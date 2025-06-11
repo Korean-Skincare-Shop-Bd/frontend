@@ -1,29 +1,17 @@
-import { useSession } from "next-auth/react";
-import { getServerSession } from "next-auth/next";
-import { redirect } from "next/navigation";
-import toast from "react-hot-toast";
+import DashboardHeader from "@/components/dashboard/header/DashboardHeader";
+import DashboardSidebar from "@/components/dashboard/sidebar/DashboardSidebar";
+import React from "react";
 
-export default async function Layout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const session: {
-    user: { name: string; email: string; image: string };
-  } | null = await getServerSession();
+const layout = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <div>
+      <DashboardHeader />
+      <div className="max-w-screen-xl mx-auto  flex flex-col md:flex-row gap-2  md:px-8">
+        <DashboardSidebar />
+        {children}
+      </div>
+    </div>
+  );
+};
 
-  if (!session) {
-    redirect("/");
-  }
-
-  let email: string = await session?.user?.email;
-  
-  const res = await fetch(`http://localhost:3001/api/users/email/${email}`);
-  const data = await res.json();
-  // redirecting user to the home page if not admin
-  if (data.role === "user") {
-    redirect("/");
-  }
-
-  return <>{children}</>;
-}
+export default layout;
