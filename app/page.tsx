@@ -1,0 +1,17 @@
+"use client";
+
+import { HeroSection } from '@/components/sections/hero-section';
+import { BrandsShowcase } from '@/components/sections/brands-showcase';
+import { TopProducts } from '@/components/sections/top-products';
+import { ReviewsSection } from '@/components/sections/reviews-section';
+
+export default function HomePage() {
+  return (
+    <div className="min-h-screen">
+      <HeroSection />
+      <BrandsShowcase />
+      <TopProducts />
+      <ReviewsSection />
+    </div>
+  );
+}
