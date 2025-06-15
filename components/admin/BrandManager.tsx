@@ -100,8 +100,8 @@ export function BrandsManager() {
 
     try {
       setFormLoading(true);
-      const submitData = { ...formData, logoFile: logoFile || undefined };
-      
+      const submitData = { ...formData, logo: logoFile || undefined };
+
       if (editingBrand) {
         await updateBrand(token, editingBrand.id, submitData);
         toast.success('Brand updated successfully');
@@ -109,7 +109,7 @@ export function BrandsManager() {
         await createBrand(token, submitData);
         toast.success('Brand created successfully');
       }
-      
+
       fetchBrands();
       resetForm();
       setDialogOpen(false);
@@ -181,51 +181,53 @@ export function BrandsManager() {
 
   return (
     <div className="mx-auto px-4 py-8 container">
-      <div className="flex md:flex-row flex-col md:justify-between md:items-center mb-8">
-        <div>
-          <h1 className="mb-2 font-bold text-3xl">Brands Management</h1>
-          <p className="text-muted-foreground">
+      <div className="flex md:flex-row flex-col md:justify-between md:items-start gap-4 mb-8">
+        <div className="flex-1">
+          <h1 className="mb-2 font-bold text-2xl sm:text-3xl">Brands Management</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
             Manage your product brands
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetForm}>
+            <Button onClick={resetForm} className="w-full md:w-auto">
               <Plus className="mr-2 w-4 h-4" />
               Add Brand
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="mx-4 w-full max-w-md">
             <DialogHeader>
-              <DialogTitle>
+              <DialogTitle className="text-lg">
                 {editingBrand ? 'Edit Brand' : 'Create New Brand'}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="name">Brand Name *</Label>
+                <Label htmlFor="name" className="font-medium text-sm">Brand Name *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="Enter brand name"
                   required
+                  className="mt-1"
                 />
               </div>
 
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description" className="font-medium text-sm">Description</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Enter brand description"
                   rows={3}
+                  className="mt-1 resize-none"
                 />
               </div>
 
               <div>
-                <Label>Brand Logo</Label>
+                <Label className="font-medium text-sm">Brand Logo</Label>
                 <div className="mt-2">
                   {logoPreview ? (
                     <div className="inline-block relative">
@@ -248,7 +250,7 @@ export function BrandsManager() {
                       </Button>
                     </div>
                   ) : (
-                    <label className="flex flex-col justify-center items-center bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 border-dashed rounded-lg w-full h-20 cursor-pointer">
+                    <label className="flex flex-col justify-center items-center bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 border-dashed rounded-lg w-full h-20 transition-colors cursor-pointer">
                       <div className="flex items-center gap-2">
                         <Upload className="w-4 h-4 text-gray-500" />
                         <span className="text-gray-500 text-sm">Upload Logo</span>
@@ -264,8 +266,8 @@ export function BrandsManager() {
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-4">
-                <Button type="submit" disabled={formLoading}>
+              <div className="flex sm:flex-row flex-col gap-2 pt-4">
+                <Button type="submit" disabled={formLoading} className="flex-1 sm:flex-none">
                   {formLoading ? (
                     <div className="flex items-center gap-2">
                       <div className="border-2 border-white border-t-transparent rounded-full w-4 h-4 animate-spin" />
@@ -279,6 +281,7 @@ export function BrandsManager() {
                   type="button"
                   variant="outline"
                   onClick={() => setDialogOpen(false)}
+                  className="flex-1 sm:flex-none"
                 >
                   Cancel
                 </Button>
@@ -290,119 +293,207 @@ export function BrandsManager() {
 
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>All Brands ({brands.length})</CardTitle>
-            <div className="relative">
+          <div className="flex lg:flex-row flex-col lg:justify-between lg:items-center gap-4">
+            <CardTitle className="text-lg sm:text-xl">All Brands ({brands.length})</CardTitle>
+            <div className="relative flex-1 lg:flex-none">
               <Search className="top-1/2 left-3 absolute w-4 h-4 text-muted-foreground -translate-y-1/2" />
               <Input
                 placeholder="Search brands..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-64"
+                className="pl-10 w-full lg:w-64"
               />
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Brand</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Products</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredBrands.map((brand) => (
-                <TableRow key={brand.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="bg-gray-100 rounded-lg w-12 h-12 overflow-hidden">
-                        {brand.logoUrl ? (
-                          <img
-                            src={brand.logoUrl}
-                            alt={brand.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="flex justify-center items-center bg-gradient-to-br from-blue-500 to-purple-600 w-full h-full">
-                            <span className="font-medium text-white text-sm">
-                              {brand.name.charAt(0)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-medium">{brand.name}</div>
-                        <div className="text-muted-foreground text-sm">ID: {brand.id}</div>
-                      </div>
+        <CardContent className="p-0 sm:p-6">
+          {/* Mobile Card View */}
+          <div className="lg:hidden block">
+            {filteredBrands.map((brand) => (
+              <div key={brand.id} className="p-4 border-b last:border-b-0">
+                <div className="flex justify-between items-start gap-3 mb-3">
+                  <div className="flex flex-1 items-center gap-3 min-w-0">
+                    <div className="flex-shrink-0 bg-gray-100 rounded-lg w-12 h-12 overflow-hidden">
+                      {brand.logoUrl ? (
+                        <img
+                          src={brand.logoUrl}
+                          alt={brand.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex justify-center items-center bg-gradient-to-br from-blue-500 to-purple-600 w-full h-full">
+                          <span className="font-medium text-white text-sm">
+                            {brand.name.charAt(0)}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="max-w-xs truncate">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{brand.name}</div>
+                      <div className="text-muted-foreground text-sm">ID: {brand.id}</div>
+                    </div>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="flex-shrink-0">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEdit(brand)}>
+                        <Edit className="mr-2 w-4 h-4" />
+                        Edit Brand
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-red-600"
+                        onClick={() => {
+                          setBrandToDelete(brand);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="mr-2 w-4 h-4" />
+                        Delete Brand
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Description:</span>
+                    <div className="mt-1 font-medium">
                       {brand.description || 'No description'}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">
-                      {brand.productCount || 0} products
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(brand.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEdit(brand)}>
-                          <Edit className="mr-2 w-4 h-4" />
-                          Edit Brand
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-red-600"
-                          onClick={() => {
-                            setBrandToDelete(brand);
-                            setDeleteDialogOpen(true);
-                          }}
-                        >
-                          <Trash2 className="mr-2 w-4 h-4" />
-                          Delete Brand
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <span className="text-muted-foreground">Products:</span>
+                      <Badge variant="secondary" className="ml-2">
+                        {brand.productCount || 0} products
+                      </Badge>
+                    </div>
+                    <div className="text-muted-foreground text-xs">
+                      {new Date(brand.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            {(filteredBrands.length === 0 || !filteredBrands) && (
+              <div className="py-8 text-muted-foreground text-center">
+                No brands found matching your search.
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden lg:block overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[200px]">Brand</TableHead>
+                  <TableHead className="min-w-[200px]">Description</TableHead>
+                  <TableHead className="min-w-[120px]">Products</TableHead>
+                  <TableHead className="min-w-[100px]">Created</TableHead>
+                  <TableHead className="min-w-[80px]">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          
-          {(filteredBrands.length === 0 || !filteredBrands) &&  (
-            <div className="py-8 text-muted-foreground text-center">
-              No brands found matching your search.
-            </div>
-          )}
+              </TableHeader>
+              <TableBody>
+                {filteredBrands.map((brand) => (
+                  <TableRow key={brand.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 bg-gray-100 rounded-lg w-12 h-12 overflow-hidden">
+                          {brand.logoUrl ? (
+                            <img
+                              src={brand.logoUrl}
+                              alt={brand.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex justify-center items-center bg-gradient-to-br from-blue-500 to-purple-600 w-full h-full">
+                              <span className="font-medium text-white text-sm">
+                                {brand.name.charAt(0)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-medium truncate">{brand.name}</div>
+                          <div className="text-muted-foreground text-sm">ID: {brand.id}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="max-w-xs truncate">
+                        {brand.description || 'No description'}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">
+                        {brand.productCount || 0} products
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        {new Date(brand.createdAt).toLocaleDateString()}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEdit(brand)}>
+                            <Edit className="mr-2 w-4 h-4" />
+                            Edit Brand
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => {
+                              setBrandToDelete(brand);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="mr-2 w-4 h-4" />
+                            Delete Brand
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+            {(filteredBrands.length === 0 || !filteredBrands) && (
+              <div className="py-8 text-muted-foreground text-center">
+                No brands found matching your search.
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="mx-4 w-full max-w-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-lg">Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm">
               This action cannot be undone. This will permanently delete the brand
               "{brandToDelete?.name}" and may affect associated products.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
+          <AlertDialogFooter className="sm:flex-row flex-col gap-2">
+            <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="w-full sm:w-auto"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

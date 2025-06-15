@@ -27,15 +27,11 @@ export default function AdminDashboard() {
               <Plus className="mr-2 w-4 h-4" />
               Add Product
             </Button>
-            <Button variant="outline" onClick={() => router.push('/admin/analytics')}>
-              <TrendingUp className="mr-2 w-4 h-4" />
-              View Analytics
-            </Button>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <StatsCards />
+        {/* <StatsCards /> */}
 
         <div className="gap-8 grid grid-cols-1 lg:grid-cols-3">
           {/* Recent Orders */}

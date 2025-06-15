@@ -161,176 +161,284 @@ export function CategoriesManager() {
   }
 
   return (
-    <div className="mx-auto px-4 py-8 container">
-      <div className="flex md:flex-row flex-col md:justify-between md:items-center mb-8">
-        <div>
-          <h1 className="mb-2 font-bold text-3xl">Categories Management</h1>
-          <p className="text-muted-foreground">
-            Organize your products with categories
-          </p>
-        </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={resetForm}>
-              <Plus className="mr-2 w-4 h-4" />
-              Add Category
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingCategory ? 'Edit Category' : 'Create New Category'}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="name">Category Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter category name"
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Enter category description"
-                  rows={3}
-                />
-              </div>
-
-              <div className="flex gap-2 pt-4">
-                <Button type="submit" disabled={formLoading}>
-                  {formLoading ? (
-                    <div className="flex items-center gap-2">
-                      <div className="border-2 border-white border-t-transparent rounded-full w-4 h-4 animate-spin" />
-                      {editingCategory ? 'Updating...' : 'Creating...'}
-                    </div>
-                  ) : (
-                    editingCategory ? 'Update Category' : 'Create Category'
-                  )}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>All Categories ({categories?.length})</CardTitle>
-            <div className="relative">
-              <Search className="top-1/2 left-3 absolute w-4 h-4 text-muted-foreground -translate-y-1/2" />
+    <div className="mx-auto px-4 py-4 sm:py-6 lg:py-8 container">
+  {/* Header Section - Responsive */}
+  <div className="flex sm:flex-row flex-col sm:justify-between sm:items-start gap-4 mb-6 sm:mb-8">
+    <div className="flex-1">
+      <h1 className="mb-2 font-bold text-2xl sm:text-3xl">Categories Management</h1>
+      <p className="text-muted-foreground text-sm sm:text-base">
+        Organize your products with categories
+      </p>
+    </div>
+    <div className="flex-shrink-0">
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogTrigger asChild>
+          <Button onClick={resetForm} className="w-full sm:w-auto">
+            <Plus className="mr-2 w-4 h-4" />
+            <span className="sm:inline">Add Category</span>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="mx-4 sm:mx-0 w-full max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl">
+              {editingCategory ? 'Edit Category' : 'Create New Category'}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="name" className="font-medium text-sm">
+                Category Name *
+              </Label>
               <Input
-                placeholder="Search categories..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-64"
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter category name"
+                required
+                className="mt-1"
               />
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Category</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Actions</TableHead>
+
+            <div>
+              <Label htmlFor="description" className="font-medium text-sm">
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Enter category description"
+                rows={3}
+                className="mt-1 resize-none"
+              />
+            </div>
+
+            <div className="flex sm:flex-row flex-col gap-2 sm:gap-3 pt-4">
+              <Button type="submit" disabled={formLoading} className="flex-1 sm:flex-none">
+                {formLoading ? (
+                  <div className="flex justify-center items-center gap-2">
+                    <div className="border-2 border-white border-t-transparent rounded-full w-4 h-4 animate-spin" />
+                    <span className="text-sm">
+                      {editingCategory ? 'Updating...' : 'Creating...'}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-sm">
+                    {editingCategory ? 'Update Category' : 'Create Category'}
+                  </span>
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDialogOpen(false)}
+                className="flex-1 sm:flex-none"
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  </div>
+
+  {/* Main Content Card */}
+  <Card className="overflow-hidden">
+    <CardHeader className="pb-4">
+      <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-4">
+        <CardTitle className="text-lg sm:text-xl">
+          All Categories ({categories?.length || 0})
+        </CardTitle>
+        <div className="relative w-full sm:w-auto">
+          <Search className="top-1/2 left-3 absolute w-4 h-4 text-muted-foreground -translate-y-1/2" />
+          <Input
+            placeholder="Search categories..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 w-full sm:w-64"
+          />
+        </div>
+      </div>
+    </CardHeader>
+    
+    <CardContent className="p-0">
+      {/* Desktop Table View */}
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[40%]">Category</TableHead>
+              <TableHead className="w-[35%]">Description</TableHead>
+              <TableHead className="w-[15%]">Created</TableHead>
+              <TableHead className="w-[10%] text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredCategories?.map((category) => (
+              <TableRow key={category.id}>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-shrink-0 justify-center items-center bg-primary/10 rounded-lg w-10 h-10">
+                      <FolderOpen className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{category.name}</div>
+                      <div className="text-muted-foreground text-sm truncate">
+                        ID: {category.id}
+                      </div>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="max-w-xs truncate">
+                    {category.description || 'No description'}
+                  </div>
+                </TableCell>
+                <TableCell className="text-sm">
+                  {new Date(category.createdAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEdit(category)}>
+                        <Edit className="mr-2 w-4 h-4" />
+                        Edit Category
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="text-red-600 focus:text-red-600"
+                        onClick={() => {
+                          setCategoryToDelete(category);
+                          setDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="mr-2 w-4 h-4" />
+                        Delete Category
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredCategories?.map((category) => (
-                <TableRow key={category.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="flex justify-center items-center bg-primary/10 rounded-lg w-10 h-10">
-                        <FolderOpen className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <div className="font-medium">{category.name}</div>
-                        <div className="text-muted-foreground text-sm">ID: {category.id}</div>
-                      </div>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden block">
+        <div className="space-y-3 p-4">
+          {filteredCategories?.map((category) => (
+            <Card key={category.id} className="shadow-sm border">
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start gap-3">
+                  <div className="flex flex-1 items-start gap-3 min-w-0">
+                    <div className="flex flex-shrink-0 justify-center items-center bg-primary/10 rounded-lg w-10 h-10">
+                      <FolderOpen className="w-5 h-5 text-primary" />
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="max-w-xs truncate">
-                      {category.description || 'No description'}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-sm truncate">{category.name}</h3>
+                      <p className="mt-1 text-muted-foreground text-xs truncate">
+                        ID: {category.id}
+                      </p>
+                      {category.description && (
+                        <p className="mt-2 text-muted-foreground text-xs line-clamp-2">
+                          {category.description}
+                        </p>
+                      )}
+                      <p className="mt-2 text-muted-foreground text-xs">
+                        Created: {new Date(category.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(category.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
+                  </div>
+                  <div className="flex-shrink-0">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className="w-8 h-8">
                           <MoreHorizontal className="w-4 h-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleEdit(category)}>
                           <Edit className="mr-2 w-4 h-4" />
-                          Edit Category
+                          Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          className="text-red-600"
+                          className="text-red-600 focus:text-red-600"
                           onClick={() => {
                             setCategoryToDelete(category);
                             setDeleteDialogOpen(true);
                           }}
                         >
                           <Trash2 className="mr-2 w-4 h-4" />
-                          Delete Category
+                          Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          
-          {(filteredCategories?.length === 0 || !filteredCategories) && (
-            <div className="py-8 text-muted-foreground text-center">
-              No categories found matching your search.
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+      
+      {/* Empty State */}
+      {(filteredCategories?.length === 0 || !filteredCategories) && (
+        <div className="py-12 text-muted-foreground text-center">
+          <div className="flex flex-col items-center gap-3">
+            <FolderOpen className="w-12 h-12 text-muted-foreground/50" />
+            <div>
+              <p className="font-medium text-sm">No categories found</p>
+              <p className="mt-1 text-muted-foreground text-xs">
+                {searchQuery ? 'Try adjusting your search terms' : 'Get started by creating your first category'}
+              </p>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            {!searchQuery && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  resetForm();
+                  setDialogOpen(true);
+                }}
+                className="mt-2"
+              >
+                <Plus className="mr-2 w-4 h-4" />
+                Add Category
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+    </CardContent>
+  </Card>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the category
-              "{categoryToDelete?.name}" and may affect associated products.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+  {/* Delete Confirmation Dialog */}
+  <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+    <AlertDialogContent className="mx-4 sm:mx-0 w-full max-w-md">
+      <AlertDialogHeader>
+        <AlertDialogTitle className="text-lg">Are you sure?</AlertDialogTitle>
+        <AlertDialogDescription className="text-sm">
+          This action cannot be undone. This will permanently delete the category
+          <span className="font-medium"> "{categoryToDelete?.name}"</span> and may affect associated products.
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter className="sm:flex-row flex-col gap-2">
+        <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+        <AlertDialogAction 
+          onClick={handleDelete}
+          className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
+        >
+          Delete Category
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+</div>
   );
 }

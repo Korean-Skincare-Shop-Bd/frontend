@@ -36,6 +36,7 @@ import {
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
+import { useAdmin } from '@/contexts/AdminContext';
 
 // Type definitions
 interface Brand {
@@ -81,6 +82,7 @@ export function Header() {
   const [isLoadingBrands, setIsLoadingBrands] = useState(true);
   const { theme, setTheme } = useTheme();
   const router = useRouter();
+  const { isAuthenticated, logout } = useAdmin();
 
   // Fetch categories from API
   useEffect(() => {
@@ -155,8 +157,9 @@ export function Header() {
   };
 
   const toggleAdmin = () => {
-    router.push(isAdmin ? '/' : '/admin/login');
-    setIsAdmin(!isAdmin);
+    logout();
+    router.push(isAdmin ? '/' : '/admin');
+    
   };
 
   return (
@@ -328,14 +331,7 @@ export function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                {!isAdmin ? (
-                  <>
-                    <DropdownMenuItem onClick={toggleAdmin}>
-                      <User className="mr-2 w-4 h-4" />
-                      Admin Login
-                    </DropdownMenuItem>
-                  </>
-                ) : (
+                
                   <>
                     <DropdownMenuItem asChild>
                       <Link href="/admin">
@@ -344,12 +340,12 @@ export function Header() {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
+                    {(isAuthenticated &&
                     <DropdownMenuItem onClick={toggleAdmin}>
                       <LogOut className="mr-2 w-4 h-4" />
                       Logout
-                    </DropdownMenuItem>
+                    </DropdownMenuItem>)}
                   </>
-                )}
               </DropdownMenuContent>
             </DropdownMenu>
 

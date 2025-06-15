@@ -48,7 +48,7 @@ export interface ProductImage {
   id: string;
   filename: string;
   originalName: string;
-  url: string;
+  imageUrl: string;
   altText?: string;
   isMainImage: boolean;
   productId: string;
@@ -73,12 +73,55 @@ export interface CreateProductRequest {
   additionalImages?: File[];
 }
 
-export const getProducts = async (token: string, page = 1, limit = 10): Promise<{ data: Product[]; total: number }> => {
-  const response = await fetch(`${API_BASE_URL}/products?page=${page}&limit=${limit}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
+export interface ProductsResponse {
+  data: any;
+  products: Product[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+export interface GetProductsParams {
+  page?: number;
+  limit?: number;
+  category?: string;
+  brand?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: 'price' | 'name' | 'createdAt';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export const getProducts = async (params: GetProductsParams = {}): Promise<ProductsResponse> => {
+  const {
+    page = 1,
+    limit = 20,
+    category,
+    brand,
+    minPrice,
+    maxPrice,
+    sortBy = 'createdAt',
+    sortOrder = 'desc'
+  } = params;
+
+  const searchParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+    sortBy,
+    sortOrder
   });
+
+  if (category) searchParams.append('category', category);
+  if (brand) searchParams.append('brand', brand);
+  if (minPrice !== undefined) searchParams.append('minPrice', minPrice.toString());
+  if (maxPrice !== undefined) searchParams.append('maxPrice', maxPrice.toString());
+
+  const response = await fetch(`${API_BASE_URL}/products/public?${searchParams.toString()}`);
 
   if (!response.ok) {
     throw new Error('Failed to fetch products');
@@ -86,7 +129,26 @@ export const getProducts = async (token: string, page = 1, limit = 10): Promise<
 
   return response.json();
 };
+export const deleteProduct = async (token: string, id: string): Promise<{ message: string }> => {
+  const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
 
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Product not found');
+    }
+    if (response.status === 401) {
+      throw new Error('Unauthorized');
+    }
+    throw new Error('Failed to delete product');
+  }
+
+  return await response.json();
+};
 export const createProduct = async (token: string, productData: CreateProductRequest): Promise<Product> => {
   const formData = new FormData();
   
@@ -117,3 +179,255 @@ export const createProduct = async (token: string, productData: CreateProductReq
   const result = await response.json();
   return result.data;
 };
+export const getProduct = async ( id: string): Promise<Product> => {
+  const response = await fetch(`${API_BASE_URL}/products/public/${id}`, {
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Product not found');
+    }
+    if (response.status === 401) {
+      throw new Error('Unauthorized');
+    }
+    throw new Error('Failed to fetch product');
+  }
+
+  const result = await response.json();
+  return result
+};
+
+export const updateProduct = async (token: string, id: string, productData: UpdateProductRequest): Promise<Product> => {
+  const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(productData),
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Product not found');
+    }
+    if (response.status === 401) {
+      throw new Error('Unauthorized');
+    }
+    throw new Error('Failed to update product');
+  }
+
+  const result = await response.json();
+  return result.data;
+};
+
+// Add these new interfaces
+export interface CreateVariationRequest {
+  price: number;
+  salePrice?: number;
+  stockQuantity: number;
+  volume?: string;
+  weightGrams?: number;
+  color?: string;
+  size?: string;
+  isDefault?: boolean;
+}
+
+export interface UpdateVariationRequest {
+  price?: number;
+  salePrice?: number;
+  stockQuantity?: number;
+  volume?: string;
+  weightGrams?: number;
+  color?: string;
+  size?: string;
+  isDefault?: boolean;
+}
+
+export interface UpdateImageRequest {
+  isPrimary?: boolean;
+  altText?: string;
+}
+
+// Add these new API functions
+export const createProductVariation = async (
+  token: string, 
+  productId: string, 
+  variationData: CreateVariationRequest
+): Promise<ProductVariation> => {
+  const response = await fetch(`${API_BASE_URL}/products/${productId}/variations`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(variationData),
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Product not found');
+    }
+    if (response.status === 401) {
+      throw new Error('Unauthorized');
+    }
+    throw new Error('Failed to create variation');
+  }
+
+  const result = await response.json();
+  return result;
+};
+
+export const updateProductVariation = async (
+  token: string, 
+  productId: string, 
+  variationId: string, 
+  variationData: UpdateVariationRequest
+): Promise<ProductVariation> => {
+  const response = await fetch(`${API_BASE_URL}/products/${productId}/variations/${variationId}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(variationData),
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Product or variation not found');
+    }
+    if (response.status === 401) {
+      throw new Error('Unauthorized');
+    }
+    throw new Error('Failed to update variation');
+  }
+
+  const result = await response.json();
+  return result;
+};
+
+export const deleteProductVariation = async (
+  token: string, 
+  productId: string, 
+  variationId: string
+): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/products/${productId}/variations/${variationId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Product or variation not found');
+    }
+    if (response.status === 401) {
+      throw new Error('Unauthorized');
+    }
+    throw new Error('Failed to delete variation');
+  }
+};
+
+export const addProductImages = async (
+  token: string, 
+  productId: string, 
+  images: File[], 
+  isPrimary?: boolean
+): Promise<ProductImage[]> => {
+  const formData = new FormData();
+  
+  images.forEach((image) => {
+    formData.append('image', image);
+  });
+  
+  if (isPrimary !== undefined) {
+    formData.append('isPrimary', String(isPrimary));
+  }
+
+  const response = await fetch(`${API_BASE_URL}/products/${productId}/images`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Product not found');
+    }
+    if (response.status === 401) {
+      throw new Error('Unauthorized');
+    }
+    throw new Error('Failed to add images');
+  }
+
+  const result = await response.json();
+  return result;
+};
+
+export const updateProductImage = async (
+  token: string, 
+  productId: string, 
+  imageId: string, 
+  imageData: UpdateImageRequest
+): Promise<ProductImage> => {
+  const response = await fetch(`${API_BASE_URL}/products/${productId}/images/${imageId}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(imageData),
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Product or image not found');
+    }
+    if (response.status === 401) {
+      throw new Error('Unauthorized');
+    }
+    throw new Error('Failed to update image');
+  }
+
+  const result = await response.json();
+  return result;
+};
+
+export const deleteProductImage = async (
+  token: string, 
+  productId: string, 
+  imageId: string
+): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/products/${productId}/images/${imageId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Product or image not found');
+    }
+    if (response.status === 401) {
+      throw new Error('Unauthorized');
+    }
+    throw new Error('Failed to delete image');
+  }
+};
+
+// Update the existing UpdateProductRequest interface
+export interface UpdateProductRequest {
+  name?: string;
+  description?: string;
+  categoryId?: string;
+  brandId?: string;
+  tags?: string[];
+  isPublished?: boolean;
+  expiryDate?: string;
+  // Remove variations and images from here since they're handled separately
+}

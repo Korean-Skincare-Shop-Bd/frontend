@@ -64,12 +64,6 @@ export function QuickActions() {
       variant: 'ghost' as const,
     },
     {
-      label: 'Analytics & Reports',
-      icon: TrendingUp,
-      onClick: () => router.push('/admin/analytics'),
-      variant: 'ghost' as const,
-    },
-    {
       label: 'Dashboard',
       icon: BarChart3,
       onClick: () => router.push('/admin'),

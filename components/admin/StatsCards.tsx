@@ -33,7 +33,7 @@ export function StatsCards() {
   const statsConfig = [
     {
       title: 'Total Revenue',
-      value: stats ? `$${stats.totalRevenue?.toLocaleString()}` : '$0',
+      value: stats ? `৳${stats.totalRevenue?.toLocaleString()}` : '$0',
       change: stats?.revenueChange || '0%',
       icon: DollarSign,
       color: 'text-green-600'

@@ -3,27 +3,69 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
-
-const brands = [
-  { id: 1, name: 'Luxe Beauty', logo: 'https://images.pexels.com/photos/1040427/pexels-photo-1040427.jpeg?auto=compress&cs=tinysrgb&w=200', href: '/products?brand=luxe-beauty' },
-  { id: 2, name: 'Golden Glow', logo: 'https://images.pexels.com/photos/1040427/pexels-photo-1040427.jpeg?auto=compress&cs=tinysrgb&w=200', href: '/products?brand=golden-glow' },
-  { id: 3, name: 'Pure Essence', logo: 'https://images.pexels.com/photos/1040427/pexels-photo-1040427.jpeg?auto=compress&cs=tinysrgb&w=200', href: '/products?brand=pure-essence' },
-  { id: 4, name: 'Royal Touch', logo: 'https://images.pexels.com/photos/1040427/pexels-photo-1040427.jpeg?auto=compress&cs=tinysrgb&w=200', href: '/products?brand=royal-touch' },
-  { id: 5, name: 'Radiant Beauty', logo: 'https://images.pexels.com/photos/1040427/pexels-photo-1040427.jpeg?auto=compress&cs=tinysrgb&w=200', href: '/products?brand=radiant-beauty' },
-  { id: 6, name: 'Elegant Skin', logo: 'https://images.pexels.com/photos/1040427/pexels-photo-1040427.jpeg?auto=compress&cs=tinysrgb&w=200', href: '/products?brand=elegant-skin' },
-  { id: 7, name: 'Divine Care', logo: 'https://images.pexels.com/photos/1040427/pexels-photo-1040427.jpeg?auto=compress&cs=tinysrgb&w=200', href: '/products?brand=divine-care' },
-  { id: 8, name: 'Luxury Line', logo: 'https://images.pexels.com/photos/1040427/pexels-photo-1040427.jpeg?auto=compress&cs=tinysrgb&w=200', href: '/products?brand=luxury-line' },
-];
+import { useEffect, useState } from 'react';
+import { getBrands, Brand } from '@/lib/api/brands';
 
 export function BrandsShowcase() {
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        setLoading(true);
+        const response = await getBrands(1, 100); // Fetch first 20 brands
+        setBrands(response.data.brands);
+        console.log(response.data.brands)
+      } catch (err) {
+        console.error('Failed to fetch brands:', err);
+        setError('Failed to load brands');
+        // Fallback to static data if API fails
+        setBrands([])
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBrands();
+  }, []);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <section className="bg-gradient-to-br from-primary-50 dark:from-gray-900 to-orange-50 dark:to-gray-800 py-16">
+        <div className="mx-auto px-4 container">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 font-bold text-3xl md:text-4xl golden-text">
+              Trusted by Premium Brands
+            </h2>
+            <p className="mx-auto max-w-2xl text-muted-foreground text-lg">
+              Loading our curated selection of luxury beauty brands...
+            </p>
+          </div>
+          <div className="flex justify-center items-center h-40">
+            <div className="border-primary-600 border-b-2 rounded-full w-8 h-8 animate-spin"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Don't render if no brands available
+  if (brands.length === 0) {
+    return null;
+  }
+
   return (
-    <section className="py-16 bg-gradient-to-br from-primary-50 to-orange-50 dark:from-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 golden-text">
+    <section className="bg-gradient-to-br from-primary-50 dark:from-gray-900 to-orange-50 dark:to-gray-800 py-16">
+      <div className="mx-auto px-4 container">
+        <div className="mb-12 text-center">
+          <h2 className="mb-4 font-bold text-3xl md:text-4xl golden-text">
             Trusted by Premium Brands
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="mx-auto max-w-2xl text-muted-foreground text-lg">
             Discover our curated selection of luxury beauty brands, each chosen for their quality and innovation.
           </p>
         </div>
@@ -42,21 +84,26 @@ export function BrandsShowcase() {
             {[...brands, ...brands].map((brand, index) => (
               <Link
                 key={`${brand.id}-${index}`}
-                href={brand.href}
-                className="flex-shrink-0 group"
+                href={`/products?brand=${encodeURIComponent(brand.name.toLowerCase().replace(/\s+/g, '-'))}`}
+                className="group flex-shrink-0"
               >
-                <div className="w-32 h-32 md:w-40 md:h-40 relative rounded-xl overflow-hidden bg-white shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                <div className="relative bg-white shadow-lg group-hover:shadow-xl rounded-xl w-32 md:w-40 h-32 md:h-40 overflow-hidden group-hover:scale-105 transition-all duration-300">
                   <div className="absolute inset-0 bg-gradient-to-br from-primary-100 to-orange-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="relative z-10 p-4 h-full flex flex-col items-center justify-center">
-                    <div className="w-16 h-16 md:w-20 md:h-20 relative mb-2">
+                  <div className="z-10 relative flex flex-col justify-center items-center p-4 h-full">
+                    <div className="relative mb-2 w-16 md:w-20 h-16 md:h-20">
                       <Image
-                        src={brand.logo}
+                        src={brand.logoUrl || '/placeholder-brand-logo.png'}
                         alt={brand.name}
                         fill
-                        className="object-cover rounded-lg"
+                        className="rounded-lg object-cover"
+                        onError={(e) => {
+                          // Fallback to placeholder if image fails to load
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/placeholder-brand-logo.png';
+                        }}
                       />
                     </div>
-                    <p className="text-sm md:text-base font-semibold text-center text-gray-800 group-hover:text-primary-600 transition-colors">
+                    <p className="font-semibold text-gray-800 group-hover:text-primary-600 text-sm md:text-base text-center transition-colors">
                       {brand.name}
                     </p>
                   </div>
@@ -66,17 +113,7 @@ export function BrandsShowcase() {
           </motion.div>
         </div>
 
-        <div className="text-center mt-8">
-          <Link
-            href="/brands"
-            className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium"
-          >
-            View All Brands
-            <svg className="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </div>
+        
       </div>
     </section>
   );
