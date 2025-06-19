@@ -4,13 +4,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Search, 
-  ShoppingBag, 
-  Menu, 
-  X, 
-  User, 
-  LogOut, 
+import {
+  Search,
+  ShoppingBag,
+  Menu,
+  X,
+  User,
+  LogOut,
   Settings,
   Sun,
   Moon,
@@ -37,6 +37,9 @@ import {
 } from '@/components/ui/navigation-menu';
 import { cn } from '@/lib/utils';
 import { useAdmin } from '@/contexts/AdminContext';
+import { useToast } from '@/hooks/use-toast';
+import { getEnhancedCart } from '@/lib/api/cart';
+import { getSessionIdCookie } from '@/lib/cookies/session';
 
 // Type definitions
 interface Brand {
@@ -56,25 +59,32 @@ interface Category {
 interface ApiResponse<T> {
   categories: T[];
   message: string;
-      data: {
-          brands: Brand[];
-          pagination: {
-              page: number;
-              limit: number;
-              total: number;
-              totalPages: number;
-              hasNext: boolean;
-              hasPrev: boolean;
-          };
-      };
-  
+  data: {
+    brands: Brand[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  };
+
+}
+interface CartItemWithProduct {
+  id: string;
+  productId: string;
+  quantity: number;
+  price: number;
+  loading?: boolean;
 }
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [cartItems, setCartItems] = useState(3); // Mock cart count
+  const [cartItems, setCartItems] = useState<number>(0); // Mock cart count
   const [isAdmin, setIsAdmin] = useState(false); // Mock admin state
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -83,6 +93,11 @@ export function Header() {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const { isAuthenticated, logout } = useAdmin();
+  const { toast } = useToast();
+  const [items, setItems] = useState<CartItemWithProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  // const sessionIdcookie = getSessionIdCookie();
+
 
   // Fetch categories from API
   useEffect(() => {
@@ -90,13 +105,13 @@ export function Header() {
       try {
         setIsLoadingCategories(true);
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories?limit=50`);
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch categories');
         }
-        
+
         const result: ApiResponse<Category> = await response.json();
-        
+
         if (result) {
           setCategories(result.categories || []);
         }
@@ -112,19 +127,67 @@ export function Header() {
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    const fetchCartData = async () => {
+      try {
+        setLoading(true);
+
+        // Get cart items
+        const cartResponse = await getEnhancedCart();
+        const cartItems = cartResponse.data.cart.items;
+
+        // Convert cart items to our interface
+        const cartItemsWithProduct: CartItemWithProduct[] = cartItems.map(item => ({
+          id: item.productId, // Using productId as ID for now
+          productId: item.productId,
+          quantity: item.quantity,
+          price: Number(item.totalPrice),
+          loading: true
+        }));
+
+        setItems(cartItemsWithProduct);
+        let count = 0
+        for (const item of cartItemsWithProduct) {
+          count += item.quantity;
+        }
+        setCartItems(count)
+
+        // Fetch product details for each item
+
+      } catch (error) {
+        console.error('Failed to fetch cart:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load cart items",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCartData();
+    window.addEventListener('cartUpdated', fetchCartData);
+
+    return () => {
+      window.removeEventListener('cartUpdated', fetchCartData);
+    };
+  }, [toast]);
+
+
   // Fetch brands from API
   useEffect(() => {
     const fetchBrands = async () => {
       try {
         setIsLoadingBrands(true);
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/brands?limit=50`);
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch brands');
         }
-        
+
         const result: ApiResponse<Brand> = await response.json();
-        
+
         if (result) {
           console.log(result)
           setBrands(result.data.brands || []);
@@ -159,14 +222,14 @@ export function Header() {
   const toggleAdmin = () => {
     logout();
     router.push(isAdmin ? '/' : '/admin');
-    
+
   };
 
   return (
     <header className={cn(
       "sticky top-0 z-50 w-full transition-all duration-300",
-      isScrolled 
-        ? "glass-effect shadow-lg border-b" 
+      isScrolled
+        ? "glass-effect shadow-lg border-b"
         : "bg-white/95 dark:bg-gray-900/95"
     )}>
       <div className="mx-auto px-4 container">
@@ -195,7 +258,7 @@ export function Header() {
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
-              
+
               <NavigationMenuItem>
                 <NavigationMenuTrigger>Categories</NavigationMenuTrigger>
                 <NavigationMenuContent>
@@ -309,17 +372,25 @@ export function Header() {
             </Button>
 
             {/* Cart */}
-            <Button variant="ghost" size="icon" asChild className="relative">
-              <Link href="/cart">
-                <ShoppingBag className="w-5 h-5" />
-                {cartItems > 0 && (
-                  <Badge 
-                    variant="secondary" 
-                    className="-top-2 -right-2 absolute bg-primary p-0 rounded-full w-5 h-5 text-white text-xs"
-                  >
-                    {cartItems}
-                  </Badge>
-                )}
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="group relative hover:shadow-lg focus-visible:ring-2 focus-visible:ring-primary/70 transition-shadow"
+              aria-label="View cart"
+            >
+              <Link href="/cart" className="flex justify-center items-center">
+                <span className="relative flex items-center">
+                  <ShoppingBag className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                  {cartItems > 0 && (
+                    <span
+                      className="-top-2 -right-2 absolute flex justify-center items-center bg-gradient-to-tr from-primary to-yellow-400 shadow-md border-2 border-background rounded-full w-5 h-5 font-semibold text-white text-xs"
+                      aria-label={`${cartItems} items in cart`}
+                    >
+                      {cartItems}
+                    </span>
+                  )}
+                </span>
               </Link>
             </Button>
 
@@ -331,21 +402,21 @@ export function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                
-                  <>
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin">
-                        <Settings className="mr-2 w-4 h-4" />
-                        Admin Dashboard
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    {(isAuthenticated &&
+
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin">
+                      <Settings className="mr-2 w-4 h-4" />
+                      Admin Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {(isAuthenticated &&
                     <DropdownMenuItem onClick={toggleAdmin}>
                       <LogOut className="mr-2 w-4 h-4" />
                       Logout
                     </DropdownMenuItem>)}
-                  </>
+                </>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -390,7 +461,7 @@ export function Header() {
                 <Link href="/products" className="block py-2 font-medium hover:text-primary text-lg">
                   Products
                 </Link>
-                
+
                 <div>
                   <h3 className="py-2 font-medium text-lg">Categories</h3>
                   <div className="space-y-2 pl-4">
@@ -431,7 +502,7 @@ export function Header() {
                         <Link
                           key={brand.id}
                           href={`/products?brand=${brand.id}`}
-                                                    className="flex items-center py-1 text-muted-foreground hover:text-primary"
+                          className="flex items-center py-1 text-muted-foreground hover:text-primary"
                           onClick={() => setIsOpen(false)}
                         >
                           {brand.logo && (

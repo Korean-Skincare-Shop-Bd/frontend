@@ -10,8 +10,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { getEnhancedCart, updateCartItem, removeCartItem } from '@/lib/api/cart';
+import { getEnhancedCart, updateCartItem, removeCartItem, prepareCheckout } from '@/lib/api/cart';
 import { getProduct, Product, ProductVariation } from '@/lib/api/products';
+import { useRouter } from 'next/navigation';
 
 interface CartItemWithProduct {
   id: string;
@@ -28,23 +29,25 @@ export default function CartPage() {
   const [loading, setLoading] = useState(true);
   const [promoCode, setPromoCode] = useState('');
   const { toast } = useToast();
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const router = useRouter();
 
   // Fetch cart data and product details
   useEffect(() => {
     const fetchCartData = async () => {
       try {
         setLoading(true);
-        
+
         // Get cart items
         const cartResponse = await getEnhancedCart();
-        const cartItems = cartResponse.data.items;
+        const cartItems = cartResponse.data.cart.items;
 
         // Convert cart items to our interface
         const cartItemsWithProduct: CartItemWithProduct[] = cartItems.map(item => ({
           id: item.productId, // Using productId as ID for now
           productId: item.productId,
           quantity: item.quantity,
-          price: item.price,
+          price: Number(item.totalPrice),
           loading: true
         }));
 
@@ -55,9 +58,9 @@ export default function CartPage() {
           cartItemsWithProduct.map(async (item) => {
             try {
               const product = await getProduct(item.productId);
-              
+
               // Find the appropriate variation based on price or use first variation
-              const variation = product.variations.find(v => 
+              const variation = product.variations.find(v =>
                 v.price === item.price || v.salePrice === item.price
               ) || product.variations[0];
 
@@ -101,29 +104,29 @@ export default function CartPage() {
 
     try {
       // Update item in state optimistically
-      setItems(prevItems => 
-        prevItems.map(item => 
+      setItems(prevItems =>
+        prevItems.map(item =>
           item.id === itemId ? { ...item, quantity: newQuantity } : item
         )
       );
 
       // Update on server
       await updateCartItem('', itemId, { quantity: newQuantity }); // Add token when available
-      
+
       toast({
         title: "Success",
         description: "Cart updated successfully",
       });
     } catch (error) {
       console.error('Failed to update cart item:', error);
-      
+
       // Revert optimistic update
-      setItems(prevItems => 
-        prevItems.map(item => 
+      setItems(prevItems =>
+        prevItems.map(item =>
           item.id === itemId ? { ...item, quantity: item.quantity } : item
         )
       );
-      
+
       toast({
         title: "Error",
         description: "Failed to update cart item",
@@ -140,14 +143,14 @@ export default function CartPage() {
 
       // Remove from server
       await removeCartItem('', itemId); // Add token when available
-      
+
       toast({
         title: "Success",
         description: "Item removed from cart",
       });
     } catch (error) {
       console.error('Failed to remove cart item:', error);
-      
+
       // Revert optimistic update if needed
       toast({
         title: "Error",
@@ -169,17 +172,52 @@ export default function CartPage() {
     }
     return sum;
   }, 0);
+  const handleProceedToCheckout = async () => {
+    try {
+      setCheckoutLoading(true);
+      
+      // Prepare cart for checkout
+      await prepareCheckout();
+      
+      toast({
+        title: "Success",
+        description: "Cart prepared for checkout",
+      });
+      
+      // Navigate to checkout page
+      router.push('/checkout');
+    } catch (error) {
+      console.error('Failed to prepare checkout:', error);
+      
+      let errorMessage = "Failed to prepare checkout";
+      
+      // Handle specific error cases
+      if (error instanceof Error) {
+        if (error.message.includes('404')) {
+          errorMessage = "Cart not found. Please refresh and try again.";
+        } else if (error.message.includes('400')) {
+          errorMessage = "Cart validation failed. Please check your items and try again.";
+        }
+      }
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
 
-  const shipping = subtotal > 50 ? 0 : 9.99;
-  const tax = subtotal * 0.08; // 8% tax
-  const total = subtotal + shipping + tax;
+  const total = subtotal 
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center bg-gray-50 dark:bg-gray-900 min-h-screen">
+      <div className="flex justify-center items-center bg-gray-50 dark:bg-gray-900 px-4 min-h-screen">
         <div className="text-center">
           <Loader2 className="mx-auto mb-4 w-8 h-8 animate-spin" />
-          <p>Loading your cart...</p>
+          <p className="text-sm sm:text-base">Loading your cart...</p>
         </div>
       </div>
     );
@@ -188,14 +226,14 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
-        <div className="mx-auto px-4 py-16 container">
+        <div className="mx-auto px-4 py-8 sm:py-16 max-w-4xl container">
           <div className="text-center">
-            <ShoppingBag className="mx-auto mb-6 w-24 h-24 text-muted-foreground" />
-            <h1 className="mb-4 font-bold text-3xl">Your cart is empty</h1>
-            <p className="mb-8 text-muted-foreground">
+            <ShoppingBag className="mx-auto mb-4 sm:mb-6 w-16 sm:w-24 h-16 sm:h-24 text-muted-foreground" />
+            <h1 className="mb-2 sm:mb-4 font-bold text-2xl sm:text-3xl">Your cart is empty</h1>
+            <p className="mb-6 sm:mb-8 px-4 text-muted-foreground text-sm sm:text-base">
               Looks like you haven't added any items to your cart yet.
             </p>
-            <Button asChild className="golden-button">
+            <Button asChild className="w-full sm:w-auto golden-button">
               <Link href="/products">
                 Continue Shopping
               </Link>
@@ -208,24 +246,27 @@ export default function CartPage() {
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
-      <div className="mx-auto px-4 py-8 container">
+      <div className="mx-auto px-4 py-4 sm:py-8 max-w-7xl container">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="ghost" asChild>
+        <div className="flex sm:flex-row flex-col sm:items-center gap-2 sm:gap-4 mb-6 sm:mb-8">
+          <Button variant="ghost" asChild className="self-start sm:self-auto">
             <Link href="/products">
               <ArrowLeft className="mr-2 w-4 h-4" />
-              Continue Shopping
+              <span className="hidden sm:inline">Continue Shopping</span>
+              <span className="sm:hidden">Back</span>
             </Link>
           </Button>
-          <div>
-            <h1 className="font-bold text-3xl">Shopping Cart</h1>
-            <p className="text-muted-foreground">{items.length} items in your cart</p>
+          <div className="flex-1">
+            <h1 className="font-bold text-2xl sm:text-3xl">Shopping Cart</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              {items.length} {items.length === 1 ? 'item' : 'items'} in your cart
+            </p>
           </div>
         </div>
 
-        <div className="gap-8 grid grid-cols-1 lg:grid-cols-3">
+        <div className="gap-4 lg:gap-8 grid grid-cols-1 lg:grid-cols-3">
           {/* Cart Items */}
-          <div className="space-y-4 lg:col-span-2">
+          <div className="space-y-3 sm:space-y-4 lg:col-span-2">
             {items.map((item, index) => (
               <motion.div
                 key={item.id}
@@ -234,18 +275,19 @@ export default function CartPage() {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
               >
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
                     {item.loading ? (
-                      <div className="flex justify-center items-center h-24">
-                        <Loader2 className="w-6 h-6 animate-spin" />
+                      <div className="flex justify-center items-center h-20 sm:h-24">
+                        <Loader2 className="w-5 sm:w-6 h-5 sm:h-6 animate-spin" />
                       </div>
                     ) : (
-                      <div className="flex gap-6">
-                        <div className="relative flex-shrink-0 w-24 h-24">
+                      <div className="flex sm:flex-row flex-col gap-3 sm:gap-4 lg:gap-6">
+                        {/* Product Image */}
+                        <div className="relative flex-shrink-0 w-full sm:w-20 lg:w-24 h-48 sm:h-20 lg:h-24">
                           <Image
                             src={
-                              item.variation?.imageUrl || 
-                              item.product?.baseImageUrl || 
+                              item.variation?.imageUrl ||
+                              item.product?.baseImageUrl ||
                               item.product?.images?.[0]?.imageUrl ||
                               '/placeholder.jpg'
                             }
@@ -254,76 +296,83 @@ export default function CartPage() {
                             className="rounded-lg object-cover"
                           />
                         </div>
-                        
-                        <div className="flex-1 space-y-2">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="text-muted-foreground text-sm">
+
+                        {/* Product Details */}
+                        <div className="flex-1 space-y-2 sm:space-y-3">
+                          {/* Product Info & Actions */}
+                          <div className="flex sm:flex-row flex-col sm:justify-between sm:items-start gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-muted-foreground text-xs sm:text-sm truncate">
                                 {item.product?.brand?.name}
                               </p>
-                              <h3 className="font-semibold">
+                              <h3 className="font-semibold text-sm sm:text-base line-clamp-2">
                                 {item.product?.name || 'Unknown Product'}
                               </h3>
                               {item.variation?.volume && (
-                                <p className="text-muted-foreground text-sm">
+                                <p className="text-muted-foreground text-xs sm:text-sm">
                                   Size: {item.variation.volume}
                                 </p>
                               )}
                             </div>
-                            
-                            <div className="flex gap-2">
-                              <Button size="icon" variant="ghost">
-                                <Heart className="w-4 h-4" />
+
+                            {/* Action Buttons */}
+                            <div className="flex self-end sm:self-start gap-1 sm:gap-2">
+                              <Button size="icon" variant="ghost" className="w-8 sm:w-10 h-8 sm:h-10">
+                                <Heart className="w-3 sm:w-4 h-3 sm:h-4" />
                               </Button>
-                              <Button 
-                                size="icon" 
+                              <Button
+                                size="icon"
                                 variant="ghost"
                                 onClick={() => removeItem(item.id)}
-                                className="text-red-500 hover:text-red-700"
+                                className="w-8 sm:w-10 h-8 sm:h-10 text-red-500 hover:text-red-700"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-3 sm:w-4 h-3 sm:h-4" />
                               </Button>
                             </div>
                           </div>
-                          
-                          <div className="flex justify-between items-center">
+
+                          {/* Price & Quantity */}
+                          <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-3">
+                            {/* Price */}
                             <div className="flex items-center gap-2">
-                              <span className="font-bold golden-text">
-                                ${(item.variation?.salePrice || item.variation?.price || item.price).toFixed(2)}
+                              <span className="font-bold text-sm sm:text-base golden-text">
+                                ৳{(Number(item.variation?.salePrice) || Number(item.variation?.price) || Number(item.price)).toFixed(2)}
                               </span>
-                              {item.variation?.price && item.variation?.salePrice && item.variation.price > item.variation.salePrice && (
-                                <span className="text-muted-foreground text-sm line-through">
-                                  ${item.variation.price.toFixed(2)}
+                              {item.variation?.price && item.variation?.salePrice && Number(item.variation.price) > Number(item.variation.salePrice) && (
+                                <span className="text-muted-foreground text-xs sm:text-sm line-through">
+                                  ৳{Number(item.variation.price).toFixed(2)}
                                 </span>
                               )}
                             </div>
-                            
-                            <div className="flex items-center border rounded-lg">
+
+                            {/* Quantity Controls */}
+                            <div className="flex items-center self-end sm:self-auto border rounded-lg">
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                className="w-8 h-8"
+                                className="w-7 sm:w-8 h-7 sm:h-8"
                               >
                                 <Minus className="w-3 h-3" />
                               </Button>
-                              <span className="px-3 py-1 min-w-[40px] text-sm text-center">
+                              <span className="px-2 sm:px-3 py-1 min-w-[32px] sm:min-w-[40px] text-xs sm:text-sm text-center">
                                 {item.quantity}
                               </span>
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                className="w-8 h-8"
+                                className="w-7 sm:w-8 h-7 sm:h-8"
                                 disabled={item.variation?.stockQuantity ? item.quantity >= item.variation.stockQuantity : false}
                               >
                                 <Plus className="w-3 h-3" />
                               </Button>
                             </div>
                           </div>
-                          
+
+                          {/* Stock Warning */}
                           {item.variation?.stockQuantity && item.variation.stockQuantity <= 5 && (
-                            <p className="text-orange-600 text-sm">
+                            <p className="text-orange-600 text-xs sm:text-sm">
                               Only {item.variation.stockQuantity} left in stock
                             </p>
                           )}
@@ -337,71 +386,87 @@ export default function CartPage() {
           </div>
 
           {/* Order Summary */}
-          <div>
-            <Card className="top-8 sticky">
-              <CardContent className="p-6">
-                <h2 className="mb-6 font-semibold text-xl">Order Summary</h2>
-                
-                <div className="space-y-4">
-                  <div className="flex justify-between">
+          <div className="lg:col-span-1">
+            <Card className="lg:top-8 lg:sticky">
+              <CardContent className="p-4 sm:p-6">
+                <h2 className="mb-4 sm:mb-6 font-semibold text-lg sm:text-xl">Order Summary</h2>
+
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="flex justify-between text-sm sm:text-base">
                     <span>Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span>৳{subtotal.toFixed(2)}</span>
                   </div>
-                  
+
                   {savings > 0 && (
-                    <div className="flex justify-between text-green-600">
+                    <div className="flex justify-between text-green-600 text-sm sm:text-base">
                       <span>Savings</span>
-                      <span>-${savings.toFixed(2)}</span>
+                      <span>-৳{savings.toFixed(2)}</span>
                     </div>
                   )}
-                  
-                  <div className="flex justify-between">
+
+                  {/* <div className="flex justify-between text-sm sm:text-base">
                     <span>Shipping</span>
-                    <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
-                  </div>
-                  
-                  <div className="flex justify-between">
+                    <span>{shipping === 0 ? 'Free' : `৳${shipping.toFixed(2)}`}</span>
+                  </div> */}
+
+                  {/* <div className="flex justify-between text-sm sm:text-base">
                     <span>Tax</span>
-                    <span>${tax.toFixed(2)}</span>
-                  </div>
-                  
+                    <span>৳{tax.toFixed(2)}</span>
+                  </div> */}
+
                   <Separator />
-                  
-                  <div className="flex justify-between font-semibold text-lg">
+
+                  <div className="flex justify-between font-semibold text-base sm:text-lg">
                     <span>Total</span>
-                    <span className="golden-text">${total.toFixed(2)}</span>
+                    <span className="golden-text">৳{total.toFixed(2)}</span>
                   </div>
                 </div>
 
-                {shipping > 0 && (
+                {/* Free Shipping Message */}
+                {/* {shipping > 0 && (
                   <div className="bg-blue-50 dark:bg-blue-900/20 mt-4 p-3 rounded-lg">
-                    <p className="text-blue-600 dark:text-blue-400 text-sm">
-                      Add ${(50 - subtotal).toFixed(2)} more for free shipping!
+                    <p className="text-blue-600 dark:text-blue-400 text-xs sm:text-sm">
+                      Add ৳{(50 - subtotal).toFixed(2)} more for free shipping!
                     </p>
                   </div>
-                )}
+                )} */}
 
                 {/* Promo Code */}
-                <div className="space-y-3 mt-6">
-                  <div className="flex gap-2">
+                <div className="space-y-3 mt-4 sm:mt-6">
+                  <div className="flex sm:flex-row flex-col gap-2">
                     <Input
                       placeholder="Promo code"
                       value={promoCode}
                       onChange={(e) => setPromoCode(e.target.value)}
+                      className="flex-1 text-sm"
                     />
-                    <Button variant="outline">Apply</Button>
+                    <Button variant="outline" className="text-sm sm:text-base">
+                      Apply
+                    </Button>
                   </div>
                 </div>
 
                 {/* Checkout Button */}
-                <Button className="mt-6 w-full golden-button" size="lg">
-                  Proceed to Checkout
+                <Button
+                  className="mt-4 sm:mt-6 w-full text-sm sm:text-base golden-button"
+                  size="lg"
+                  onClick={handleProceedToCheckout}
+                  disabled={checkoutLoading || items.length === 0}
+                >
+                  {checkoutLoading ? (
+                    <>
+                      <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+                      Preparing Checkout...
+                    </>
+                  ) : (
+                    'Proceed to Checkout'
+                  )}
                 </Button>
 
                 {/* Security Info */}
-                <div className="mt-4 text-center">
+                <div className="mt-3 sm:mt-4 text-center">
                   <p className="text-muted-foreground text-xs">
-                    Secure checkout with SSL encryption
+                    Cash on delivery option
                   </p>
                 </div>
               </CardContent>

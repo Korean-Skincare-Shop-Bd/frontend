@@ -1,17 +1,14 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { ShoppingBag, Eye, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { getProducts, Product } from '@/lib/api/products';
 import { QuickViewModal } from '../ui/quick-view-modal';
 import { useToast } from '@/hooks/use-toast';
 import { addToEnhancedCart } from '@/lib/api/cart';
+import { ProductsSection } from '../product/ProductSections';
 
 export function TopProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -44,44 +41,46 @@ export function TopProducts() {
 
     fetchProducts();
   }, []);
-  const handleAddToCart = async (product: Product, variationId?: string) => {
-  try {
-    setAddingToCart(product.id);
-    
-    const selectedVariation = variationId 
-      ? product.variations.find(v => v.id === variationId)
-      : product.variations[0];
 
-    if (!selectedVariation) {
+  const handleAddToCart = async (product: Product, variationId?: string) => {
+    try {
+      setAddingToCart(product.id);
+      
+      const selectedVariation = variationId 
+        ? product.variations.find(v => v.id === variationId)
+        : product.variations[0];
+
+      if (!selectedVariation) {
+        toast({
+          title: "Error",
+          description: "No product variation available",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await addToEnhancedCart({
+        productId: product.id,
+        quantity: 1,
+        variantId: selectedVariation.id
+      });
+      window.dispatchEvent(new Event('cartUpdated'));
+
+      toast({
+        title: "Success",
+        description: `${product.name} added to cart`,
+      });
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
       toast({
         title: "Error",
-        description: "No product variation available",
+        description: "Failed to add item to cart",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setAddingToCart(null);
     }
-
-    await addToEnhancedCart('', {
-      productId: product.id,
-      quantity: 1,
-      variationId: selectedVariation.id
-    });
-
-    toast({
-      title: "Success",
-      description: `${product.name} added to cart`,
-    });
-  } catch (error) {
-    console.error('Failed to add to cart:', error);
-    toast({
-      title: "Error",
-      description: "Failed to add item to cart",
-      variant: "destructive",
-    });
-  } finally {
-    setAddingToCart(null);
-  }
-};
+  };
 
   // Helper function to get the main image
   const getMainImage = (product: Product): string => {
@@ -95,8 +94,8 @@ export function TopProducts() {
 
     const variation = product.variations[0]; // Get first variation
     return {
-      price: variation.salePrice || variation.price,
-      originalPrice: variation.salePrice ? variation.price : null
+      price: Number(variation.salePrice) || Number(variation.price),
+      originalPrice: variation.salePrice ? Number(variation.price) : null
     };
   };
 
@@ -110,7 +109,7 @@ export function TopProducts() {
 
   // Helper function to check if product is on sale
   const isOnSale = (product: Product): boolean => {
-    return product.variations.some(variation => variation.salePrice && variation.salePrice < variation.price);
+    return product.variations.some(variation => variation.salePrice && Number(variation.salePrice) < Number(variation.price));
   };
 
   const handleQuickView = (product: Product) => {
@@ -173,137 +172,18 @@ export function TopProducts() {
             </p>
           </div>
 
-          <div className="gap-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-            {products.slice(0, 4).map((product, index) => {
-              const { price, originalPrice } = getProductPrice(product);
-              const mainImageUrl = getMainImage(product);
-              const isNew = isNewProduct(product.createdAt);
-              const onSale = isOnSale(product);
-
-              return (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                  onMouseEnter={() => setHoveredProduct(product.id)}
-                  onMouseLeave={() => setHoveredProduct(null)}
-                  className="group"
-                >
-                  <Card className="shadow-lg hover:shadow-xl border-0 overflow-hidden group-hover:scale-105 transition-all duration-300">
-                    <div className="relative aspect-square overflow-hidden">
-                      <Link href={`/products/${product.id}`}>
-                        <Image
-                          src={mainImageUrl}
-                          alt={product.name}
-                          fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = '/placeholder-product.png';
-                          }}
-                        />
-                      </Link>
-
-                      {/* Badges */}
-                      <div className="top-2 left-2 absolute flex flex-col gap-1">
-                        {isNew && (
-                          <Badge className="bg-primary text-white">New</Badge>
-                        )}
-                        {product.tags.includes('HOT') && (
-                          <Badge className="bg-red-500 text-white">Hot</Badge>
-                        )}
-                        {product.tags.includes('BESTSELLER') && (
-                          <Badge className="bg-red-500 text-white">Bestseller</Badge>
-                        )}
-                        {onSale && originalPrice && (
-                          <Badge variant="destructive">
-                            -{Math.round((1 - price / originalPrice) * 100)}%
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className={`absolute top-2 right-2 transition-all duration-300 ${hoveredProduct === product.id ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'
-                        }`}>
-                        <Button
-                          size="icon"
-                          variant="secondary"
-                          className="bg-gray-800 hover:bg-black"
-                          onClick={() => handleQuickView(product)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </div>
-
-                      {/* Quick Add to Cart */}
-                      <div className={`absolute bottom-2 left-2 right-2 transition-all duration-300 ${hoveredProduct === product.id ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
-                        }`}>
-                        <Button
-                          className="w-full golden-button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleAddToCart(product);
-                          }}
-                          disabled={addingToCart === product.id}
-                        >
-                          {addingToCart === product.id ? (
-                            <>
-                              <Loader2 className="mr-2 w-4 h-4 animate-spin" />
-                              Adding...
-                            </>
-                          ) : (
-                            <>
-                              <ShoppingBag className="mr-2 w-4 h-4" />
-                              Add to Cart
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-
-                    <CardContent className="p-4">
-                      <div className="space-y-2">
-                        <p className="text-muted-foreground text-sm">{product.brand?.name}</p>
-                        <h3 className="font-semibold line-clamp-2">
-                          <Link href={`/products/${product.id}`} className="hover:text-primary transition-colors">
-                            {product.name}
-                          </Link>
-                        </h3>
-
-                        {/* Category */}
-                        <p className="text-muted-foreground text-xs">
-                          {product.category?.name}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-lg golden-text">
-                            ৳{price}
-                          </span>
-                          {originalPrice && originalPrice > price && (
-                            <span className="text-muted-foreground text-sm line-through">
-                              ৳{originalPrice}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Stock Status */}
-                        {product.variations.length > 0 && (
-                          <div className="text-xs">
-                            {product.variations[0].stockQuantity > 0 ? (
-                              <span className="text-green-600">In Stock</span>
-                            ) : (
-                              <span className="text-red-600">Out of Stock</span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
+          <ProductsSection
+            products={products.slice(0, 4)}
+            hoveredProduct={hoveredProduct}
+            setHoveredProduct={setHoveredProduct}
+            handleAddToCart={handleAddToCart}
+            addingToCart={addingToCart}
+            handleQuickView={handleQuickView}
+            getProductPrice={getProductPrice}
+            getMainImage={getMainImage}
+            isNewProduct={isNewProduct}
+            isOnSale={isOnSale}
+          />
 
           <div className="mt-12 text-center">
             <Button variant="outline" size="lg" asChild>

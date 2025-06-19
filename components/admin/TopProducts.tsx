@@ -17,7 +17,7 @@ export function TopProducts() {
       try {
         setLoading(true);
         const response = await getProducts({page: 1, limit:5});
-        setProducts(response.data.slice(0, 3)); // Get top 3 products
+        setProducts(response.products.slice(0, 3)); // Get top 3 products
       } catch (error) {
         console.error('Error fetching products:', error);
       } finally {
@@ -82,7 +82,7 @@ export function TopProducts() {
               </div>
               <div className="text-right">
                 <p className="font-medium">
-                  ${Number(product.variations?.[0]?.price ?? 0).toFixed(2)}
+                  ৳{Number(product.variations?.[0]?.price ?? 0).toFixed(2)}
                 </p>
                 <p className="text-muted-foreground text-sm">#{index + 1}</p>
               </div>

@@ -109,3 +109,19 @@ export const deleteBanner = async (token: string, id: string): Promise<void> => 
     throw new Error('Failed to delete banner');
   }
 };
+export const getActiveBanners = async (): Promise<Banner[]> => {
+    const response = await fetch(`${API_BASE_URL}/banners/active`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Failed to fetch active banners');
+    }
+
+    const data = await response.json();
+    return data.banners;
+};

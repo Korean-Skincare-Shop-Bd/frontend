@@ -202,11 +202,11 @@ export default function ProductDetails() {
                             {variation.name || 'Default Variation'}
                           </div>
                         </TableCell>
-                        <TableCell>${variation.price}</TableCell>
+                        <TableCell>৳{variation.price}</TableCell>
                         <TableCell>
                           {variation.salePrice ? (
                             <span className="text-green-600">
-                              ${variation.salePrice}
+                              ৳{variation.salePrice}
                             </span>
                           ) : (
                             '-'
@@ -293,8 +293,8 @@ export default function ProductDetails() {
                   <div>
                     <p className="font-medium text-sm">Price Range</p>
                     <p className="text-muted-foreground text-sm">
-                      ${Math.min(...product.variations.map(v => v.price)).toFixed(2)} - 
-                      ${Math.max(...product.variations.map(v => v.price)).toFixed(2)}
+                      ৳{Math.min(...product.variations.map(v => v.price)).toFixed(2)} - 
+                      ৳{Math.max(...product.variations.map(v => v.price)).toFixed(2)}
                     </p>
                   </div>
                   

@@ -7,43 +7,91 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Star, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { getActiveBanners, type Banner } from '@/lib/api/banners';
 
-const banners = [
+// Fallback banners in case API fails or no active banners
+const fallbackBanners = [
   {
-    id: 1,
+    id: 'fallback-1',
     title: "Discover Your Natural Glow",
     subtitle: "Premium skincare essentials for radiant skin",
-    image: "https://images.pexels.com/photos/3762879/pexels-photo-3762879.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    imageUrl: "https://images.pexels.com/photos/3762879/pexels-photo-3762879.jpeg?auto=compress&cs=tinysrgb&w=1200",
     cta: "Shop Skincare",
-    href: "/products?category=skincare"
+    linkUrl: "/products?category=skincare"
   },
   {
-    id: 2,
+    id: 'fallback-2',
     title: "Luxury Makeup Collection",
     subtitle: "Professional quality cosmetics for every occasion",
-    image: "https://images.pexels.com/photos/2113994/pexels-photo-2113994.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    imageUrl: "https://images.pexels.com/photos/2113994/pexels-photo-2113994.jpeg?auto=compress&cs=tinysrgb&w=1200",
     cta: "Explore Makeup",
-    href: "/products?category=makeup"
+    linkUrl: "/products?category=makeup"
   },
   {
-    id: 3,
+    id: 'fallback-3',
     title: "Signature Fragrances",
     subtitle: "Captivating scents that define your presence",
-    image: "https://images.pexels.com/photos/1961795/pexels-photo-1961795.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    imageUrl: "https://images.pexels.com/photos/1961795/pexels-photo-1961795.jpeg?auto=compress&cs=tinysrgb&w=1200",
     cta: "Discover Scents",
-    href: "/products?category=fragrances"
+    linkUrl: "/products?category=fragrances"
   }
 ];
 
+interface ProcessedBanner {
+  id: string;
+  imageUrl: string;
+  cta: string;
+  linkUrl: string;
+}
+
 export function HeroSection() {
+  const [banners, setBanners] = useState<ProcessedBanner[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % banners.length);
-    }, 5000);
-    return () => clearInterval(timer);
+    const fetchBanners = async () => {
+      try {
+        const activeBanners = await getActiveBanners();
+        console.log(activeBanners);
+        
+        if (activeBanners.length > 0) {
+          console.log(1)
+          // Process API banners - add default title, subtitle, and CTA if not provided
+          const processedBanners: ProcessedBanner[] = activeBanners.map((banner, index) => ({
+            id: banner.id,
+            // title: `Discover Our Latest Collection`, // Default title
+            // subtitle: `Premium beauty products that enhance your natural glow`, // Default subtitle
+            imageUrl: banner.imageUrl,
+            cta: "Shop Now", // Default CTA
+            linkUrl: banner.linkUrl || "/products" // Default link
+          }));
+          
+          setBanners(processedBanners);
+        } else {
+          // Use fallback banners if no active banners
+          setBanners(fallbackBanners);
+        }
+      } catch (error) {
+        console.error('Failed to fetch active banners:', error);
+        // Use fallback banners on error
+        setBanners(fallbackBanners);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBanners();
   }, []);
+
+  useEffect(() => {
+    if (banners.length > 0) {
+      const timer = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % banners.length);
+      }, 5000);
+      return () => clearInterval(timer);
+    }
+  }, [banners.length]);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % banners.length);
@@ -52,6 +100,43 @@ export function HeroSection() {
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
   };
+
+  if (loading) {
+    return (
+      <section className="relative bg-gray-200 dark:bg-gray-800 h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden animate-pulse">
+        <div className="absolute inset-0 flex justify-center items-center">
+          <div className="text-center">
+            <div className="bg-gray-300 dark:bg-gray-700 mx-auto mb-4 rounded w-48 h-8"></div>
+            <div className="bg-gray-300 dark:bg-gray-700 mx-auto mb-8 rounded w-64 h-6"></div>
+            <div className="bg-gray-300 dark:bg-gray-700 mx-auto rounded w-32 h-12"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (banners.length === 0) {
+    return (
+      <section className="relative bg-gradient-to-br from-primary-100 dark:from-gray-800 to-primary-200 dark:to-gray-900 h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden">
+        <div className="absolute inset-0 flex justify-center items-center">
+          <div className="mx-auto px-4 text-center container">
+            <h1 className="mb-4 font-bold text-4xl md:text-6xl lg:text-7xl leading-tight golden-text">
+              Welcome to Golden Beauty
+            </h1>
+            <p className="mb-8 text-muted-foreground text-lg md:text-xl lg:text-2xl">
+              Discover premium beauty products for your natural glow
+            </p>
+            <Button asChild size="lg" className="px-8 py-6 h-auto text-lg golden-button">
+              <Link href="/products">
+                <ShoppingBag className="mr-2 w-5 h-5" />
+                Shop Now
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="relative h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden">
@@ -66,35 +151,30 @@ export function HeroSection() {
         >
           <div className="relative h-full">
             <Image
-              src={banners[currentSlide].image}
-              alt={banners[currentSlide].title}
+              src={banners[currentSlide].imageUrl}
+              alt={banners[currentSlide].cta || "Banner image"}
               fill
               className="object-cover"
               priority
             />
             <div className="absolute inset-0 bg-black/40" />
             
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="container mx-auto px-4 text-center text-white">
+            <div className="absolute inset-0 flex justify-center items-center">
+              <div className="mx-auto px-4 text-white text-center container">
                 <motion.div
                   initial={{ y: 30, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3, duration: 0.8 }}
-                  className="max-w-4xl mx-auto"
+                  className="mx-auto max-w-4xl"
                 >
-                  <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 leading-tight">
-                    {banners[currentSlide].title}
-                  </h1>
-                  <p className="text-lg md:text-xl lg:text-2xl mb-8 text-gray-200">
-                    {banners[currentSlide].subtitle}
-                  </p>
+
                   <Button 
                     asChild 
                     size="lg" 
-                    className="golden-button text-lg px-8 py-6 h-auto"
+                    className="px-8 py-6 h-auto text-lg golden-button"
                   >
-                    <Link href={banners[currentSlide].href}>
-                      <ShoppingBag className="mr-2 h-5 w-5" />
+                    <Link href={banners[currentSlide].linkUrl}>
+                      <ShoppingBag className="mr-2 w-5 h-5" />
                       {banners[currentSlide].cta}
                     </Link>
                   </Button>
@@ -105,47 +185,53 @@ export function HeroSection() {
         </motion.div>
       </AnimatePresence>
 
-      {/* Navigation Arrows */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-      >
-        <ChevronLeft className="h-6 w-6 text-white" />
-      </button>
-      <button
-        onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-      >
-        <ChevronRight className="h-6 w-6 text-white" />
-      </button>
-
-      {/* Dots Indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex space-x-2">
-        {banners.map((_, index) => (
+      {/* Navigation Arrows - Only show if more than 1 banner */}
+      {banners.length > 1 && (
+        <>
           <button
-            key={index}
-            onClick={() => setCurrentSlide(index)}
-            className={`w-3 h-3 rounded-full transition-colors ${
-              index === currentSlide ? 'bg-primary-400' : 'bg-white/50'
-            }`}
-          />
-        ))}
-      </div>
+            onClick={prevSlide}
+            className="top-1/2 left-4 z-10 absolute bg-white/20 hover:bg-white/30 p-2 rounded-full transition-colors -translate-y-1/2"
+          >
+            <ChevronLeft className="w-6 h-6 text-white" />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="top-1/2 right-4 z-10 absolute bg-white/20 hover:bg-white/30 p-2 rounded-full transition-colors -translate-y-1/2"
+          >
+            <ChevronRight className="w-6 h-6 text-white" />
+          </button>
+        </>
+      )}
+
+      {/* Dots Indicator - Only show if more than 1 banner */}
+      {banners.length > 1 && (
+        <div className="bottom-8 left-1/2 z-10 absolute flex space-x-2 -translate-x-1/2">
+          {banners.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-3 h-3 rounded-full transition-colors ${
+                index === currentSlide ? 'bg-primary-400' : 'bg-white/50'
+              }`}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Floating Elements */}
       <motion.div
         animate={{ y: [0, -10, 0] }}
         transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-20 right-10 hidden lg:block"
+        className="hidden lg:block top-20 right-10 absolute"
       >
-        <Card className="glass-effect border-white/20">
+        <Card className="border-white/20 glass-effect">
           <CardContent className="p-4 text-center">
-            <div className="flex items-center justify-center mb-2">
+            <div className="flex justify-center items-center mb-2">
               {[1, 2, 3, 4, 5].map((star) => (
-                <Star key={star} className="h-4 w-4 fill-primary-400 text-primary-400" />
+                <Star key={star} className="fill-primary-400 w-4 h-4 text-primary-400" />
               ))}
             </div>
-            <p className="text-sm font-medium">5,000+ Happy Customers</p>
+            <p className="font-medium text-sm">5,000+ Happy Customers</p>
           </CardContent>
         </Card>
       </motion.div>
@@ -153,12 +239,12 @@ export function HeroSection() {
       <motion.div
         animate={{ y: [0, 10, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute bottom-32 left-10 hidden lg:block"
+        className="hidden lg:block bottom-32 left-10 absolute"
       >
-        <Card className="glass-effect border-white/20">
+        <Card className="border-white/20 glass-effect">
           <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold golden-text">50+</p>
-            <p className="text-sm font-medium">Premium Brands</p>
+            <p className="font-bold text-2xl golden-text">50+</p>
+            <p className="font-medium text-sm">Premium Brands</p>
           </CardContent>
         </Card>
       </motion.div>

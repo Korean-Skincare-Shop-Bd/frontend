@@ -6,55 +6,128 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Quote } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
-const reviews = [
-  {
-    id: 1,
-    name: 'Sarah Johnson',
-    avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100',
-    rating: 5,
-    comment: 'Absolutely love the Golden Glow Serum! My skin has never looked better. The results are visible within just a few days.',
-    product: 'Golden Glow Serum',
-    date: '2024-01-15'
-  },
-  {
-    id: 2,
-    name: 'Emily Chen',
-    avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100',
-    rating: 5,
-    comment: 'The customer service is exceptional and the product quality is outstanding. I highly recommend Golden Beauty to everyone!',
-    product: 'Radiant Foundation',
-    date: '2024-01-12'
-  },
-  {
-    id: 3,
-    name: 'Maria Rodriguez',
-    avatar: 'https://images.pexels.com/photos/1181519/pexels-photo-1181519.jpeg?auto=compress&cs=tinysrgb&w=100',
-    rating: 5,
-    comment: 'Fast shipping, great packaging, and the products exceeded my expectations. Will definitely order again!',
-    product: 'Luxury Eye Cream',
-    date: '2024-01-10'
-  },
-  {
-    id: 4,
-    name: 'Jessica Taylor',
-    avatar: 'https://images.pexels.com/photos/1680172/pexels-photo-1680172.jpeg?auto=compress&cs=tinysrgb&w=100',
-    rating: 5,
-    comment: 'Amazing quality and the results speak for themselves. My skin feels so much smoother and looks radiant.',
-    product: 'Nourishing Lip Balm',
-    date: '2024-01-08'
-  }
-];
+import { getReviews, getReviewStatistics, type Review, type ReviewsResponse, type ReviewStatistics } from '@/lib/api/review';
 
 export function ReviewsSection() {
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [statistics, setStatistics] = useState<ReviewStatistics | null>(null);
   const [currentReview, setCurrentReview] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentReview((prev) => (prev + 1) % reviews.length);
-    }, 4000);
-    return () => clearInterval(timer);
+    const fetchData = async () => {
+      try {
+        // Fetch both reviews and statistics concurrently
+        const [reviewsResponse, statisticsResponse] = await Promise.all([
+          getReviews({
+            // rating: 4, // Only get 4+ star reviews for the showcase
+            limit: 6,
+            sortBy: 'createdAt',
+            sortOrder: 'desc',
+            hasComment: true // Only reviews with comments
+          }),
+          getReviewStatistics()
+        ]);
+
+        setReviews(reviewsResponse.reviews);
+        setStatistics(statisticsResponse);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        // Fallback to empty state or keep loading state
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
+
+  useEffect(() => {
+    if (reviews.length > 0) {
+      const timer = setInterval(() => {
+        setCurrentReview((prev) => (prev + 1) % reviews.length);
+      }, 4000);
+      return () => clearInterval(timer);
+    }
+  }, [reviews.length]);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  const renderStars = (rating: number) => {
+    return [1, 2, 3, 4, 5].map((star) => (
+      <Star
+        key={star}
+        className={`w-5 h-5 ${
+          star <= rating 
+            ? 'fill-primary text-primary' 
+            : 'text-gray-300'
+        }`}
+      />
+    ));
+  };
+
+  const calculateSatisfactionRate = () => {
+    if (!statistics) return 0;
+    const { ratingDistribution, totalReviews } = statistics;
+    const positiveReviews = (ratingDistribution['4'] || 0) + (ratingDistribution['5'] || 0);
+    return totalReviews > 0 ? Math.round((positiveReviews / totalReviews) * 100) : 0;
+  };
+
+  if (loading) {
+    return (
+      <section className="bg-gradient-to-br from-primary-50 dark:from-gray-800 to-orange-50 dark:to-gray-900 py-16">
+        <div className="mx-auto px-4 container">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 font-bold text-3xl md:text-4xl golden-text">
+              What Our Customers Say
+            </h2>
+            <p className="mx-auto max-w-2xl text-muted-foreground text-lg">
+              Loading customer reviews...
+            </p>
+          </div>
+          <div className="mx-auto max-w-4xl">
+            <Card className="border-primary-200 h-80 md:h-64 animate-pulse glass-effect">
+              <CardContent className="flex flex-col justify-center p-8 h-full">
+                <div className="bg-gray-200 dark:bg-gray-700 mx-auto mb-4 rounded w-3/4 h-4"></div>
+                <div className="bg-gray-200 dark:bg-gray-700 mx-auto mb-8 rounded w-1/2 h-4"></div>
+                <div className="flex justify-center items-center gap-4">
+                  <div className="bg-gray-200 dark:bg-gray-700 rounded-full w-12 h-12"></div>
+                  <div className="bg-gray-200 dark:bg-gray-700 rounded w-32 h-4"></div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (reviews.length === 0) {
+    return (
+      <section className="bg-gradient-to-br from-primary-50 dark:from-gray-800 to-orange-50 dark:to-gray-900 py-16">
+        <div className="mx-auto px-4 container">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 font-bold text-3xl md:text-4xl golden-text">
+              What Our Customers Say
+            </h2>
+            <p className="mx-auto max-w-2xl text-muted-foreground text-lg">
+              Be the first to share your experience with our products!
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="bg-gradient-to-br from-primary-50 dark:from-gray-800 to-orange-50 dark:to-gray-900 py-16">
@@ -91,28 +164,25 @@ export function ReviewsSection() {
                     <div className="flex md:flex-row flex-col justify-center items-center gap-4">
                       <div className="flex items-center gap-4">
                         <Avatar className="w-12 h-12">
-                          <AvatarImage src={reviews[currentReview].avatar} />
-                          <AvatarFallback>
-                            {reviews[currentReview].name.split(' ').map(n => n[0]).join('')}
+                          <AvatarFallback className="bg-primary-100 text-primary-700">
+                            {getInitials(reviews[currentReview].customerName)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="md:text-left text-center">
                           <p className="font-semibold text-gray-900 dark:text-white">
-                            {reviews[currentReview].name}
+                            {reviews[currentReview].customerName}
                           </p>
                           <p className="text-muted-foreground text-sm">
-                            {reviews[currentReview].product}
+                            {reviews[currentReview].productName}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            {formatDate(reviews[currentReview].createdAt)}
                           </p>
                         </div>
                       </div>
                       
                       <div className="flex items-center gap-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star
-                            key={star}
-                            className="fill-primary w-5 h-5 text-primary"
-                          />
-                        ))}
+                        {renderStars(reviews[currentReview].rating)}
                       </div>
                     </div>
                   </CardContent>
@@ -136,32 +206,40 @@ export function ReviewsSection() {
         </div>
 
         {/* Statistics */}
-        <div className="gap-8 grid grid-cols-1 md:grid-cols-3 mt-16 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <div className="mb-2 font-bold text-3xl md:text-4xl golden-text">5,000+</div>
-            <p className="text-muted-foreground">Happy Customers</p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <div className="mb-2 font-bold text-3xl md:text-4xl golden-text">4.9</div>
-            <p className="text-muted-foreground">Average Rating</p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-          >
-            <div className="mb-2 font-bold text-3xl md:text-4xl golden-text">98%</div>
-            <p className="text-muted-foreground">Satisfaction Rate</p>
-          </motion.div>
-        </div>
+        {statistics && (
+          <div className="gap-8 grid grid-cols-1 md:grid-cols-3 mt-16 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <div className="mb-2 font-bold text-3xl md:text-4xl golden-text">
+                {statistics.totalReviews.toLocaleString()}+
+              </div>
+              <p className="text-muted-foreground">Happy Customers</p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <div className="mb-2 font-bold text-3xl md:text-4xl golden-text">
+                {Math.round(statistics.averageRating * 10) / 10}
+              </div>
+              <p className="text-muted-foreground">Average Rating</p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              <div className="mb-2 font-bold text-3xl md:text-4xl golden-text">
+                {calculateSatisfactionRate()}%
+              </div>
+              <p className="text-muted-foreground">Satisfaction Rate</p>
+            </motion.div>
+          </div>
+        )}
       </div>
     </section>
   );

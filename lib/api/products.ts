@@ -25,6 +25,17 @@ export interface Product {
   };
   variations: ProductVariation[];
   images: ProductImage[];
+  maxPrice:number;
+  minPrice:number;
+  reviews:ProductReview[];
+}
+export interface ProductReview{
+  id:string
+  email:string
+  customerName:string,
+  rating:number
+  comment:string
+  createdAt:string
 }
 
 export interface ProductVariation {
@@ -76,14 +87,12 @@ export interface CreateProductRequest {
 export interface ProductsResponse {
   data: any;
   products: Product[];
-  pagination: {
     page: number;
     limit: number;
     total: number;
     totalPages: number;
     hasNext: boolean;
     hasPrev: boolean;
-  };
 }
 
 export interface GetProductsParams {

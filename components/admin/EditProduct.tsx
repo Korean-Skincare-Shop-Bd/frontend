@@ -84,7 +84,7 @@ export default function EditProduct() {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      const productData = await getProduct(token!, id);
+      const productData = await getProduct(id);
       setProduct(productData);
       setFormData({
         name: productData.name,
@@ -396,9 +396,9 @@ export default function EditProduct() {
                     {variations.map((variation) => (
                       <TableRow key={variation.id}>
                         <TableCell>{variation.name || 'Unnamed'}</TableCell>
-                        <TableCell>${variation.price}</TableCell>
+                        <TableCell>৳{variation.price}</TableCell>
                         <TableCell>
-                          {variation.salePrice ? `$${variation.salePrice}` : '-'}
+                          {variation.salePrice ? `৳${variation.salePrice}` : '-'}
                         </TableCell>
                         <TableCell>{variation.stockQuantity}</TableCell>
                         <TableCell>{variation.volume || '-'}</TableCell>

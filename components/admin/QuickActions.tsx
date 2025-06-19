@@ -51,12 +51,12 @@ export function QuickActions() {
       onClick: () => router.push('/admin/orders'),
       variant: 'ghost' as const,
     },
-    {
-      label: 'Customer Management',
-      icon: Users,
-      onClick: () => router.push('/admin/customers'),
-      variant: 'ghost' as const,
-    },
+    // {
+    //   label: 'Customer Management',
+    //   icon: Users,
+    //   onClick: () => router.push('/admin/customers'),
+    //   variant: 'ghost' as const,
+    // },
     {
       label: 'Banners',
       icon: Image,
