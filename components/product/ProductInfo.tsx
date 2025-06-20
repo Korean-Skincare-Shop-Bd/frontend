@@ -213,7 +213,12 @@ export function ProductInfo({
             )}
           </div>
         </div>
-
+        {product?.expiryDate && (
+          <div className="flex items-center gap-2 text-gray-600 text-base">
+            <span className="font-semibold">Expiry Date:</span>
+            <span>{new Date(product.expiryDate).toLocaleDateString()}</span>
+          </div>
+        )}
         <p className="text-gray-600 text-lg leading-relaxed">{description}</p>
       </div>
 
@@ -386,8 +391,7 @@ export function ProductInfo({
             <div className="inline-flex justify-center items-center bg-emerald-100 dark:bg-emerald-900 mb-3 rounded-full w-12 h-12">
               <Truck className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h4 className="mb-1 font-semibold text-gray-900 dark:text-gray-100">Free Shipping</h4>
-            <p className="text-gray-600 dark:text-gray-300 text-sm">On orders over ৳1000</p>
+            <h4 className="mb-1 font-semibold text-gray-900 dark:text-gray-100">Safe Shipping</h4>
           </div>
           <div className="bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 rounded-lg text-center transition-colors">
             <div className="inline-flex justify-center items-center bg-blue-100 dark:bg-blue-900 mb-3 rounded-full w-12 h-12">
@@ -401,7 +405,7 @@ export function ProductInfo({
               <RotateCcw className="w-6 h-6 text-orange-600 dark:text-orange-400" />
             </div>
             <h4 className="mb-1 font-semibold text-gray-900 dark:text-gray-100">Easy Returns</h4>
-            <p className="text-gray-600 dark:text-gray-300 text-sm">30-day return policy</p>
+            <p className="text-gray-600 dark:text-gray-300 text-sm">Easy return policy</p>
           </div>
         </div>
       </div>

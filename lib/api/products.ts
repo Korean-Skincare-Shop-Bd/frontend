@@ -102,6 +102,7 @@ export interface GetProductsParams {
   brand?: string;
   minPrice?: number;
   maxPrice?: number;
+  search?:string;
   sortBy?: 'price' | 'name' | 'createdAt';
   sortOrder?: 'asc' | 'desc';
 }
@@ -114,6 +115,7 @@ export const getProducts = async (params: GetProductsParams = {}): Promise<Produ
     brand,
     minPrice,
     maxPrice,
+    search,
     sortBy = 'createdAt',
     sortOrder = 'desc'
   } = params;
@@ -129,6 +131,8 @@ export const getProducts = async (params: GetProductsParams = {}): Promise<Produ
   if (brand) searchParams.append('brand', brand);
   if (minPrice !== undefined) searchParams.append('minPrice', minPrice.toString());
   if (maxPrice !== undefined) searchParams.append('maxPrice', maxPrice.toString());
+  if (search!== undefined) searchParams.append('search', search);
+  searchParams.append('includeVariations', 'true')
 
   const response = await fetch(`${API_BASE_URL}/products/public?${searchParams.toString()}`);
 

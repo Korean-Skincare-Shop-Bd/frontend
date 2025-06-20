@@ -15,7 +15,8 @@ import {
   Crown,
   Tag,
   Image,
-  FolderOpen
+  FolderOpen,
+  Wrench
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -34,6 +35,7 @@ const navigation = [
   // { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Banners', href: '/admin/banners', icon: Image },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
+  { name: 'Manual Orders', href: '/admin/manual-order', icon: Wrench} 
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {
@@ -44,7 +46,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const handleLogout = () => {
     logout();
-    router.push('/admin/login');
   };
 
   return (

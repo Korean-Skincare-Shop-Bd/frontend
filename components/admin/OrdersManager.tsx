@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
-
 import {
   Table,
   TableBody,
@@ -12,7 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-
 
 import { useOrders } from '@/hooks/use-orders';
 import {
@@ -26,20 +24,8 @@ import { OrderDetailDialog } from '../Order/OrderDetailDialog';
 import { OrderTableRow } from '../Order/OrderTableRows';
 import { MobileOrderCard } from '../Order/MobileOrderCard';
 
-// Constants
-
-// Utility functions
-
-
-
-
-
-
-
-
 // Main component
 export function OrdersManager() {
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderDetailOpen, setOrderDetailOpen] = useState(false);
   const { token } = useAdmin();
@@ -49,26 +35,69 @@ export function OrdersManager() {
     loading,
     currentPage,
     setCurrentPage,
-    pagination, // Changed from totalOrders
-    statusFilter,
-    setStatusFilter,
+    pagination,
+    orderStatusFilter,
+    setOrderStatusFilter,
+    paymentStatusFilter,
+    setPaymentStatusFilter,
+    paymentMethodFilter,
+    setPaymentMethodFilter,
+    searchFilter,
+    setSearchFilter,
+    dateFromFilter,
+    setDateFromFilter,
+    dateToFilter,
+    setDateToFilter,
     fetchOrders,
     updateOrderStatus,
-    updatePaymentStatus
+    updatePaymentStatus,
+    applyFilters
   } = useOrders(token);
 
+  // Initial load and when filters change (except search - search is debounced)
   useEffect(() => {
-    console.log(statusFilter)
-    fetchOrders(currentPage, statusFilter === 'all' ? undefined : statusFilter);
-  }, [token, currentPage, statusFilter]);
+    fetchOrders(
+      currentPage,
+      orderStatusFilter === 'all' ? undefined : orderStatusFilter,
+      paymentStatusFilter === 'all' ? undefined : paymentStatusFilter,
+      paymentMethodFilter === 'all' ? undefined : paymentMethodFilter,
+      searchFilter || undefined,
+      dateFromFilter || undefined,
+      dateToFilter || undefined
+    );
+  }, [
+    token, 
+    currentPage, 
+    orderStatusFilter, 
+    paymentStatusFilter, 
+    paymentMethodFilter,
+    dateFromFilter,
+    dateToFilter
+  ]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (currentPage === 1) {
+        // If already on page 1, just apply filters
+        applyFilters();
+      } else {
+        // If not on page 1, reset to page 1 and apply filters
+        setCurrentPage(1);
+        // The above useEffect will handle the API call
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchFilter]);
 
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
     setOrderDetailOpen(true);
   };
 
-  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
-    const success = await updateOrderStatus(orderId, newStatus);
+  const handleStatusUpdate = async (orderId: string, newStatus: string, notes?: string) => {
+    const success = await updateOrderStatus(orderId, newStatus, notes);
     if (success && selectedOrder?.id === orderId) {
       // Update the selected order in the dialog
       const updatedOrder = orders.find(o => o.id === orderId);
@@ -78,8 +107,8 @@ export function OrdersManager() {
     }
   };
 
-  const handlePaymentStatusUpdate = async (orderId: string, paymentStatus: string) => {
-    const success = await updatePaymentStatus(orderId, paymentStatus);
+  const handlePaymentStatusUpdate = async (orderId: string, paymentStatus: string, notes?: string) => {
+    const success = await updatePaymentStatus(orderId, paymentStatus, notes);
     if (success && selectedOrder?.id === orderId) {
       // Update the selected order in the dialog
       const updatedOrder = orders.find(o => o.id === orderId);
@@ -89,14 +118,10 @@ export function OrdersManager() {
     }
   };
 
-  const filteredOrders = Array.isArray(orders) ? orders.filter(order => {
-    const matchesSearch =
-      order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.email.toLowerCase().includes(searchQuery.toLowerCase()); // Changed from customerEmail
-
-    return matchesSearch;
-  }) : [];
+  // Handle page changes
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
 
   if (loading) {
     return <OrdersLoading />;
@@ -115,27 +140,36 @@ export function OrdersManager() {
 
       <Card>
         <OrderFilters
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          totalOrders={pagination.total} // Use pagination.total
+          searchQuery={searchFilter}
+          setSearchQuery={setSearchFilter}
+          orderStatusFilter={orderStatusFilter}
+          setOrderStatusFilter={setOrderStatusFilter}
+          paymentStatusFilter={paymentStatusFilter}
+          setPaymentStatusFilter={setPaymentStatusFilter}
+          paymentMethodFilter={paymentMethodFilter}
+          setPaymentMethodFilter={setPaymentMethodFilter}
+          dateFromFilter={dateFromFilter}
+          setDateFromFilter={setDateFromFilter}
+          dateToFilter={dateToFilter}
+          setDateToFilter={setDateToFilter}
+          totalOrders={pagination.total}
+          onApplyFilters={applyFilters}
         />
 
         <CardContent className="p-0 sm:p-6">
           {/* Mobile Card View */}
           <div className="lg:hidden block">
-            {filteredOrders.map((order) => (
+            {orders.map((order) => (
               <MobileOrderCard
                 key={order.id}
                 order={order}
                 onViewOrder={handleViewOrder}
                 onUpdateStatus={handleStatusUpdate}
-                onUpdatePaymentStatus={handlePaymentStatusUpdate} // Add this
+                onUpdatePaymentStatus={handlePaymentStatusUpdate}
               />
             ))}
 
-            {filteredOrders.length === 0 && <EmptyOrdersState />}
+            {orders.length === 0 && <EmptyOrdersState />}
           </div>
 
           {/* Desktop Table View */}
@@ -152,19 +186,19 @@ export function OrdersManager() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrders.map((order) => (
+                {orders.map((order) => (
                   <OrderTableRow
                     key={order.id}
                     order={order}
                     onViewOrder={handleViewOrder}
                     onUpdateStatus={handleStatusUpdate}
-                    onUpdatePaymentStatus={handlePaymentStatusUpdate} // Add this
+                    onUpdatePaymentStatus={handlePaymentStatusUpdate}
                   />
                 ))}
               </TableBody>
             </Table>
 
-            {filteredOrders.length === 0 && <EmptyOrdersState />}
+            {orders.length === 0 && <EmptyOrdersState />}
           </div>
         </CardContent>
       </Card>
@@ -175,29 +209,77 @@ export function OrdersManager() {
         open={orderDetailOpen}
         onOpenChange={setOrderDetailOpen}
         onUpdateStatus={handleStatusUpdate}
-        onUpdatePaymentStatus={handlePaymentStatusUpdate} // Add this
+        onUpdatePaymentStatus={handlePaymentStatusUpdate}
       />
 
-      {/* Pagination could be added here */}
-      {pagination.total > 20 && (
-        <div className="flex justify-center mt-6">
-          <div className="flex gap-2">
+      {/* Enhanced Pagination */}
+      {pagination.totalPages > 1 && (
+        <div className="flex sm:flex-row flex-col justify-between items-center gap-4 mt-6">
+          <div className="text-muted-foreground text-sm">
+            Showing {((currentPage - 1) * pagination.limit) + 1} to {Math.min(currentPage * pagination.limit, pagination.total)} of {pagination.total} orders
+          </div>
+          
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
-              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              size="sm"
+              onClick={() => handlePageChange(1)}
+              disabled={!pagination.hasPrev}
+            >
+              First
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
               disabled={!pagination.hasPrev}
             >
               Previous
             </Button>
-            <span className="flex items-center px-4">
-              Page {pagination.page} of {pagination.totalPages}
-            </span>
+            
+            <div className="flex items-center gap-1">
+              {/* Show page numbers around current page */}
+              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                let pageNum=1;
+                if (pagination.totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= pagination.totalPages - 2) {
+                  pageNum = pagination.totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(pageNum)}
+                    className="p-0 w-8 h-8"
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            
             <Button
               variant="outline"
-              onClick={() => setCurrentPage(currentPage + 1)}
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
               disabled={!pagination.hasNext}
             >
               Next
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(pagination.totalPages)}
+              disabled={!pagination.hasNext}
+            >
+              Last
             </Button>
           </div>
         </div>

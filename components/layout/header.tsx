@@ -239,12 +239,16 @@ export function Header() {
             <motion.div
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.6 }}
-              className="flex justify-center items-center bg-golden-gradient rounded-full w-8 lg:w-10 h-8 lg:h-10"
+              className="flex justify-center items-center bg-white rounded-full w-12 h-12"
             >
-              <Crown className="w-4 lg:w-5 h-4 lg:h-5 text-white" />
+              <img
+                src="/logo.png"
+                alt="Korean Skincare Shop BD Logo"
+                className="pt-1 w-12 h-8"
+              />
             </motion.div>
             <span className="hidden lg:inline-block font-bold text-xl lg:text-2xl golden-text">
-              Golden Beauty
+              KOREAN SKINCARE SHOP BD
             </span>
           </Link>
 

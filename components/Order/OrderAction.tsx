@@ -6,7 +6,6 @@ import { Button } from "../ui/button";
 const ORDER_STATUSES = {
   PENDING: 'PENDING',
   CONFIRMED: 'CONFIRMED',
-  PROCESSING: 'PROCESSING',
   SHIPPED: 'SHIPPED',
   DELIVERED: 'DELIVERED',
   CANCELLED: 'CANCELLED'
@@ -43,10 +42,7 @@ export const OrderActions = ({ order, onViewOrder, onUpdateStatus, onUpdatePayme
         <CheckCircle className="mr-2 w-4 h-4" />
         Mark Confirmed
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={() => onUpdateStatus(order.id, ORDER_STATUSES.PROCESSING)}>
-        <Package className="mr-2 w-4 h-4" />
-        Mark Processing
-      </DropdownMenuItem>
+      
       <DropdownMenuItem onClick={() => onUpdateStatus(order.id, ORDER_STATUSES.SHIPPED)}>
         <Truck className="mr-2 w-4 h-4" />
         Mark Shipped

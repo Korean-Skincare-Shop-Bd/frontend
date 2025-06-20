@@ -121,7 +121,7 @@ export function HeroSection() {
         <div className="absolute inset-0 flex justify-center items-center">
           <div className="mx-auto px-4 text-center container">
             <h1 className="mb-4 font-bold text-4xl md:text-6xl lg:text-7xl leading-tight golden-text">
-              Welcome to Golden Beauty
+              Welcome to KOREAN SKINCARE SHOP BD
             </h1>
             <p className="mb-8 text-muted-foreground text-lg md:text-xl lg:text-2xl">
               Discover premium beauty products for your natural glow
@@ -218,36 +218,9 @@ export function HeroSection() {
         </div>
       )}
 
-      {/* Floating Elements */}
-      <motion.div
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        className="hidden lg:block top-20 right-10 absolute"
-      >
-        <Card className="border-white/20 glass-effect">
-          <CardContent className="p-4 text-center">
-            <div className="flex justify-center items-center mb-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star key={star} className="fill-primary-400 w-4 h-4 text-primary-400" />
-              ))}
-            </div>
-            <p className="font-medium text-sm">5,000+ Happy Customers</p>
-          </CardContent>
-        </Card>
-      </motion.div>
+      
 
-      <motion.div
-        animate={{ y: [0, 10, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="hidden lg:block bottom-32 left-10 absolute"
-      >
-        <Card className="border-white/20 glass-effect">
-          <CardContent className="p-4 text-center">
-            <p className="font-bold text-2xl golden-text">50+</p>
-            <p className="font-medium text-sm">Premium Brands</p>
-          </CardContent>
-        </Card>
-      </motion.div>
+      
     </section>
   );
 }

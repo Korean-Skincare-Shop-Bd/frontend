@@ -1,12 +1,11 @@
 import { Order } from "@/lib/api/orders";
 import { TableCell, TableRow } from "../ui/table";
-import { CheckCircle, Package, Truck, XCircle } from "lucide-react";
+import { CheckCircle, CheckCircle2, Clock, Package, RotateCcw, Truck, XCircle } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { OrderActions } from "./OrderAction";
 const ORDER_STATUSES = {
   PENDING: 'PENDING',
   CONFIRMED: 'CONFIRMED',
-  PROCESSING: 'PROCESSING',
   SHIPPED: 'SHIPPED',
   DELIVERED: 'DELIVERED',
   CANCELLED: 'CANCELLED'
@@ -31,7 +30,6 @@ const getPaymentStatusColor = (paymentStatus: string) => {
 const getStatusColor = (status: string) => {
   const statusColors = {
     [ORDER_STATUSES.DELIVERED]: 'bg-green-100 text-green-800',
-    [ORDER_STATUSES.PROCESSING]: 'bg-blue-100 text-blue-800',
     [ORDER_STATUSES.SHIPPED]: 'bg-purple-100 text-purple-800',
     [ORDER_STATUSES.PENDING]: 'bg-yellow-100 text-yellow-800',
     [ORDER_STATUSES.CONFIRMED]: 'bg-cyan-100 text-cyan-800',
@@ -45,11 +43,19 @@ const getStatusColor = (status: string) => {
   };
   return statusColors[status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800';
 };
+const getPaymentStatusIcon = (paymentStatus: string) => {
+  const paymentIcons = {
+    [PAYMENT_STATUSES.PAID]: <CheckCircle2 className="w-4 h-4 text-green-600" />,
+    [PAYMENT_STATUSES.PENDING]: <Clock className="w-4 h-4 text-yellow-600" />,
+    [PAYMENT_STATUSES.FAILED]: <XCircle className="w-4 h-4 text-red-600" />,
+    [PAYMENT_STATUSES.REFUNDED]: <RotateCcw className="w-4 h-4 text-orange-600" />,
+  };
+  return paymentIcons[paymentStatus as keyof typeof paymentIcons] || <Clock className="w-4 h-4 text-gray-600" />;
+};
 
 const getStatusIcon = (status: string) => {
   const statusIcons = {
     [ORDER_STATUSES.DELIVERED]: <CheckCircle className="w-4 h-4" />,
-    [ORDER_STATUSES.PROCESSING]: <Package className="w-4 h-4" />,
     [ORDER_STATUSES.SHIPPED]: <Truck className="w-4 h-4" />,
     [ORDER_STATUSES.CANCELLED]: <XCircle className="w-4 h-4" />,
     // Legacy status support
@@ -100,9 +106,12 @@ export const OrderTableRow = ({ order, onViewOrder, onUpdateStatus, onUpdatePaym
             {order.orderStatus}
           </Badge>
         </div>
+        <div className="flex items-center gap-2">
+          {getPaymentStatusIcon(order.paymentStatus)}
         <Badge variant="outline" className={`text-xs w-fit ${getPaymentStatusColor(order.paymentStatus)}`}>
           {order.paymentStatus}
         </Badge>
+        </div>
       </div>
     </TableCell>
     <TableCell>

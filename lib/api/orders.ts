@@ -229,16 +229,43 @@ export interface OrdersListResponse {
 export const getAllOrders = async (
   token: string, 
   page = 1, 
-  limit = 10, 
-  status?: string
+  limit = 20, 
+  orderStatus?: string,
+  paymentStatus?: string,
+  paymentMethod?: string,
+  search?: string,
+  dateFrom?: string,
+  dateTo?: string,
+  includeItems = true
 ): Promise<OrdersListResponse> => {
   const params = new URLSearchParams({
     page: page.toString(),
     limit: limit.toString(),
+    includeItems: includeItems.toString(),
   });
   
-  if (status) {
-    params.append('status', status);
+  if (orderStatus) {
+    params.append('orderStatus', orderStatus);
+  }
+  
+  if (paymentStatus) {
+    params.append('paymentStatus', paymentStatus);
+  }
+  
+  if (paymentMethod) {
+    params.append('paymentMethod', paymentMethod);
+  }
+  
+  if (search) {
+    params.append('search', search);
+  }
+  
+  if (dateFrom) {
+    params.append('dateFrom', dateFrom);
+  }
+  
+  if (dateTo) {
+    params.append('dateTo', dateTo);
   }
 
   const response = await fetch(`${API_BASE_URL}/orders?${params}`, {
@@ -319,6 +346,99 @@ export const updateEnhancedOrderPaymentStatus = async (
     }
     
     throw new Error(errorData?.message || 'Failed to update payment status');
+  }
+
+  return response.json();
+};
+// lib/api/orders.ts (add this to your existing file)
+
+export interface CreateManualOrderRequest {
+  customerName: string;
+  email: string;
+  phone: string;
+  shippingAddress: string;
+  billingAddress: string;
+  items: {
+    productVariationId: string;
+    quantity: number;
+    customPrice?: number;
+    customDiscountAmount?: number;
+    customDiscountPercentage?: number;
+    notes?: string;
+  }[];
+  paymentMethod: 'CASH_ON_DELIVERY' | 'BKASH';
+  paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+  orderStatus: 'PENDING' | 'CONFIRMED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'RETURNED';
+  customTotalAmount?: number;
+  customDiscountAmount?: number;
+  customShippingFee?: number;
+  notes?: string;
+  orderSource?: string;
+  referenceNumber?: string;
+  generateInvoice?: boolean;
+  sendEmailNotification?: boolean;
+  skipStockValidation?: boolean;
+  markAsPaid?: boolean;
+}
+
+export interface CreateManualOrderResponse {
+  success: boolean;
+  message: string;
+  data: {
+    order: Order;
+    invoice?: {
+      id: string;
+      url: string;
+    };
+  };
+}
+
+export const createManualOrder = async (
+  token: string,
+  orderData: CreateManualOrderRequest
+): Promise<CreateManualOrderResponse> => {
+  const response = await fetch(`${API_BASE_URL}/orders/enhanced/admin/manual-order`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(orderData),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    throw new Error(errorData?.message || 'Failed to create manual order');
+  }
+
+  return response.json();
+};
+
+// Get product variations for the order form
+export interface ProductVariation {
+  id: string;
+  productName: string;
+  variationName: string;
+  price: number;
+  stock: number;
+  sku: string;
+}
+
+export const getProductVariations = async (
+  token: string,
+  search?: string
+): Promise<{ success: boolean; data: ProductVariation[] }> => {
+  const params = new URLSearchParams();
+  if (search) params.append('search', search);
+
+  const response = await fetch(`${API_BASE_URL}/product-variations${search ? `?${params}` : ''}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch product variations');
   }
 
   return response.json();

@@ -2,7 +2,6 @@ import { Order, getAllOrders, UpdateOrderStatusRequest, updateEnhancedOrderStatu
 import { useState } from "react";
 import { toast } from "./use-toast";
 
-// Update the useOrders hook
 export const useOrders = (token: string | null) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -12,11 +11,25 @@ export const useOrders = (token: string | null) => {
     totalPages: 1,
     hasNext: false,
     hasPrev: false,
-    page:1
+    page: 1,
+    limit: 20
   });
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>('all');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('all');
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('all');
+  const [searchFilter, setSearchFilter] = useState<string>('');
+  const [dateFromFilter, setDateFromFilter] = useState<string>('');
+  const [dateToFilter, setDateToFilter] = useState<string>('');
 
-  const fetchOrders = async (page = 1, status?: string) => {
+  const fetchOrders = async (
+    page = 1, 
+    orderStatus?: string,
+    paymentStatus?: string,
+    paymentMethod?: string,
+    search?: string,
+    dateFrom?: string,
+    dateTo?: string
+  ) => {
     if (!token) return;
     
     try {
@@ -25,7 +38,12 @@ export const useOrders = (token: string | null) => {
         token, 
         page, 
         20, 
-        status === 'all' ? undefined : status
+        orderStatus === 'all' ? undefined : orderStatus,
+        paymentStatus === 'all' ? undefined : paymentStatus,
+        paymentMethod === 'all' ? undefined : paymentMethod,
+        search || undefined,
+        dateFrom || undefined,
+        dateTo || undefined
       );
       
       setOrders(response.data.orders);
@@ -49,7 +67,15 @@ export const useOrders = (token: string | null) => {
       
       await updateEnhancedOrderStatus(token, orderId, statusData);
       toast({ variant: "default", title: "Order status updated successfully" });
-      await fetchOrders(currentPage, statusFilter === 'all' ? undefined : statusFilter);
+      await fetchOrders(
+        currentPage, 
+        orderStatusFilter === 'all' ? undefined : orderStatusFilter,
+        paymentStatusFilter === 'all' ? undefined : paymentStatusFilter,
+        paymentMethodFilter === 'all' ? undefined : paymentMethodFilter,
+        searchFilter,
+        dateFromFilter,
+        dateToFilter
+      );
       return true;
     } catch (error) {
       console.error('Error updating order status:', error);
@@ -69,7 +95,15 @@ export const useOrders = (token: string | null) => {
       
       await updateEnhancedOrderPaymentStatus(token, orderId, paymentData);
       toast({ variant: "default", title: "Payment status updated successfully" });
-      await fetchOrders(currentPage, statusFilter === 'all' ? undefined : statusFilter);
+      await fetchOrders(
+        currentPage, 
+        orderStatusFilter === 'all' ? undefined : orderStatusFilter,
+        paymentStatusFilter === 'all' ? undefined : paymentStatusFilter,
+        paymentMethodFilter === 'all' ? undefined : paymentMethodFilter,
+        searchFilter,
+        dateFromFilter,
+        dateToFilter
+      );
       return true;
     } catch (error) {
       console.error('Error updating payment status:', error);
@@ -78,16 +112,41 @@ export const useOrders = (token: string | null) => {
     }
   };
 
+  // Helper function to apply all current filters
+  const applyFilters = () => {
+    fetchOrders(
+      1, // Reset to first page when applying filters
+      orderStatusFilter === 'all' ? undefined : orderStatusFilter,
+      paymentStatusFilter === 'all' ? undefined : paymentStatusFilter,
+      paymentMethodFilter === 'all' ? undefined : paymentMethodFilter,
+      searchFilter,
+      dateFromFilter,
+      dateToFilter
+    );
+    setCurrentPage(1);
+  };
+
   return {
     orders,
     loading,
     currentPage,
     setCurrentPage,
     pagination,
-    statusFilter,
-    setStatusFilter,
+    orderStatusFilter,
+    setOrderStatusFilter,
+    paymentStatusFilter,
+    setPaymentStatusFilter,
+    paymentMethodFilter,
+    setPaymentMethodFilter,
+    searchFilter,
+    setSearchFilter,
+    dateFromFilter,
+    setDateFromFilter,
+    dateToFilter,
+    setDateToFilter,
     fetchOrders,
     updateOrderStatus,
-    updatePaymentStatus
+    updatePaymentStatus,
+    applyFilters
   };
 };

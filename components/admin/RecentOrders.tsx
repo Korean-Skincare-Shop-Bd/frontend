@@ -15,7 +15,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-
 import { useOrders } from '@/hooks/use-orders';
 import {
   Order,
@@ -25,20 +24,24 @@ import { EmptyOrdersState } from '../Order/EmptyOrderState';
 import { OrdersLoading } from '../Order/Loading';
 import { OrderDetailDialog } from '../Order/OrderDetailDialog';
 import { OrderActions } from '../Order/OrderAction';
+import { CheckCircle2, Clock, RotateCcw } from 'lucide-react';
+
 const ORDER_STATUSES = {
   PENDING: 'PENDING',
   CONFIRMED: 'CONFIRMED',
-  PROCESSING: 'PROCESSING',
   SHIPPED: 'SHIPPED',
   DELIVERED: 'DELIVERED',
-  CANCELLED: 'CANCELLED'
+  CANCELLED: 'CANCELLED',
+  RETURNED: 'RETURNED'
 } as const;
+
 const PAYMENT_STATUSES = {
   PENDING: 'PENDING',
   PAID: 'PAID',
   FAILED: 'FAILED',
   REFUNDED: 'REFUNDED'
 } as const;
+
 const getPaymentStatusColor = (paymentStatus: string) => {
   const paymentColors = {
     [PAYMENT_STATUSES.PAID]: 'bg-green-100 text-green-800 border-green-200',
@@ -49,21 +52,14 @@ const getPaymentStatusColor = (paymentStatus: string) => {
   return paymentColors[paymentStatus as keyof typeof paymentColors] || 'bg-gray-100 text-gray-800 border-gray-200';
 };
 
-
 const getStatusColor = (status: string) => {
   const statusColors = {
     [ORDER_STATUSES.DELIVERED]: 'bg-green-100 text-green-800',
-    [ORDER_STATUSES.PROCESSING]: 'bg-blue-100 text-blue-800',
+    [ORDER_STATUSES.CONFIRMED]: 'bg-blue-100 text-blue-800',
     [ORDER_STATUSES.SHIPPED]: 'bg-purple-100 text-purple-800',
     [ORDER_STATUSES.PENDING]: 'bg-yellow-100 text-yellow-800',
-    [ORDER_STATUSES.CONFIRMED]: 'bg-cyan-100 text-cyan-800',
     [ORDER_STATUSES.CANCELLED]: 'bg-red-100 text-red-800',
-    // Legacy status support
-    delivered: 'bg-green-100 text-green-800',
-    processing: 'bg-blue-100 text-blue-800',
-    shipped: 'bg-purple-100 text-purple-800',
-    pending: 'bg-yellow-100 text-yellow-800',
-    cancelled: 'bg-red-100 text-red-800',
+    [ORDER_STATUSES.RETURNED]: 'bg-orange-100 text-orange-800',
   };
   return statusColors[status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800';
 };
@@ -71,22 +67,29 @@ const getStatusColor = (status: string) => {
 const getStatusIcon = (status: string) => {
   const statusIcons = {
     [ORDER_STATUSES.DELIVERED]: <CheckCircle className="w-4 h-4" />,
-    [ORDER_STATUSES.PROCESSING]: <Package className="w-4 h-4" />,
+    [ORDER_STATUSES.CONFIRMED]: <Package className="w-4 h-4" />,
     [ORDER_STATUSES.SHIPPED]: <Truck className="w-4 h-4" />,
     [ORDER_STATUSES.CANCELLED]: <XCircle className="w-4 h-4" />,
-    // Legacy status support
-    delivered: <CheckCircle className="w-4 h-4" />,
-    processing: <Package className="w-4 h-4" />,
-    shipped: <Truck className="w-4 h-4" />,
-    cancelled: <XCircle className="w-4 h-4" />,
+    [ORDER_STATUSES.RETURNED]: <XCircle className="w-4 h-4" />,
+    [ORDER_STATUSES.PENDING]: <Package className="w-4 h-4" />,
   };
   return statusIcons[status as keyof typeof statusIcons] || <Package className="w-4 h-4" />;
 };
 
+// Payment status icons
+
+const getPaymentStatusIcon = (paymentStatus: string) => {
+  const paymentIcons = {
+    [PAYMENT_STATUSES.PAID]: <CheckCircle2 className="w-4 h-4 text-green-600" />,
+    [PAYMENT_STATUSES.PENDING]: <Clock className="w-4 h-4 text-yellow-600" />,
+    [PAYMENT_STATUSES.FAILED]: <XCircle className="w-4 h-4 text-red-600" />,
+    [PAYMENT_STATUSES.REFUNDED]: <RotateCcw className="w-4 h-4 text-orange-600" />,
+  };
+  return paymentIcons[paymentStatus as keyof typeof paymentIcons] || <Clock className="w-4 h-4 text-gray-600" />;
+};
 
 // Main component
 export function RecentOrders() {
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderDetailOpen, setOrderDetailOpen] = useState(false);
   const { token } = useAdmin();
@@ -94,28 +97,36 @@ export function RecentOrders() {
   const {
     orders,
     loading,
-    currentPage,
-    setCurrentPage,
     pagination,
-    statusFilter,
-    setStatusFilter,
+    searchFilter,
+    setSearchFilter,
     fetchOrders,
     updateOrderStatus,
-    updatePaymentStatus
+    updatePaymentStatus,
+    applyFilters
   } = useOrders(token);
 
   useEffect(() => {
-    // Fetch recent orders (first page, no status filter, limit to recent)
-    fetchOrders(1, undefined);
+    // Fetch recent orders (first page, no filters, show recent orders)
+    fetchOrders(1);
   }, [token]);
+
+  // Handle search with debouncing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      applyFilters();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchFilter]);
 
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
     setOrderDetailOpen(true);
   };
 
-  const handleStatusUpdate = async (orderId: string, newStatus: string) => {
-    const success = await updateOrderStatus(orderId, newStatus);
+  const handleStatusUpdate = async (orderId: string, newStatus: string, notes?: string) => {
+    const success = await updateOrderStatus(orderId, newStatus, notes);
     if (success && selectedOrder?.id === orderId) {
       // Update the selected order in the dialog
       const updatedOrder = orders.find(o => o.id === orderId);
@@ -125,8 +136,8 @@ export function RecentOrders() {
     }
   };
 
-  const handlePaymentStatusUpdate = async (orderId: string, paymentStatus: string) => {
-    const success = await updatePaymentStatus(orderId, paymentStatus);
+  const handlePaymentStatusUpdate = async (orderId: string, paymentStatus: string, notes?: string) => {
+    const success = await updatePaymentStatus(orderId, paymentStatus, notes);
     if (success && selectedOrder?.id === orderId) {
       // Update the selected order in the dialog
       const updatedOrder = orders.find(o => o.id === orderId);
@@ -135,32 +146,6 @@ export function RecentOrders() {
       }
     }
   };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'delivered':
-        return 'bg-green-100 text-green-800';
-      case 'processing':
-        return 'bg-blue-100 text-blue-800';
-      case 'shipped':
-        return 'bg-purple-100 text-purple-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const filteredOrders = Array.isArray(orders) ? orders.filter(order => {
-    const matchesSearch =
-      order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.email.toLowerCase().includes(searchQuery.toLowerCase());
-
-    return matchesSearch;
-  }) : [];
 
   if (loading) {
     return <OrdersLoading />;
@@ -185,15 +170,12 @@ export function RecentOrders() {
               <div className="relative">
                 <Search className="top-1/2 left-3 absolute w-4 h-4 text-muted-foreground -translate-y-1/2" />
                 <Input
-                  placeholder="Search orders..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-64"
+                  placeholder="Search by order number, customer name, or email..."
+                  value={searchFilter}
+                  onChange={(e) => setSearchFilter(e.target.value)}
+                  className="pl-10 w-80"
                 />
               </div>
-              <Button variant="outline" size="icon">
-                <Filter className="w-4 h-4" />
-              </Button>
             </div>
           </div>
         </CardHeader>
@@ -213,62 +195,65 @@ export function RecentOrders() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrders.map((order) => (
+                {orders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell>
-                          <div>
-                            <div className="font-medium">{order.orderNumber}</div>
-                            <div className="text-muted-foreground text-sm">
-                              {order.itemCount} items
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="flex flex-shrink-0 justify-center items-center bg-gradient-to-br from-blue-500 to-purple-600 rounded-full w-8 h-8 font-medium text-white text-sm">
-                              {order.customerName.charAt(0)}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="font-medium truncate">{order.customerName}</div>
-                              <div className="text-muted-foreground text-sm truncate">{order.email}</div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          ৳{order.totalAmount.toFixed(2)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-2">
-                              {getStatusIcon(order.orderStatus)}
-                              <Badge className={getStatusColor(order.orderStatus)}>
-                                {order.orderStatus}
-                              </Badge>
-                            </div>
-                            <Badge variant="outline" className={`text-xs w-fit ${getPaymentStatusColor(order.paymentStatus)}`}>
-                              {order.paymentStatus}
-                            </Badge>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            {new Date(order.createdAt).toLocaleDateString()}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <OrderActions
-                            order={order}
-                            onViewOrder={handleViewOrder}
-                            onUpdateStatus={updateOrderStatus}
-                            onUpdatePaymentStatus={updatePaymentStatus} // Add this
-                          />
-                        </TableCell>
+                      <div>
+                        <div className="font-medium">{order.orderNumber}</div>
+                        <div className="text-muted-foreground text-sm">
+                          {order.itemCount} items
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-shrink-0 justify-center items-center bg-gradient-to-br from-blue-500 to-purple-600 rounded-full w-8 h-8 font-medium text-white text-sm">
+                          {order.customerName.charAt(0)}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-medium truncate">{order.customerName}</div>
+                          <div className="text-muted-foreground text-sm truncate">{order.email}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      ৳{order.totalAmount.toFixed(2)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(order.orderStatus)}
+                          <Badge className={getStatusColor(order.orderStatus)}>
+                            {order.orderStatus}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2">
+                        {getPaymentStatusIcon(order.paymentStatus)}
+                        <Badge variant="outline" className={`text-xs w-fit ${getPaymentStatusColor(order.paymentStatus)}`}>
+                          {order.paymentStatus}
+                        </Badge>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <OrderActions
+                        order={order}
+                        onViewOrder={handleViewOrder}
+                        onUpdateStatus={handleStatusUpdate}
+                        onUpdatePaymentStatus={handlePaymentStatusUpdate}
+                      />
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
 
-            {filteredOrders.length === 0 && <EmptyOrdersState />}
+            {orders.length === 0 && <EmptyOrdersState />}
           </div>
         </CardContent>
       </Card>

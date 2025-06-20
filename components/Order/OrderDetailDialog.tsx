@@ -6,7 +6,6 @@ import { Badge } from "../ui/badge";
 const ORDER_STATUSES = {
   PENDING: 'PENDING',
   CONFIRMED: 'CONFIRMED',
-  PROCESSING: 'PROCESSING',
   SHIPPED: 'SHIPPED',
   DELIVERED: 'DELIVERED',
   CANCELLED: 'CANCELLED'
@@ -22,7 +21,6 @@ const PAYMENT_STATUSES = {
 const getStatusColor = (status: string) => {
   const statusColors = {
     [ORDER_STATUSES.DELIVERED]: 'bg-green-100 text-green-800',
-    [ORDER_STATUSES.PROCESSING]: 'bg-blue-100 text-blue-800',
     [ORDER_STATUSES.SHIPPED]: 'bg-purple-100 text-purple-800',
     [ORDER_STATUSES.PENDING]: 'bg-yellow-100 text-yellow-800',
     [ORDER_STATUSES.CONFIRMED]: 'bg-cyan-100 text-cyan-800',
@@ -224,14 +222,6 @@ export const OrderDetailDialog = ({ order, open, onOpenChange, onUpdateStatus, o
                 disabled={order.orderStatus === ORDER_STATUSES.CONFIRMED}
               >
                 Mark Confirmed
-              </Button>
-              <Button
-                onClick={() => onUpdateStatus(order.id, ORDER_STATUSES.PROCESSING)}
-                className="flex-1 sm:flex-none"
-                size="sm"
-                disabled={order.orderStatus === ORDER_STATUSES.PROCESSING}
-              >
-                Mark Processing
               </Button>
               <Button
                 onClick={() => onUpdateStatus(order.id, ORDER_STATUSES.SHIPPED)}

@@ -1,8 +1,12 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ProductReviews } from './ProductReviews';
 import { Product } from '@/lib/api/products';
+import { getAllShippingCharges, ShippingChargesResponse } from '@/lib/api/shipping';
 
 interface ProductTabsProps {
   product: Product;
@@ -10,7 +14,15 @@ interface ProductTabsProps {
 }
 
 export function ProductTabs({ product, onReviewSubmitted }: ProductTabsProps) {
-    const reviewCount = product.reviews.length;
+  const reviewCount = product.reviews.length;
+  const [shippingCharges, setShippingCharges] = useState<ShippingChargesResponse['data'] | null>(null);
+
+  useEffect(() => {
+    getAllShippingCharges()
+      .then((res: ShippingChargesResponse) => setShippingCharges(res.data))
+      .catch((err) => console.error('Error loading shipping charges:', err));
+  }, []);
+
   return (
     <Tabs defaultValue="description" className="mb-16">
       <TabsList className="grid grid-cols-4 w-full">
@@ -19,14 +31,15 @@ export function ProductTabs({ product, onReviewSubmitted }: ProductTabsProps) {
         <TabsTrigger value="shipping">Shipping</TabsTrigger>
         <TabsTrigger value="reviews">Reviews ({reviewCount || 0})</TabsTrigger>
       </TabsList>
-      
+
+      {/* Description Tab */}
       <TabsContent value="description" className="mt-6">
         <Card>
           <CardContent className="p-6">
             <h3 className="mb-4 font-semibold">Product Description</h3>
             <p className="mb-6 text-muted-foreground">{product.description}</p>
-            
-            {product.tags && product.tags.length > 0 && (
+
+            {product.tags?.length > 0 && (
               <>
                 <h4 className="mb-3 font-semibold">Tags</h4>
                 <div className="flex flex-wrap gap-2 mb-6">
@@ -41,7 +54,8 @@ export function ProductTabs({ product, onReviewSubmitted }: ProductTabsProps) {
           </CardContent>
         </Card>
       </TabsContent>
-      
+
+      {/* Details Tab */}
       <TabsContent value="details" className="mt-6">
         <Card>
           <CardContent className="p-6">
@@ -73,7 +87,8 @@ export function ProductTabs({ product, onReviewSubmitted }: ProductTabsProps) {
           </CardContent>
         </Card>
       </TabsContent>
-      
+
+      {/* Shipping Tab */}
       <TabsContent value="shipping" className="mt-6">
         <Card>
           <CardContent className="p-6">
@@ -81,30 +96,42 @@ export function ProductTabs({ product, onReviewSubmitted }: ProductTabsProps) {
             <p className="mb-4 text-muted-foreground">
               We offer standard shipping on all orders, with delivery times varying by location.
             </p>
-            <div className="space-y-4">
-              <div>
-                <h4 className="mb-2 font-medium">Delivery Time</h4>
-                <p className="text-muted-foreground">
-                  - Standard Shipping: 3-7 business days<br />
-                  - Express Shipping: 1-3 business days (additional fee)
-                </p>
+
+            {shippingCharges ? (
+              <div className="space-y-4">
+                <div>
+                  <h4 className="mb-2 font-medium">Delivery Charges</h4>
+                  <ul className="space-y-1 text-muted-foreground">
+                    <li>• Inside Dhaka: ৳{shippingCharges.dhaka}</li>
+                    <li>• Outside Dhaka: ৳{shippingCharges.outsideDhaka}</li>
+                  </ul>
+                </div>
+                {shippingCharges.details.length > 0 && (
+                  <div>
+                    <h4 className="mt-4 mb-2 font-medium">More Details</h4>
+                    <ul className="space-y-1 ml-6 text-muted-foreground text-sm list-disc">
+                      {shippingCharges.details.map((item) => (
+                        <li key={item.id}>
+                          <strong className="capitalize">{item.region.replace('_', ' ')}:</strong>{' '}
+                          ৳{item.charge} — {item.description}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
-              <div>
-                <h4 className="mb-2 font-medium">Return Policy</h4>
-                <p className="text-muted-foreground">
-                  Products can be returned within 30 days of delivery for a full refund.
-                  Items must be unused and in their original packaging.
-                </p>
-              </div>
-            </div>
+            ) : (
+              <p className="text-muted-foreground">Loading shipping details...</p>
+            )}
           </CardContent>
         </Card>
       </TabsContent>
-      
+
+      {/* Reviews Tab */}
       <TabsContent value="reviews" className="mt-6">
-        <ProductReviews 
-          productId={product.id} 
-          reviews={product.reviews} 
+        <ProductReviews
+          productId={product.id}
+          reviews={product.reviews}
           onReviewSubmitted={onReviewSubmitted}
         />
       </TabsContent>

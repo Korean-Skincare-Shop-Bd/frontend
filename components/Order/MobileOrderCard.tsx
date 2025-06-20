@@ -5,7 +5,6 @@ import { CheckCircle, Package, Truck, XCircle } from "lucide-react";
 const ORDER_STATUSES = {
   PENDING: 'PENDING',
   CONFIRMED: 'CONFIRMED',
-  PROCESSING: 'PROCESSING',
   SHIPPED: 'SHIPPED',
   DELIVERED: 'DELIVERED',
   CANCELLED: 'CANCELLED'
@@ -30,7 +29,7 @@ const getPaymentStatusColor = (paymentStatus: string) => {
 const getStatusColor = (status: string) => {
   const statusColors = {
     [ORDER_STATUSES.DELIVERED]: 'bg-green-100 text-green-800',
-    [ORDER_STATUSES.PROCESSING]: 'bg-blue-100 text-blue-800',
+    // [ORDER_STATUSES.PROCESSING]: 'bg-blue-100 text-blue-800',
     [ORDER_STATUSES.SHIPPED]: 'bg-purple-100 text-purple-800',
     [ORDER_STATUSES.PENDING]: 'bg-yellow-100 text-yellow-800',
     [ORDER_STATUSES.CONFIRMED]: 'bg-cyan-100 text-cyan-800',
@@ -48,7 +47,7 @@ const getStatusColor = (status: string) => {
 const getStatusIcon = (status: string) => {
   const statusIcons = {
     [ORDER_STATUSES.DELIVERED]: <CheckCircle className="w-4 h-4" />,
-    [ORDER_STATUSES.PROCESSING]: <Package className="w-4 h-4" />,
+    // [ORDER_STATUSES.PROCESSING]: <Package className="w-4 h-4" />,
     [ORDER_STATUSES.SHIPPED]: <Truck className="w-4 h-4" />,
     [ORDER_STATUSES.CANCELLED]: <XCircle className="w-4 h-4" />,
     // Legacy status support
@@ -59,6 +58,7 @@ const getStatusIcon = (status: string) => {
   };
   return statusIcons[status as keyof typeof statusIcons] || <Package className="w-4 h-4" />;
 };
+
 
 
 interface MobileOrderCardProps {

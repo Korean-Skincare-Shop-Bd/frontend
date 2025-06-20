@@ -58,7 +58,7 @@ export function ProductsManager() {
       const params = { page: currentPage, limit: 20 };
       const response = await getProducts(params);
       setProducts(response.products);
-      setTotalProducts(response.pagination.total);
+      setTotalProducts(response.total);
     } catch (error) {
       console.error('Error fetching products:', error);
       toast.error('Failed to fetch products');
