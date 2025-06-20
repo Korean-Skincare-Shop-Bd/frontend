@@ -44,20 +44,20 @@ const paymentMethods = [
         icon: Package,
         available: true
     },
-    {
-        id: 'CARD',
-        name: 'Credit/Debit Card',
-        description: 'Secure online payment',
-        icon: CreditCard,
-        available: true
-    },
-    {
-        id: 'MOBILE_BANKING',
-        name: 'Mobile Banking',
-        description: 'bKash, Nagad, Rocket',
-        icon: Phone,
-        available: true
-    }
+    // {
+    //     id: 'CARD',
+    //     name: 'Credit/Debit Card',
+    //     description: 'Secure online payment',
+    //     icon: CreditCard,
+    //     available: true
+    // },
+    // {
+    //     id: 'MOBILE_BANKING',
+    //     name: 'Mobile Banking',
+    //     description: 'bKash, Nagad, Rocket',
+    //     icon: Phone,
+    //     available: true
+    // }
 ];
 
 const regions = [
@@ -312,7 +312,7 @@ export default function CheckoutPage() {
             });
 
             // Redirect to order confirmation page
-            router.push(`/orders/${result.data.orderId}`);
+            router.push(`/`);
         } catch (error: any) {
             toast({
                 title: "Checkout Failed",
@@ -324,7 +324,12 @@ export default function CheckoutPage() {
         }
     };
 
-    const subtotal = cartData?.data?.cart?.items?.reduce((sum, item) => sum + item.totalPrice, 0) || 0;
+    const subtotal = items.reduce(
+        (sum, item) =>
+            sum +
+            ((Number(item.variation?.salePrice) || Number(item.variation?.price) || Number(item.price)) * item.quantity),
+        0
+    );
     const total = subtotal + shippingCost;
 
     if (loading) {
@@ -695,7 +700,7 @@ export default function CheckoutPage() {
                                                                     </p>
                                                                 </div>
                                                                 <span className="font-medium">
-                                                                    ৳{(item.price || 0).toFixed(2)}
+                                                                    ৳{((Number(item.variation?.salePrice) || Number(item.variation?.price) || Number(item.price)) * item.quantity).toFixed(2)}
                                                                 </span>
                                                             </div>
                                                         ))}

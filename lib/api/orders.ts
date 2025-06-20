@@ -5,14 +5,64 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 export interface Order {
   id: string;
   orderNumber: string;
-  customerId: string;
   customerName: string;
-  customerEmail: string;
+  email: string;
+  phone: string;
+  shippingAddress: string;
+  billingAddress: string;
   totalAmount: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  discountAmount: number;
+  shippingFee: number;
+  paymentMethod: 'CASH_ON_DELIVERY' | 'CARD' | 'MOBILE_BANKING';
+  paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+  orderStatus: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+  creationMethod: 'CUSTOMER' | 'ADMIN';
+  invoiceUrl?: string;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
-  items: OrderItem[];
+  createdByAdminId?: string | null;
+  cartSessionId: string;
+  createdByAdmin?: any | null;
+  items:OrderItem[]
+  _count: {
+    items: number;
+  };
+  itemCount: number;
+}
+export interface OrderItem {
+  id: string;
+  orderId: string;
+  productVariationId: string;
+  quantity: number;
+  priceAtPurchase: string;
+  originalPrice: string | null;
+  discountAmount: string | null;
+  discountPercentage: string | null;
+  productName: string;
+  variationName: string;
+  createdAt: string;
+  productVariation: {
+    id: string;
+    productId: string;
+    name: string;
+    price: string;
+    salePrice: string;
+    discount: string | null;
+    volume: string;
+    stockQuantity: number;
+    imageUrl: string | null;
+    attributes: Record<string, any>;
+    tags: string[];
+    weightGrams: string;
+    createdAt: string;
+    updatedAt: string;
+    product: {
+      id: string;
+      name: string;
+      baseImageUrl: string;
+    };
+  };
 }
 
 export interface OrderItem {
@@ -129,6 +179,146 @@ export const checkCheckoutReadiness = async (): Promise<CheckoutReadinessRespons
     }
     
     throw new Error(errorData?.message || 'Failed to check checkout readiness');
+  }
+
+  return response.json();
+};
+// Add these new interfaces
+export interface UpdateOrderStatusRequest {
+  orderStatus: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+  notes?: string;
+}
+
+export interface UpdatePaymentStatusRequest {
+  paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
+  notes?: string;
+}
+
+export interface EnhancedOrderResponse {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    orderNumber: string;
+    orderStatus?: string;
+    paymentStatus?: string;
+    paymentMethod?: string;
+    customerName: string;
+    totalAmount: number;
+    updatedAt: string;
+  };
+}
+
+export interface OrdersListResponse {
+  success: boolean;
+  message: string;
+  data: {
+    orders: Order[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  };
+}
+
+// Add these new API functions
+export const getAllOrders = async (
+  token: string, 
+  page = 1, 
+  limit = 10, 
+  status?: string
+): Promise<OrdersListResponse> => {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  });
+  
+  if (status) {
+    params.append('status', status);
+  }
+
+  const response = await fetch(`${API_BASE_URL}/orders?${params}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch orders');
+  }
+
+  return response.json();
+};
+
+export const updateEnhancedOrderStatus = async (
+  token: string,
+  orderId: string,
+  statusData: UpdateOrderStatusRequest
+): Promise<EnhancedOrderResponse> => {
+  const response = await fetch(`${API_BASE_URL}/orders/enhanced/${orderId}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(statusData),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    
+    if (response.status === 400) {
+      throw new Error(errorData?.error || 'Invalid request data');
+    }
+    
+    if (response.status === 401) {
+      throw new Error('Unauthorized access');
+    }
+    
+    if (response.status === 404) {
+      throw new Error('Order not found');
+    }
+    
+    throw new Error(errorData?.message || 'Failed to update order status');
+  }
+
+  return response.json();
+};
+
+export const updateEnhancedOrderPaymentStatus = async (
+  token: string,
+  orderId: string,
+  paymentData: UpdatePaymentStatusRequest
+): Promise<EnhancedOrderResponse> => {
+  const response = await fetch(`${API_BASE_URL}/orders/enhanced/${orderId}/payment-status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify(paymentData),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    
+    if (response.status === 400) {
+      throw new Error(errorData?.error || 'Invalid payment status transition');
+    }
+    
+    if (response.status === 401) {
+      throw new Error('Unauthorized access');
+    }
+    
+    if (response.status === 404) {
+      throw new Error('Order not found');
+    }
+    
+    throw new Error(errorData?.message || 'Failed to update payment status');
   }
 
   return response.json();
