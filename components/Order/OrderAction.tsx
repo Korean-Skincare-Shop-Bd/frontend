@@ -71,10 +71,6 @@ export const OrderActions = ({ order, onViewOrder, onUpdateStatus, onUpdatePayme
 
       <div className="my-1 bg-border h-px" />
 
-      <DropdownMenuItem>
-        <FileText className="mr-2 w-4 h-4" />
-        Generate Invoice
-      </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
 );

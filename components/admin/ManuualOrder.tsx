@@ -842,9 +842,10 @@ export function ManualOrderForm() {
                                 </Label>
                                 <Input
                                     id="orderSource"
-                                    value={formData.orderSource}
+                                    value="ADMIN_MANUAL"
                                     onChange={(e) => updateFormData('orderSource', e.target.value)}
-                                    placeholder="e.g., ADMIN_MANUAL, PHONE_ORDER"
+                                    placeholder="ADMIN_MANUAL"
+                                    disabled={true}
                                 />
                             </div>
 

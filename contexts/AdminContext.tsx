@@ -14,6 +14,10 @@ interface AdminContextType {
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
+// 7 days in milliseconds
+const TOKEN_EXPIRATION_DAYS = 7;
+const TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_DAYS * 24 * 60 * 60 * 1000;
+
 export function AdminProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [adminData, setAdminData] = useState<{ id: string; email: string; username: string } | null>(null);
@@ -23,11 +27,23 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const savedToken = localStorage.getItem('admin_token');
     const savedAdminData = localStorage.getItem('admin_data');
+    const savedTimestamp = localStorage.getItem('admin_token_timestamp');
     
-    if (savedToken && savedAdminData) {
-      setToken(savedToken);
-      setAdminData(JSON.parse(savedAdminData));
-      setIsAuthenticated(true);
+    if (savedToken && savedAdminData && savedTimestamp) {
+      const timestamp = parseInt(savedTimestamp, 10);
+      const currentTime = new Date().getTime();
+      
+      // Check if token is expired
+      if (currentTime - timestamp < TOKEN_EXPIRATION_MS) {
+        setToken(savedToken);
+        setAdminData(JSON.parse(savedAdminData));
+        setIsAuthenticated(true);
+      } else {
+        // Token expired, clear storage
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_data');
+        localStorage.removeItem('admin_token_timestamp');
+      }
     }
     
     setLoading(false);
@@ -50,8 +66,11 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         });
         setIsAuthenticated(true);
         
+        const currentTime = new Date().getTime();
+        
         localStorage.setItem('admin_token', authToken);
         localStorage.setItem('admin_data', JSON.stringify({ id, email, username }));
+        localStorage.setItem('admin_token_timestamp', currentTime.toString());
       }
     } catch (error) {
       throw error;
@@ -65,6 +84,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_data');
+    localStorage.removeItem('admin_token_timestamp');
   };
 
   return (

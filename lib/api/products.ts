@@ -105,6 +105,7 @@ export interface GetProductsParams {
   search?:string;
   sortBy?: 'price' | 'name' | 'createdAt';
   sortOrder?: 'asc' | 'desc';
+  variationTags?:string;
 }
 
 export const getProducts = async (params: GetProductsParams = {}): Promise<ProductsResponse> => {
@@ -117,7 +118,9 @@ export const getProducts = async (params: GetProductsParams = {}): Promise<Produ
     maxPrice,
     search,
     sortBy = 'createdAt',
-    sortOrder = 'desc'
+    sortOrder = 'desc',
+    variationTags,
+
   } = params;
 
   const searchParams = new URLSearchParams({
@@ -133,6 +136,7 @@ export const getProducts = async (params: GetProductsParams = {}): Promise<Produ
   if (maxPrice !== undefined) searchParams.append('maxPrice', maxPrice.toString());
   if (search!== undefined) searchParams.append('search', search);
   searchParams.append('includeVariations', 'true')
+  if (variationTags !== undefined) searchParams.append('variationTags',variationTags.toString())
 
   const response = await fetch(`${API_BASE_URL}/products/public?${searchParams.toString()}`);
 

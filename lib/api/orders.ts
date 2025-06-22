@@ -1,4 +1,4 @@
-import { getSessionIdCookie } from "../cookies/session";
+import { setSessionIdCookie, getSessionIdCookie, removeSessionIdCookie } from '../cookies/session';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -154,6 +154,7 @@ export const processCheckout = async (checkoutData: CheckoutRequest): Promise<Ch
     
     throw new Error(errorData?.message || 'Failed to process checkout');
   }
+  removeSessionIdCookie();
 
   return response.json();
 };

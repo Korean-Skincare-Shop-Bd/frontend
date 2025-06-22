@@ -537,7 +537,7 @@ export default function CheckoutPage() {
                                                         Shipping Cost ({selectedRegion === 'dhaka' ? 'Dhaka' : 'Outside Dhaka'})
                                                     </span>
                                                     <span className="font-bold text-blue-700 dark:text-blue-300">
-                                                        ৳{shippingCost.toFixed(2)}
+                                                        ৳{Number(shippingCost).toFixed(2)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -717,7 +717,7 @@ export default function CheckoutPage() {
                                                             Items ({items.length})
                                                         </span>
                                                         <span className="font-medium">
-                                                            ৳{subtotal.toFixed(2)}
+                                                            ৳{Number(subtotal).toFixed(2)}
                                                         </span>
                                                     </div>
 
@@ -726,14 +726,14 @@ export default function CheckoutPage() {
                                                     <div className="space-y-2">
                                                         <div className="flex justify-between items-center text-sm">
                                                             <span className="text-muted-foreground">Subtotal</span>
-                                                            <span>৳{subtotal.toFixed(2)}</span>
+                                                            <span>৳{Number(subtotal).toFixed(2)}</span>
                                                         </div>
                                                         <div className="flex justify-between items-center text-sm">
                                                             <span className="text-muted-foreground">
                                                                 Shipping ({selectedRegion === 'dhaka' ? 'Dhaka' : 'Outside Dhaka'})
                                                             </span>
                                                             <span className={shippingCost === 0 ? "text-green-600" : ""}>
-                                                                {shippingCost === 0 ? 'Free' : `৳${shippingCost.toFixed(2)}`}
+                                                                {shippingCost === 0 ? 'Free' : `৳${Number(shippingCost).toFixed(2)}`}
                                                             </span>
                                                         </div>
                                                         <div className="flex justify-between items-center text-sm">
@@ -747,7 +747,7 @@ export default function CheckoutPage() {
                                                     <div className="flex justify-between items-center font-bold text-lg">
                                                         <span>Total</span>
                                                         <span className="golden-text">
-                                                            ৳{total.toFixed(2)}
+                                                            ৳{Number(total).toFixed(2)}
                                                         </span>
                                                     </div>
                                                 </>
@@ -783,7 +783,7 @@ export default function CheckoutPage() {
                                                 ) : (
                                                     <div className="flex items-center gap-2">
                                                         <ShieldCheck className="w-5 h-5" />
-                                                        Place Order - ৳{total.toFixed(2)}
+                                                        Place Order - ৳{Number(total).toFixed(2)}
                                                     </div>
                                                 )}
                                             </Button>

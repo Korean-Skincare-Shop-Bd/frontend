@@ -89,7 +89,26 @@ export const addToEnhancedCart = async (
 
 export const getEnhancedCart = async (): Promise<EnhancedCartResponse> => {
   const sessionId = await getSessionIdCookie();
-  if (!sessionId) throw new Error('No cart session found');
+  if (!sessionId){
+    return {
+      message: 'No session found',
+      data: {
+        cart: {
+          sessionId: '',
+          items: [],
+          itemCount: 0,
+          totalPrice: 0,
+          createdAt: '',
+          updatedAt: '',
+          expiresAt: ''
+        },
+        sessionId: '',
+        isNewCart: false,
+        reservation: null,
+        enhanced: false
+      }
+    };
+  }
 
   try {
     const response = await fetch(`${API_BASE_URL}/enhanced-cart/${sessionId}`, {

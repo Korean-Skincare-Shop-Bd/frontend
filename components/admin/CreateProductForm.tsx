@@ -45,14 +45,14 @@ export function CreateProductForm() {
 
   const fetchInitialData = async () => {
     if (!token) return;
-    
+
     try {
       setLoadingData(true);
       const [categoriesResponse, brandsResponse] = await Promise.all([
         getCategories(),
         getBrands()
       ]);
-      
+
       setCategories(categoriesResponse.categories);
       setBrands(brandsResponse.data.brands);
     } catch (error) {
@@ -213,14 +213,86 @@ export function CreateProductForm() {
                   </div>
                 </div>
 
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="tags">Tags</Label>
-                  <Input
-                    id="tags"
-                    value={formData.tags || ''}
-                    onChange={(e) => handleInputChange('tags', e.target.value)}
-                    placeholder="Enter tags separated by commas"
-                  />
+
+                  {/* Selected tags display */}
+                  {formData.tags && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {formData.tags.split(',').filter(Boolean).map((tag) => (
+                        <div
+                          key={tag}
+                          className="inline-flex items-center bg-primary/10 dark:bg-primary/20 px-3 py-1 border border-input dark:border-gray-700 rounded-full font-medium text-primary dark:text-primary-foreground text-sm"
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newTags = (formData.tags ?? '')
+                                .split(',')
+                                .filter(t => t !== tag)
+                                .join(',');
+                              handleInputChange('tags', newTags);
+                            }}
+                            className="hover:bg-primary/20 dark:hover:bg-primary/30 ml-2 p-1 rounded-full"
+                          >
+                            <span className="sr-only">Remove tag</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <line x1="18" y1="6" x2="6" y2="18"></line>
+                              <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Select component */}
+                  <Select
+                    value=""
+                    onValueChange={(selectedTag) => {
+                      const currentTags = formData.tags ? formData.tags.split(',') : [];
+                      const newTags = currentTags.includes(selectedTag)
+                        ? currentTags.filter(tag => tag !== selectedTag)
+                        : [...currentTags, selectedTag];
+                      handleInputChange('tags', newTags.filter(Boolean).join(','));
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select tags...">
+                        <span className="text-muted-foreground">Add tags</span>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["HOT", "NEW", "SALE", "FEATURED"].map((tag) => (
+                        <SelectItem
+                          key={tag}
+                          value={tag}
+                          className={`${formData.tags?.includes(tag) ? 'bg-accent/50 dark:bg-accent/30' : ''}`}
+                        >
+                          <div className="flex items-center">
+                            {tag}
+                            {formData.tags?.includes(tag) && (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="ml-2"
+                              >
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                              </svg>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
             </Card>
@@ -376,7 +448,7 @@ export function CreateProductForm() {
                         ))}
                       </div>
                     )}
-                    
+
                     {additionalImages.length < 10 && (
                       <label className="flex flex-col justify-center items-center bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 border-dashed rounded-lg w-full h-24 cursor-pointer">
                         <div className="flex items-center gap-2">
@@ -388,7 +460,7 @@ export function CreateProductForm() {
                           className="hidden"
                           accept="image/*"
                           multiple
-                                                    onChange={handleAdditionalImagesChange}
+                          onChange={handleAdditionalImagesChange}
                         />
                       </label>
                     )}
@@ -415,8 +487,8 @@ export function CreateProductForm() {
                   />
                 </div>
                 <p className="text-muted-foreground text-sm">
-                  {formData.isPublished 
-                    ? 'Product will be visible to customers' 
+                  {formData.isPublished
+                    ? 'Product will be visible to customers'
                     : 'Product will be saved as draft'
                   }
                 </p>
