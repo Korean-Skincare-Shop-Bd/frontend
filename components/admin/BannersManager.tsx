@@ -1,26 +1,35 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Upload, X, Eye, MoreHorizontal, ExternalLink } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from "react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Upload,
+  X,
+  Eye,
+  MoreHorizontal,
+  ExternalLink,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,10 +39,18 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { getBanners, createBanner, updateBanner, deleteBanner, Banner, CreateBannerRequest } from '@/lib/api/banners';
-import { useAdmin } from '@/contexts/AdminContext';
-import { toast } from 'sonner';
+} from "@/components/ui/alert-dialog";
+import {
+  getBanners,
+  createBanner,
+  updateBanner,
+  deleteBanner,
+  Banner,
+  CreateBannerRequest,
+} from "@/lib/api/banners";
+import { useAdmin } from "@/contexts/AdminContext";
+import { toast } from "sonner";
+import Image from "next/image";
 
 export function BannersManager() {
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -46,7 +63,7 @@ export function BannersManager() {
     linkUrl: string;
     isActive: boolean;
   }>({
-    linkUrl: '',
+    linkUrl: "",
     isActive: true,
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -60,14 +77,14 @@ export function BannersManager() {
 
   const fetchBanners = async () => {
     if (!token) return;
-    
+
     try {
       setLoading(true);
       const data = await getBanners(token);
       setBanners(data.banners);
     } catch (error) {
-      console.error('Error fetching banners:', error);
-      toast.error('Failed to fetch banners');
+      console.error("Error fetching banners:", error);
+      toast.error("Failed to fetch banners");
     } finally {
       setLoading(false);
     }
@@ -90,7 +107,7 @@ export function BannersManager() {
     if (!token) return;
 
     if (!imageFile && !editingBanner) {
-      toast.error('Banner image is required');
+      toast.error("Banner image is required");
       return;
     }
 
@@ -101,34 +118,34 @@ export function BannersManager() {
         linkUrl: formData.linkUrl || undefined,
         isActive: formData.isActive,
       };
-      
+
       if (editingBanner) {
         await updateBanner(token, editingBanner.id, {
           linkUrl: formData.linkUrl || undefined,
           isActive: formData.isActive,
-          ...(imageFile && { image: imageFile })
+          ...(imageFile && { image: imageFile }),
         });
-        toast.success('Banner updated successfully');
+        toast.success("Banner updated successfully");
       } else {
         await createBanner(token, submitData);
-        toast.success('Banner created successfully');
+        toast.success("Banner created successfully");
       }
-      
+
       fetchBanners();
       resetForm();
       setDialogOpen(false);
     } catch (error) {
-      console.error('Error saving banner:', error);
-      toast.error('Failed to save banner');
+      console.error("Error saving banner:", error);
+      toast.error("Failed to save banner");
     } finally {
       setFormLoading(false);
     }
   };
 
-    const handleEdit = (banner: Banner) => {
+  const handleEdit = (banner: Banner) => {
     setEditingBanner(banner);
     setFormData({
-      linkUrl: banner.linkUrl || '',
+      linkUrl: banner.linkUrl || "",
       isActive: banner.isActive,
     });
     setImagePreview(banner.imageUrl);
@@ -141,11 +158,11 @@ export function BannersManager() {
 
     try {
       await deleteBanner(token, bannerToDelete.id);
-      toast.success('Banner deleted successfully');
+      toast.success("Banner deleted successfully");
       fetchBanners();
     } catch (error) {
-      console.error('Error deleting banner:', error);
-      toast.error('Failed to delete banner');
+      console.error("Error deleting banner:", error);
+      toast.error("Failed to delete banner");
     } finally {
       setDeleteDialogOpen(false);
       setBannerToDelete(null);
@@ -154,7 +171,7 @@ export function BannersManager() {
 
   const resetForm = () => {
     setFormData({
-      linkUrl: '',
+      linkUrl: "",
       isActive: true,
     });
     setEditingBanner(null);
@@ -196,7 +213,7 @@ export function BannersManager() {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>
-                {editingBanner ? 'Edit Banner' : 'Create New Banner'}
+                {editingBanner ? "Edit Banner" : "Create New Banner"}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -205,7 +222,7 @@ export function BannersManager() {
                 <div className="mt-2">
                   {imagePreview ? (
                     <div className="relative">
-                      <img
+                      <Image
                         src={imagePreview}
                         alt="Banner preview"
                         className="border rounded-lg w-full h-32 object-cover"
@@ -218,8 +235,7 @@ export function BannersManager() {
                         onClick={() => {
                           setImageFile(null);
                           setImagePreview(null);
-                        }}
-                      >
+                        }}>
                         <X className="w-3 h-3" />
                       </Button>
                     </div>
@@ -227,8 +243,12 @@ export function BannersManager() {
                     <label className="flex flex-col justify-center items-center bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 border-dashed rounded-lg w-full h-32 cursor-pointer">
                       <div className="flex flex-col items-center gap-2">
                         <Upload className="w-6 h-6 text-gray-500" />
-                        <span className="text-gray-500 text-sm">Upload Banner Image</span>
-                        <span className="text-gray-400 text-xs">Recommended: 1200x400px</span>
+                        <span className="text-gray-500 text-sm">
+                          Upload Banner Image
+                        </span>
+                        <span className="text-gray-400 text-xs">
+                          Recommended: 1200x400px
+                        </span>
                       </div>
                       <input
                         type="file"
@@ -247,7 +267,12 @@ export function BannersManager() {
                   id="linkUrl"
                   type="url"
                   value={formData.linkUrl}
-                  onChange={(e) => setFormData(prev => ({ ...prev, linkUrl: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      linkUrl: e.target.value,
+                    }))
+                  }
                   placeholder="https://example.com/promotion"
                 />
               </div>
@@ -257,7 +282,9 @@ export function BannersManager() {
                 <Switch
                   id="active"
                   checked={formData.isActive}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, isActive: checked }))
+                  }
                 />
               </div>
 
@@ -266,17 +293,18 @@ export function BannersManager() {
                   {formLoading ? (
                     <div className="flex items-center gap-2">
                       <div className="border-2 border-white border-t-transparent rounded-full w-4 h-4 animate-spin" />
-                      {editingBanner ? 'Updating...' : 'Creating...'}
+                      {editingBanner ? "Updating..." : "Creating..."}
                     </div>
+                  ) : editingBanner ? (
+                    "Update Banner"
                   ) : (
-                    editingBanner ? 'Update Banner' : 'Create Banner'
+                    "Create Banner"
                   )}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setDialogOpen(false)}
-                >
+                  onClick={() => setDialogOpen(false)}>
                   Cancel
                 </Button>
               </div>
@@ -305,14 +333,14 @@ export function BannersManager() {
           {(Array.isArray(banners) ? banners : []).map((banner) => (
             <Card key={banner.id} className="overflow-hidden">
               <div className="relative">
-                <img
+                <Image
                   src={banner.imageUrl}
                   alt="Banner"
                   className="w-full h-48 object-cover"
                 />
                 <div className="top-2 right-2 absolute flex gap-2">
                   <Badge variant={banner.isActive ? "default" : "secondary"}>
-                    {banner.isActive ? 'Active' : 'Inactive'}
+                    {banner.isActive ? "Active" : "Inactive"}
                   </Badge>
                 </div>
               </div>
@@ -322,7 +350,7 @@ export function BannersManager() {
                     Created: {new Date(banner.createdAt).toLocaleDateString()}
                   </div>
                 </div>
-                
+
                 {banner.linkUrl && (
                   <div className="flex items-center gap-2 mb-3">
                     <ExternalLink className="w-4 h-4 text-muted-foreground" />
@@ -330,8 +358,7 @@ export function BannersManager() {
                       href={banner.linkUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 text-sm hover:underline truncate"
-                    >
+                      className="text-blue-600 text-sm hover:underline truncate">
                       {banner.linkUrl}
                     </a>
                   </div>
@@ -342,8 +369,7 @@ export function BannersManager() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleEdit(banner)}
-                    className="flex-1"
-                  >
+                    className="flex-1">
                     <Edit className="mr-2 w-4 h-4" />
                     Edit
                   </Button>
@@ -358,13 +384,12 @@ export function BannersManager() {
                         <Eye className="mr-2 w-4 h-4" />
                         Preview
                       </DropdownMenuItem>
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         className="text-red-600"
                         onClick={() => {
                           setBannerToDelete(banner);
                           setDeleteDialogOpen(true);
-                        }}
-                      >
+                        }}>
                         <Trash2 className="mr-2 w-4 h-4" />
                         Delete
                       </DropdownMenuItem>
@@ -382,14 +407,13 @@ export function BannersManager() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the banner.
+              This action cannot be undone. This will permanently delete the
+              banner.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>
-              Delete
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

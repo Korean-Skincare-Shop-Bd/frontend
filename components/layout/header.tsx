@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   ShoppingBag,
@@ -14,19 +14,19 @@ import {
   Settings,
   Sun,
   Moon,
-  Crown
-} from 'lucide-react';
-import { useTheme } from 'next-themes';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+  Crown,
+} from "lucide-react";
+import { useTheme } from "next-themes";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -34,12 +34,13 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu';
-import { cn } from '@/lib/utils';
-import { useAdmin } from '@/contexts/AdminContext';
-import { useToast } from '@/hooks/use-toast';
-import { getEnhancedCart } from '@/lib/api/cart';
-import { getSessionIdCookie } from '@/lib/cookies/session';
+} from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
+import { useAdmin } from "@/contexts/AdminContext";
+import { useToast } from "@/hooks/use-toast";
+import { getEnhancedCart } from "@/lib/api/cart";
+import { getSessionIdCookie } from "@/lib/cookies/session";
+import Image from "next/image";
 
 // Type definitions
 interface Brand {
@@ -70,7 +71,6 @@ interface ApiResponse<T> {
       hasPrev: boolean;
     };
   };
-
 }
 interface CartItemWithProduct {
   id: string;
@@ -83,13 +83,14 @@ interface CartItemWithProduct {
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [cartItems, setCartItems] = useState<number>(0); // Mock cart count
   const [isAdmin, setIsAdmin] = useState(false); // Mock admin state
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isLoadingBrands, setIsLoadingBrands] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const { isAuthenticated, logout } = useAdmin();
@@ -98,16 +99,22 @@ export function Header() {
   const [loading, setLoading] = useState(true);
   // const sessionIdcookie = getSessionIdCookie();
 
+  // Prevent hydration mismatch for theme
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Fetch categories from API
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         setIsLoadingCategories(true);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories?limit=50`);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/categories?limit=50`
+        );
 
         if (!response.ok) {
-          throw new Error('Failed to fetch categories');
+          throw new Error("Failed to fetch categories");
         }
 
         const result: ApiResponse<Category> = await response.json();
@@ -116,7 +123,7 @@ export function Header() {
           setCategories(result.categories || []);
         }
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error("Error fetching categories:", error);
         // Fallback to empty array or show error message
         setCategories([]);
       } finally {
@@ -137,25 +144,26 @@ export function Header() {
         const cartItems = cartResponse.data.cart.items;
 
         // Convert cart items to our interface
-        const cartItemsWithProduct: CartItemWithProduct[] = cartItems.map(item => ({
-          id: item.productId, // Using productId as ID for now
-          productId: item.productId,
-          quantity: item.quantity,
-          price: Number(item.totalPrice),
-          loading: true
-        }));
+        const cartItemsWithProduct: CartItemWithProduct[] = cartItems.map(
+          (item) => ({
+            id: item.productId, // Using productId as ID for now
+            productId: item.productId,
+            quantity: item.quantity,
+            price: Number(item.totalPrice),
+            loading: true,
+          })
+        );
 
         setItems(cartItemsWithProduct);
-        let count = 0
+        let count = 0;
         for (const item of cartItemsWithProduct) {
           count += item.quantity;
         }
-        setCartItems(count)
+        setCartItems(count);
 
         // Fetch product details for each item
-
       } catch (error) {
-        console.error('Failed to fetch cart:', error);
+        console.error("Failed to fetch cart:", error);
         toast({
           title: "Error",
           description: "Failed to load cart items",
@@ -167,33 +175,34 @@ export function Header() {
     };
 
     fetchCartData();
-    window.addEventListener('cartUpdated', fetchCartData);
+    window.addEventListener("cartUpdated", fetchCartData);
 
     return () => {
-      window.removeEventListener('cartUpdated', fetchCartData);
+      window.removeEventListener("cartUpdated", fetchCartData);
     };
   }, [toast]);
-
 
   // Fetch brands from API
   useEffect(() => {
     const fetchBrands = async () => {
       try {
         setIsLoadingBrands(true);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/brands?limit=50`);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/brands?limit=50`
+        );
 
         if (!response.ok) {
-          throw new Error('Failed to fetch brands');
+          throw new Error("Failed to fetch brands");
         }
 
         const result: ApiResponse<Brand> = await response.json();
 
         if (result) {
-          console.log(result)
+          console.log(result);
           setBrands(result.data.brands || []);
         }
       } catch (error) {
-        console.error('Error fetching brands:', error);
+        console.error("Error fetching brands:", error);
         // Fallback to empty array or show error message
         setBrands([]);
       } finally {
@@ -208,8 +217,8 @@ export function Header() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -221,17 +230,17 @@ export function Header() {
 
   const toggleAdmin = () => {
     logout();
-    router.push(isAdmin ? '/' : '/admin');
-
+    router.push(isAdmin ? "/" : "/admin");
   };
 
   return (
-    <header className={cn(
-      "sticky top-0 z-50 w-full transition-all duration-300",
-      isScrolled
-        ? "glass-effect shadow-lg border-b"
-        : "bg-white/95 dark:bg-gray-900/95"
-    )}>
+    <header
+      className={cn(
+        "sticky top-0 z-50 w-full transition-all duration-300",
+        isScrolled
+          ? "glass-effect shadow-lg border-b"
+          : "bg-white/95 dark:bg-gray-900/95"
+      )}>
       <div className="mx-auto px-4 container">
         <div className="flex justify-between items-center h-16 lg:h-20">
           {/* Logo */}
@@ -239,10 +248,11 @@ export function Header() {
             <motion.div
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.6 }}
-              className="flex justify-center items-center bg-white rounded-full w-12 h-12"
-            >
-              <img
+              className="flex justify-center items-center bg-white rounded-full w-12 h-12">
+              <Image
                 src="/logo.png"
+                width={25}
+                height={25}
                 alt="Korean Skincare Shop BD Logo"
                 className="pt-1 w-12 h-8"
               />
@@ -276,8 +286,7 @@ export function Header() {
                         <NavigationMenuLink key={category.id} asChild>
                           <Link
                             href={`/products?category=${category.id}`}
-                            className="block space-y-1 hover:bg-accent focus:bg-accent p-3 rounded-md outline-none no-underline leading-none transition-colors hover:text-accent-foreground focus:text-accent-foreground select-none"
-                          >
+                            className="block space-y-1 hover:bg-accent focus:bg-accent p-3 rounded-md outline-none no-underline leading-none transition-colors hover:text-accent-foreground focus:text-accent-foreground select-none">
                             <div className="font-medium text-sm leading-none">
                               {category.name}
                             </div>
@@ -311,16 +320,15 @@ export function Header() {
                         <NavigationMenuLink key={brand.id} asChild>
                           <Link
                             href={`/products?brand=${brand.id}`}
-                            className="block space-y-1 hover:bg-accent focus:bg-accent p-3 rounded-md outline-none no-underline leading-none transition-colors hover:text-accent-foreground focus:text-accent-foreground select-none"
-                          >
+                            className="block space-y-1 hover:bg-accent focus:bg-accent p-3 rounded-md outline-none no-underline leading-none transition-colors hover:text-accent-foreground focus:text-accent-foreground select-none">
                             <div className="flex items-center space-x-2">
                               {brand.logo && (
-                                <img
+                                <Image
                                   src={brand.logo}
                                   alt={brand.name}
                                   className="rounded w-6 h-6 object-cover"
                                   onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.style.display = "none";
                                   }}
                                 />
                               )}
@@ -348,7 +356,9 @@ export function Header() {
           </NavigationMenu>
 
           {/* Search Bar */}
-          <form onSubmit={handleSearch} className="hidden md:flex md:flex-1 md:mx-8 md:max-w-sm">
+          <form
+            onSubmit={handleSearch}
+            className="hidden md:flex md:flex-1 md:mx-8 md:max-w-sm">
             <div className="relative w-full">
               <Search className="top-1/2 left-3 absolute w-4 h-4 text-muted-foreground -translate-y-1/2" />
               <Input
@@ -363,41 +373,39 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center space-x-2 lg:space-x-4">
+            {" "}
             {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="hidden sm:inline-flex"
-            >
-              <Sun className="w-5 h-5 rotate-0 dark:-rotate-90 scale-100 dark:scale-0 transition-all" />
-              <Moon className="absolute w-5 h-5 rotate-90 dark:rotate-0 scale-0 dark:scale-100 transition-all" />
-              <span className="sr-only">Toggle theme</span>
-            </Button>
-
+            {mounted && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="hidden sm:inline-flex">
+                <Sun className="w-5 h-5 rotate-0 dark:-rotate-90 scale-100 dark:scale-0 transition-all" />
+                <Moon className="absolute w-5 h-5 rotate-90 dark:rotate-0 scale-0 dark:scale-100 transition-all" />
+                <span className="sr-only">Toggle theme</span>
+              </Button>
+            )}
             {/* Cart */}
             <Button
               variant="ghost"
               size="icon"
               asChild
               className="group relative hover:shadow-lg focus-visible:ring-2 focus-visible:ring-primary/70 transition-shadow"
-              aria-label="View cart"
-            >
+              aria-label="View cart">
               <Link href="/cart" className="flex justify-center items-center">
                 <span className="relative flex items-center">
                   <ShoppingBag className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   {cartItems > 0 && (
                     <span
                       className="-top-2 -right-2 absolute flex justify-center items-center bg-gradient-to-tr from-primary to-yellow-400 shadow-md border-2 border-background rounded-full w-5 h-5 font-semibold text-white text-xs"
-                      aria-label={`${cartItems} items in cart`}
-                    >
+                      aria-label={`${cartItems} items in cart`}>
                       {cartItems}
                     </span>
                   )}
                 </span>
               </Link>
             </Button>
-
             {/* Admin/User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -406,7 +414,6 @@ export function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-
                 <>
                   <DropdownMenuItem asChild>
                     <Link href="/admin">
@@ -415,22 +422,21 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  {(isAuthenticated &&
+                  {isAuthenticated && (
                     <DropdownMenuItem onClick={toggleAdmin}>
                       <LogOut className="mr-2 w-4 h-4" />
                       Logout
-                    </DropdownMenuItem>)}
+                    </DropdownMenuItem>
+                  )}
                 </>
               </DropdownMenuContent>
             </DropdownMenu>
-
             {/* Mobile Menu Toggle */}
             <Button
               variant="ghost"
               size="icon"
               className="lg:hidden"
-              onClick={() => setIsOpen(!isOpen)}
-            >
+              onClick={() => setIsOpen(!isOpen)}>
               <Menu className="w-5 h-5" />
             </Button>
           </div>
@@ -456,23 +462,25 @@ export function Header() {
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-background border-t"
-          >
+            className="lg:hidden bg-background border-t">
             <div className="mx-auto px-4 py-4 container">
               <nav className="space-y-4">
-                <Link href="/products" className="block py-2 font-medium hover:text-primary text-lg">
+                <Link
+                  href="/products"
+                  className="block py-2 font-medium hover:text-primary text-lg">
                   Products
                 </Link>
-
                 <div>
                   <h3 className="py-2 font-medium text-lg">Categories</h3>
                   <div className="space-y-2 pl-4">
                     {isLoadingCategories ? (
                       <div className="flex items-center py-2">
                         <div className="mr-2 border-2 border-primary border-t-transparent rounded-full w-4 h-4 animate-spin"></div>
-                        <span className="text-muted-foreground text-sm">Loading...</span>
+                        <span className="text-muted-foreground text-sm">
+                          Loading...
+                        </span>
                       </div>
                     ) : categories.length > 0 ? (
                       categories.map((category) => (
@@ -480,8 +488,7 @@ export function Header() {
                           key={category.id}
                           href={`/products?category=${category.id}`}
                           className="block py-1 text-muted-foreground hover:text-primary"
-                          onClick={() => setIsOpen(false)}
-                        >
+                          onClick={() => setIsOpen(false)}>
                           {category.name}
                         </Link>
                       ))
@@ -492,14 +499,15 @@ export function Header() {
                     )}
                   </div>
                 </div>
-
                 <div>
                   <h3 className="py-2 font-medium text-lg">Brands</h3>
                   <div className="space-y-2 pl-4">
                     {isLoadingBrands ? (
                       <div className="flex items-center py-2">
                         <div className="mr-2 border-2 border-primary border-t-transparent rounded-full w-4 h-4 animate-spin"></div>
-                        <span className="text-muted-foreground text-sm">Loading...</span>
+                        <span className="text-muted-foreground text-sm">
+                          Loading...
+                        </span>
                       </div>
                     ) : brands.length > 0 ? (
                       brands.map((brand) => (
@@ -507,15 +515,14 @@ export function Header() {
                           key={brand.id}
                           href={`/products?brand=${brand.id}`}
                           className="flex items-center py-1 text-muted-foreground hover:text-primary"
-                          onClick={() => setIsOpen(false)}
-                        >
+                          onClick={() => setIsOpen(false)}>
                           {brand.logo && (
-                            <img
+                            <Image
                               src={brand.logo}
                               alt={brand.name}
                               className="mr-2 rounded w-4 h-4 object-cover"
                               onError={(e) => {
-                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.style.display = "none";
                               }}
                             />
                           )}
@@ -528,26 +535,28 @@ export function Header() {
                       </span>
                     )}
                   </div>
-                </div>
-
+                </div>{" "}
                 <div className="pt-4 border-t">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                    className="justify-start w-full"
-                  >
-                    {theme === 'dark' ? (
-                      <>
-                        <Sun className="mr-2 w-4 h-4" />
-                        Light Mode
-                      </>
-                    ) : (
-                      <>
-                        <Moon className="mr-2 w-4 h-4" />
-                        Dark Mode
-                      </>
-                    )}
-                  </Button>
+                  {mounted && (
+                    <Button
+                      variant="ghost"
+                      onClick={() =>
+                        setTheme(theme === "dark" ? "light" : "dark")
+                      }
+                      className="justify-start w-full">
+                      {theme === "dark" ? (
+                        <>
+                          <Sun className="mr-2 w-4 h-4" />
+                          Light Mode
+                        </>
+                      ) : (
+                        <>
+                          <Moon className="mr-2 w-4 h-4" />
+                          Dark Mode
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
               </nav>
             </div>

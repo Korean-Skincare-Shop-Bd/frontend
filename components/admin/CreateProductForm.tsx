@@ -1,33 +1,34 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Upload, X, Plus } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Upload, X, Plus } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { createProduct, CreateProductRequest } from '@/lib/api/products';
-import { getCategories, Category } from '@/lib/api/categories';
-import { getBrands, Brand } from '@/lib/api/brands';
-import { useAdmin } from '@/contexts/AdminContext';
-import { toast } from 'sonner';
+} from "@/components/ui/select";
+import { createProduct, CreateProductRequest } from "@/lib/api/products";
+import { getCategories, Category } from "@/lib/api/categories";
+import { getBrands, Brand } from "@/lib/api/brands";
+import { useAdmin } from "@/contexts/AdminContext";
+import { toast } from "sonner";
+import Image from "next/image";
 
 export function CreateProductForm() {
   const [formData, setFormData] = useState<CreateProductRequest>({
-    name: '',
+    name: "",
     price: 0,
     stockQuantity: 0,
-    description: '',
+    description: "",
     isPublished: false,
   });
   const [categories, setCategories] = useState<Category[]>([]);
@@ -50,23 +51,23 @@ export function CreateProductForm() {
       setLoadingData(true);
       const [categoriesResponse, brandsResponse] = await Promise.all([
         getCategories(),
-        getBrands()
+        getBrands(),
       ]);
 
       setCategories(categoriesResponse.categories);
       setBrands(brandsResponse.data.brands);
     } catch (error) {
-      console.error('Error fetching initial data:', error);
-      toast.error('Failed to load categories and brands');
+      console.error("Error fetching initial data:", error);
+      toast.error("Failed to load categories and brands");
     } finally {
       setLoadingData(false);
     }
   };
 
   const handleInputChange = (field: keyof CreateProductRequest, value: any) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -77,17 +78,19 @@ export function CreateProductForm() {
     }
   };
 
-  const handleAdditionalImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAdditionalImagesChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const files = Array.from(e.target.files || []);
     if (additionalImages.length + files.length > 10) {
-      toast.error('Maximum 10 additional images allowed');
+      toast.error("Maximum 10 additional images allowed");
       return;
     }
-    setAdditionalImages(prev => [...prev, ...files]);
+    setAdditionalImages((prev) => [...prev, ...files]);
   };
 
   const removeAdditionalImage = (index: number) => {
-    setAdditionalImages(prev => prev.filter((_, i) => i !== index));
+    setAdditionalImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,7 +98,7 @@ export function CreateProductForm() {
     if (!token) return;
 
     if (!formData.name || formData.price <= 0) {
-      toast.error('Please fill in all required fields');
+      toast.error("Please fill in all required fields");
       return;
     }
 
@@ -104,15 +107,16 @@ export function CreateProductForm() {
       const productData: CreateProductRequest = {
         ...formData,
         image: mainImage || undefined,
-        additionalImages: additionalImages.length > 0 ? additionalImages : undefined,
+        additionalImages:
+          additionalImages.length > 0 ? additionalImages : undefined,
       };
 
       await createProduct(token, productData);
-      toast.success('Product created successfully!');
-      router.push('/admin/products');
+      toast.success("Product created successfully!");
+      router.push("/admin/products");
     } catch (error) {
-      console.error('Error creating product:', error);
-      toast.error('Failed to create product');
+      console.error("Error creating product:", error);
+      toast.error("Failed to create product");
     } finally {
       setLoading(false);
     }
@@ -132,11 +136,7 @@ export function CreateProductForm() {
   return (
     <div className="mx-auto px-4 py-8 container">
       <div className="flex items-center gap-4 mb-8">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.back()}
-        >
+        <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
@@ -162,7 +162,7 @@ export function CreateProductForm() {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     placeholder="Enter product name"
                     required
                   />
@@ -172,8 +172,10 @@ export function CreateProductForm() {
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
-                    value={formData.description || ''}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    value={formData.description || ""}
+                    onChange={(e) =>
+                      handleInputChange("description", e.target.value)
+                    }
                     placeholder="Enter product description"
                     rows={4}
                   />
@@ -182,7 +184,10 @@ export function CreateProductForm() {
                 <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
                   <div>
                     <Label htmlFor="category">Category</Label>
-                    <Select onValueChange={(value) => handleInputChange('categoryId', value)}>
+                    <Select
+                      onValueChange={(value) =>
+                        handleInputChange("categoryId", value)
+                      }>
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
@@ -198,7 +203,10 @@ export function CreateProductForm() {
 
                   <div>
                     <Label htmlFor="brand">Brand</Label>
-                    <Select onValueChange={(value) => handleInputChange('brandId', value)}>
+                    <Select
+                      onValueChange={(value) =>
+                        handleInputChange("brandId", value)
+                      }>
                       <SelectTrigger>
                         <SelectValue placeholder="Select brand" />
                       </SelectTrigger>
@@ -219,31 +227,41 @@ export function CreateProductForm() {
                   {/* Selected tags display */}
                   {formData.tags && (
                     <div className="flex flex-wrap gap-2 mb-2">
-                      {formData.tags.split(',').filter(Boolean).map((tag) => (
-                        <div
-                          key={tag}
-                          className="inline-flex items-center bg-primary/10 dark:bg-primary/20 px-3 py-1 border border-input dark:border-gray-700 rounded-full font-medium text-primary dark:text-primary-foreground text-sm"
-                        >
-                          {tag}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newTags = (formData.tags ?? '')
-                                .split(',')
-                                .filter(t => t !== tag)
-                                .join(',');
-                              handleInputChange('tags', newTags);
-                            }}
-                            className="hover:bg-primary/20 dark:hover:bg-primary/30 ml-2 p-1 rounded-full"
-                          >
-                            <span className="sr-only">Remove tag</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <line x1="18" y1="6" x2="6" y2="18"></line>
-                              <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>
-                          </button>
-                        </div>
-                      ))}
+                      {formData.tags
+                        .split(",")
+                        .filter(Boolean)
+                        .map((tag) => (
+                          <div
+                            key={tag}
+                            className="inline-flex items-center bg-primary/10 dark:bg-primary/20 px-3 py-1 border border-input dark:border-gray-700 rounded-full font-medium text-primary dark:text-primary-foreground text-sm">
+                            {tag}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newTags = (formData.tags ?? "")
+                                  .split(",")
+                                  .filter((t) => t !== tag)
+                                  .join(",");
+                                handleInputChange("tags", newTags);
+                              }}
+                              className="hover:bg-primary/20 dark:hover:bg-primary/30 ml-2 p-1 rounded-full">
+                              <span className="sr-only">Remove tag</span>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                              </svg>
+                            </button>
+                          </div>
+                        ))}
                     </div>
                   )}
 
@@ -251,13 +269,17 @@ export function CreateProductForm() {
                   <Select
                     value=""
                     onValueChange={(selectedTag) => {
-                      const currentTags = formData.tags ? formData.tags.split(',') : [];
+                      const currentTags = formData.tags
+                        ? formData.tags.split(",")
+                        : [];
                       const newTags = currentTags.includes(selectedTag)
-                        ? currentTags.filter(tag => tag !== selectedTag)
+                        ? currentTags.filter((tag) => tag !== selectedTag)
                         : [...currentTags, selectedTag];
-                      handleInputChange('tags', newTags.filter(Boolean).join(','));
-                    }}
-                  >
+                      handleInputChange(
+                        "tags",
+                        newTags.filter(Boolean).join(",")
+                      );
+                    }}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select tags...">
                         <span className="text-muted-foreground">Add tags</span>
@@ -268,8 +290,11 @@ export function CreateProductForm() {
                         <SelectItem
                           key={tag}
                           value={tag}
-                          className={`${formData.tags?.includes(tag) ? 'bg-accent/50 dark:bg-accent/30' : ''}`}
-                        >
+                          className={`${
+                            formData.tags?.includes(tag)
+                              ? "bg-accent/50 dark:bg-accent/30"
+                              : ""
+                          }`}>
                           <div className="flex items-center">
                             {tag}
                             {formData.tags?.includes(tag) && (
@@ -283,8 +308,7 @@ export function CreateProductForm() {
                                 strokeWidth="2"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                className="ml-2"
-                              >
+                                className="ml-2">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                               </svg>
                             )}
@@ -311,7 +335,12 @@ export function CreateProductForm() {
                       type="number"
                       step="0.01"
                       value={formData.price}
-                      onChange={(e) => handleInputChange('price', parseFloat(e.target.value) || 0)}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "price",
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
                       placeholder="0.00"
                       required
                     />
@@ -323,8 +352,13 @@ export function CreateProductForm() {
                       id="salePrice"
                       type="number"
                       step="0.01"
-                      value={formData.salePrice || ''}
-                      onChange={(e) => handleInputChange('salePrice', parseFloat(e.target.value) || undefined)}
+                      value={formData.salePrice || ""}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "salePrice",
+                          parseFloat(e.target.value) || undefined
+                        )
+                      }
                       placeholder="0.00"
                     />
                   </div>
@@ -336,8 +370,13 @@ export function CreateProductForm() {
                     <Input
                       id="stockQuantity"
                       type="number"
-                      value={formData.stockQuantity || ''}
-                      onChange={(e) => handleInputChange('stockQuantity', parseInt(e.target.value) || 0)}
+                      value={formData.stockQuantity || ""}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "stockQuantity",
+                          parseInt(e.target.value) || 0
+                        )
+                      }
                       placeholder="0"
                     />
                   </div>
@@ -346,8 +385,10 @@ export function CreateProductForm() {
                     <Label htmlFor="volume">Volume</Label>
                     <Input
                       id="volume"
-                      value={formData.volume || ''}
-                      onChange={(e) => handleInputChange('volume', e.target.value)}
+                      value={formData.volume || ""}
+                      onChange={(e) =>
+                        handleInputChange("volume", e.target.value)
+                      }
                       placeholder="e.g., 30ml, 100g"
                     />
                   </div>
@@ -358,8 +399,13 @@ export function CreateProductForm() {
                   <Input
                     id="weightGrams"
                     type="number"
-                    value={formData.weightGrams || ''}
-                    onChange={(e) => handleInputChange('weightGrams', parseFloat(e.target.value) || undefined)}
+                    value={formData.weightGrams || ""}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "weightGrams",
+                        parseFloat(e.target.value) || undefined
+                      )
+                    }
                     placeholder="0"
                   />
                 </div>
@@ -369,8 +415,10 @@ export function CreateProductForm() {
                   <Input
                     id="expiryDate"
                     type="datetime-local"
-                    value={formData.expiryDate || ''}
-                    onChange={(e) => handleInputChange('expiryDate', e.target.value)}
+                    value={formData.expiryDate || ""}
+                    onChange={(e) =>
+                      handleInputChange("expiryDate", e.target.value)
+                    }
                   />
                 </div>
               </CardContent>
@@ -388,7 +436,7 @@ export function CreateProductForm() {
                   <div className="mt-2">
                     {mainImage ? (
                       <div className="inline-block relative">
-                        <img
+                        <Image
                           src={URL.createObjectURL(mainImage)}
                           alt="Main product"
                           className="rounded-lg w-32 h-32 object-cover"
@@ -398,8 +446,7 @@ export function CreateProductForm() {
                           variant="destructive"
                           size="icon"
                           className="-top-2 -right-2 absolute w-6 h-6"
-                          onClick={() => setMainImage(null)}
-                        >
+                          onClick={() => setMainImage(null)}>
                           <X className="w-3 h-3" />
                         </Button>
                       </div>
@@ -408,7 +455,10 @@ export function CreateProductForm() {
                         <div className="flex flex-col justify-center items-center pt-5 pb-6">
                           <Upload className="mb-4 w-8 h-8 text-gray-500" />
                           <p className="mb-2 text-gray-500 text-sm">
-                            <span className="font-semibold">Click to upload</span> main image
+                            <span className="font-semibold">
+                              Click to upload
+                            </span>{" "}
+                            main image
                           </p>
                         </div>
                         <input
@@ -430,7 +480,7 @@ export function CreateProductForm() {
                       <div className="gap-4 grid grid-cols-4">
                         {additionalImages.map((image, index) => (
                           <div key={index} className="relative">
-                            <img
+                            <Image
                               src={URL.createObjectURL(image)}
                               alt={`Additional ${index + 1}`}
                               className="rounded-lg w-full h-24 object-cover"
@@ -440,8 +490,7 @@ export function CreateProductForm() {
                               variant="destructive"
                               size="icon"
                               className="-top-2 -right-2 absolute w-6 h-6"
-                              onClick={() => removeAdditionalImage(index)}
-                            >
+                              onClick={() => removeAdditionalImage(index)}>
                               <X className="w-3 h-3" />
                             </Button>
                           </div>
@@ -453,7 +502,9 @@ export function CreateProductForm() {
                       <label className="flex flex-col justify-center items-center bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 border-dashed rounded-lg w-full h-24 cursor-pointer">
                         <div className="flex items-center gap-2">
                           <Plus className="w-4 h-4 text-gray-500" />
-                          <span className="text-gray-500 text-sm">Add More Images</span>
+                          <span className="text-gray-500 text-sm">
+                            Add More Images
+                          </span>
                         </div>
                         <input
                           type="file"
@@ -483,14 +534,15 @@ export function CreateProductForm() {
                   <Switch
                     id="published"
                     checked={formData.isPublished}
-                    onCheckedChange={(checked) => handleInputChange('isPublished', checked)}
+                    onCheckedChange={(checked) =>
+                      handleInputChange("isPublished", checked)
+                    }
                   />
                 </div>
                 <p className="text-muted-foreground text-sm">
                   {formData.isPublished
-                    ? 'Product will be visible to customers'
-                    : 'Product will be saved as draft'
-                  }
+                    ? "Product will be visible to customers"
+                    : "Product will be saved as draft"}
                 </p>
               </CardContent>
             </Card>
@@ -505,15 +557,14 @@ export function CreateProductForm() {
                       Creating Product...
                     </div>
                   ) : (
-                    'Create Product'
+                    "Create Product"
                   )}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   className="w-full"
-                  onClick={() => router.back()}
-                >
+                  onClick={() => router.back()}>
                   Cancel
                 </Button>
               </CardContent>
