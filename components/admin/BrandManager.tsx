@@ -262,10 +262,10 @@ export function BrandsManager() {
                 <Label className="font-medium text-sm">Brand Logo</Label>
                 <div className="mt-2">
                   {logoPreview ? (
-                    <div className="inline-block relative">
-                      <Image
+                    <div className="inline-block relative">                      <Image
                         src={logoPreview}
                         alt="Brand logo"
+                        fill
                         className="border rounded-lg w-20 h-20 object-cover"
                       />
                       <Button
@@ -345,8 +345,7 @@ export function BrandsManager() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6">
-          {/* Mobile Card View */}
+        <CardContent className="p-0 sm:p-6">          {/* Mobile Card View */}
           <div className="lg:hidden block">
             {filteredBrands.map((brand) => (
               <div key={brand.id} className="p-4 border-b last:border-b-0">
@@ -357,6 +356,7 @@ export function BrandsManager() {
                         <Image
                           src={brand.logoUrl}
                           alt={brand.name}
+                          fill
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -452,6 +452,8 @@ export function BrandsManager() {
                             <Image
                               src={brand.logoUrl}
                               alt={brand.name}
+                              width={48}
+                              height={48}
                               className="w-full h-full object-cover"
                             />
                           ) : (

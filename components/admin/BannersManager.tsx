@@ -220,11 +220,13 @@ export function BannersManager() {
               <div>
                 <Label>Banner Image *</Label>
                 <div className="mt-2">
+                  {" "}
                   {imagePreview ? (
                     <div className="relative">
                       <Image
                         src={imagePreview}
                         alt="Banner preview"
+                        fill
                         className="border rounded-lg w-full h-32 object-cover"
                       />
                       <Button
@@ -332,10 +334,12 @@ export function BannersManager() {
         <div className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {(Array.isArray(banners) ? banners : []).map((banner) => (
             <Card key={banner.id} className="overflow-hidden">
+              {" "}
               <div className="relative">
                 <Image
                   src={banner.imageUrl}
                   alt="Banner"
+                  fill
                   className="w-full h-48 object-cover"
                 />
                 <div className="top-2 right-2 absolute flex gap-2">

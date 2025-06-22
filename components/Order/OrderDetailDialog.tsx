@@ -223,6 +223,7 @@ export const OrderDetailDialog = ({
                                 item.productVariation.product.baseImageUrl
                               }
                               alt={item.productName}
+                              fill
                               className="border rounded w-10 h-10 object-cover"
                             />
                           ) : (

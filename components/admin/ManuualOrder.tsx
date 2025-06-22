@@ -857,7 +857,7 @@ export function ManualOrderForm() {
                                     id="referenceNumber"
                                     value={formData.referenceNumber}
                                     onChange={(e) => updateFormData('referenceNumber', e.target.value)}
-                                    placeholder="e.g., STORE-001-2025"
+                                    placeholder="e.g., Bkash transaction ID or order reference"
                                 />
                             </div>
                         </div>

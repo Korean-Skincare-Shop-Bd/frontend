@@ -439,6 +439,7 @@ export function CreateProductForm() {
                         <Image
                           src={URL.createObjectURL(mainImage)}
                           alt="Main product"
+                          fill
                           className="rounded-lg w-32 h-32 object-cover"
                         />
                         <Button
@@ -483,6 +484,7 @@ export function CreateProductForm() {
                             <Image
                               src={URL.createObjectURL(image)}
                               alt={`Additional ${index + 1}`}
+                              fill
                               className="rounded-lg w-full h-24 object-cover"
                             />
                             <Button

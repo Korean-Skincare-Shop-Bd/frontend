@@ -133,6 +133,7 @@ export default function ProductDetails() {
                     <Image
                       src={product.baseImageUrl}
                       alt={product.name}
+                      fill
                       className="border rounded-lg w-full h-32 object-cover"
                     />
                     <Badge
@@ -147,6 +148,7 @@ export default function ProductDetails() {
                     <Image
                       src={image.imageUrl}
                       alt={image.altText || product.name}
+                      fill
                       className="border rounded-lg w-full h-32 object-cover"
                     />
                     {image.isMainImage && (
@@ -210,6 +212,7 @@ export default function ProductDetails() {
                               <Image
                                 src={variation.imageUrl}
                                 alt={variation.name || product.name}
+                                fill
                                 className="rounded w-8 h-8 object-cover"
                               />
                             )}

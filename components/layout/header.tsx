@@ -322,10 +322,13 @@ export function Header() {
                             href={`/products?brand=${brand.id}`}
                             className="block space-y-1 hover:bg-accent focus:bg-accent p-3 rounded-md outline-none no-underline leading-none transition-colors hover:text-accent-foreground focus:text-accent-foreground select-none">
                             <div className="flex items-center space-x-2">
+                              {" "}
                               {brand.logo && (
                                 <Image
                                   src={brand.logo}
                                   alt={brand.name}
+                                  width={24}
+                                  height={24}
                                   className="rounded w-6 h-6 object-cover"
                                   onError={(e) => {
                                     e.currentTarget.style.display = "none";
@@ -516,10 +519,13 @@ export function Header() {
                           href={`/products?brand=${brand.id}`}
                           className="flex items-center py-1 text-muted-foreground hover:text-primary"
                           onClick={() => setIsOpen(false)}>
+                          {" "}
                           {brand.logo && (
                             <Image
                               src={brand.logo}
                               alt={brand.name}
+                              width={16}
+                              height={16}
                               className="mr-2 rounded w-4 h-4 object-cover"
                               onError={(e) => {
                                 e.currentTarget.style.display = "none";

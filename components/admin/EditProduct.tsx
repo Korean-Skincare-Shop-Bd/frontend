@@ -523,6 +523,7 @@ export default function EditProduct() {
                     <Image
                       src={product.baseImageUrl}
                       alt={product.name}
+                      fill
                       className="border rounded-lg w-full h-48 object-cover"
                     />
                     <Badge
@@ -540,6 +541,7 @@ export default function EditProduct() {
                         <Image
                           src={image.imageUrl}
                           alt={image.altText || product.name}
+                          fill
                           className="border rounded-lg w-full h-32 object-cover"
                         />
 

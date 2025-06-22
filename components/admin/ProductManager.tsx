@@ -161,7 +161,7 @@ export function ProductsManager() {
           </div>
         </CardHeader>
         <CardContent className="p-0 sm:p-6">
-          {/* Mobile Card View */}
+          {/* Mobile Card View */}{" "}
           <div className="lg:hidden block">
             {filteredProducts?.map((product) => (
               <div key={product.id} className="p-4 border-b last:border-b-0">
@@ -172,6 +172,8 @@ export function ProductsManager() {
                         <Image
                           src={product.baseImageUrl}
                           alt={product.name}
+                          width={48}
+                          height={48}
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -282,7 +284,6 @@ export function ProductsManager() {
               </div>
             )}
           </div>
-
           {/* Desktop Table View */}
           <div className="hidden lg:block overflow-x-auto">
             <Table>
@@ -303,10 +304,11 @@ export function ProductsManager() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="flex-shrink-0 bg-gray-100 rounded-lg w-12 h-12 overflow-hidden">
-                          {product.baseImageUrl ? (
-                            <Image
+                          {product.baseImageUrl ? (                            <Image
                               src={product.baseImageUrl}
                               alt={product.name}
+                              width={48}
+                              height={48}
                               className="w-full h-full object-cover"
                             />
                           ) : (
@@ -413,7 +415,8 @@ export function ProductsManager() {
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm">
               This action cannot be undone. This will permanently delete the
-              product &quot;{productToDelete?.name}&quot; and all its variations.
+              product &quot;{productToDelete?.name}&quot; and all its
+              variations.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:flex-row flex-col gap-2">
