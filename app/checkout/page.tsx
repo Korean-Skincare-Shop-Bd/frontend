@@ -886,7 +886,7 @@ export default function CheckoutPage() {
                                         </div>
                                     </div>
 
-                                    {/* <div className="bg-gray-50 dark:bg-gray-800/50 mt-4 p-3 rounded-lg">
+                                    <div className="bg-gray-50 dark:bg-gray-800/50 mt-4 p-3 rounded-lg">
                                         <div className="flex items-start gap-2">
                                             <AlertCircle className="flex-shrink-0 mt-0.5 w-4 h-4 text-gray-600 dark:text-gray-400" />
                                             <div className="text-gray-700 dark:text-gray-300 text-sm">
@@ -899,7 +899,7 @@ export default function CheckoutPage() {
                                                 </ul>
                                             </div>
                                         </div>
-                                    </div> */}
+                                    </div>
                                 </CardContent>
                             </Card>
                         </motion.div>

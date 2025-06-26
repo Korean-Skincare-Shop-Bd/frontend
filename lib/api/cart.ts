@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from '@/hooks/use-toast';
 // import { useToast } from '@/hooks/use-toast';
 import { setSessionIdCookie, getSessionIdCookie, removeSessionIdCookie } from '../cookies/session';
 // import { Description } from '@radix-ui/react-toast';
@@ -131,26 +132,68 @@ export const getEnhancedCart = async (): Promise<EnhancedCartResponse> => {
 };
 
 // Server Action for cart operations
-export async function updateCartItem(
+export async function updateCartItemQuantity(
+  variationId: string,
+  quantity: number
+) {
+  console.log(variationId)
+  const sessionId = await getSessionIdCookie();
+  if (!sessionId) {
+    throw new Error('No cart session found. Please create a cart first.');
+  }
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/enhanced-cart/variation/${variationId}/quantity?variationId=${variationId}&enhanced_cart_session_id=${sessionId}`,
+      {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ quantity, sessionId }),
+      next: { tags: ['cart'] },
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      // Attach error details if available
+      const errorMsg = data?.message || 'Failed to update cart item quantity';
+      const errorDetails = data?.details ? ` Details: ${JSON.stringify(data.details)}` : '';
+      throw new Error(`${errorMsg}${errorDetails}`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Cart API Error:', error);
+    throw error;
+  }
+}
+
+// Option 2: Bulk update stock for multiple variations
+export async function updateCartItemsStockBulk(
   token: string,
-  itemId: string,
-  updateData: { quantity: number }
+  stockUpdates: Array<{ variationId: string; stockQuantity: number }>
 ) {
   try {
-    const response = await fetch(`${API_BASE_URL}/enhanced-cart/items/${itemId}`, {
+    const response = await fetch(`${API_BASE_URL}/enhanced-cart/stock/bulk-update`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify(updateData),
+      body: JSON.stringify({ stockUpdates }),
       credentials: 'include',
       next: { tags: ['cart'] }
     });
 
     if (!response.ok) {
-      throw new Error('Failed to update cart item');
+      const errorText = await response.text();
+      throw new Error(`Failed to bulk update stock: ${errorText}`);
     }
+
+    return await response.json();
   } catch (error) {
     console.error('Cart API Error:', error);
     throw error;
@@ -158,26 +201,50 @@ export async function updateCartItem(
 }
 
 // Server Action for cart operations
-export async function removeCartItem(token: string, itemId: string) {
+export async function removeCartItem(
+  productId: string,
+  variantId: string,
+) {
   try {
-    const response = await fetch(`${API_BASE_URL}/enhanced-cart/items/${itemId}`, {
+    const requestBody: {
+      productId: string;
+      variantId: string;
+      sessionId?: string;
+    } = {
+      productId,
+      variantId
+    };
+
+    // Add sessionId to body if provided (Method 2 - Explicit)
+    const sessionId = await getSessionIdCookie();
+    if (sessionId) {
+      requestBody.sessionId = sessionId;
+    }
+    else{
+      toast({ description: 'No session ID found. Please refresh the page or try again.' });
+      return;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/enhanced-cart/remove?enhanced_cart_session_id=${sessionId}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
       },
-      credentials: 'include',
+      body: JSON.stringify(requestBody),
       next: { tags: ['cart'] }
     });
 
     if (!response.ok) {
-      throw new Error('Failed to remove item from cart');
+      const errorText = await response.text();
+      throw new Error(`Failed to remove item from cart: ${errorText}`);
     }
+
+    return await response.json();
   } catch (error) {
     console.error('Cart API Error:', error);
     throw error;
   }
 }
-
 export const prepareCheckout = async (): Promise<any> => {
   const sessionId = await getSessionIdCookie();
   if (!sessionId) throw new Error('No cart session found');
