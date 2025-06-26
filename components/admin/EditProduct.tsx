@@ -11,13 +11,13 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 import {
   Dialog,
@@ -28,11 +28,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { 
-  getProduct, 
-  updateProduct, 
-  Product, 
-  UpdateProductRequest, 
+import {
+  getProduct,
+  updateProduct,
+  Product,
+  UpdateProductRequest,
   ProductVariation,
   ProductImage,
   createProductVariation,
@@ -43,25 +43,23 @@ import {
   deleteProductImage,
   CreateVariationRequest,
   UpdateVariationRequest,
-  UpdateImageRequest,
-} from "@/lib/api/products";
-import { useAdmin } from "@/contexts/AdminContext";
-import { toast } from "sonner";
-import Image from "next/image";
+  UpdateImageRequest
+} from '@/lib/api/products';
+import { useAdmin } from '@/contexts/AdminContext';
+import { toast } from 'sonner';
 
 export default function EditProduct() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<UpdateProductRequest>({});
-  const [newTag, setNewTag] = useState("");
+  const [newTag, setNewTag] = useState('');
   const [variations, setVariations] = useState<ProductVariation[]>([]);
   const [images, setImages] = useState<ProductImage[]>([]);
 
   // Variation dialog states
   const [showVariationDialog, setShowVariationDialog] = useState(false);
-  const [editingVariation, setEditingVariation] =
-    useState<ProductVariation | null>(null);
+  const [editingVariation, setEditingVariation] = useState<ProductVariation | null>(null);
   const [variationForm, setVariationForm] = useState<CreateVariationRequest>({
     name: '',
     price: 0,
@@ -91,46 +89,44 @@ export default function EditProduct() {
       setProduct(productData);
       setFormData({
         name: productData.name,
-        description: productData.description || "",
+        description: productData.description || '',
         categoryId: productData.categoryId,
         brandId: productData.brandId,
         tags: productData.tags || [],
         isPublished: productData.isPublished,
-        expiryDate: productData.expiryDate
-          ? productData.expiryDate.split("T")[0]
-          : "",
+        expiryDate: productData.expiryDate ? productData.expiryDate.split('T')[0] : '',
       });
       setVariations(productData.variations || []);
       setImages(productData.images || []);
     } catch (error) {
-      console.error("Error fetching product:", error);
-      toast.error("Failed to fetch product");
+      console.error('Error fetching product:', error);
+      toast.error('Failed to fetch product');
     } finally {
       setLoading(false);
     }
   };
 
   const handleInputChange = (field: keyof UpdateProductRequest, value: any) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      [field]: value,
+      [field]: value
     }));
   };
 
   const addTag = () => {
     if (newTag.trim() && !formData.tags?.includes(newTag.trim())) {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
-        tags: [...(prev.tags || []), newTag.trim()],
+        tags: [...(prev.tags || []), newTag.trim()]
       }));
-      setNewTag("");
+      setNewTag('');
     }
   };
 
   const removeTag = (tagToRemove: string) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      tags: prev.tags?.filter((tag) => tag !== tagToRemove) || [],
+      tags: prev.tags?.filter(tag => tag !== tagToRemove) || []
     }));
   };
 
@@ -140,17 +136,15 @@ export default function EditProduct() {
 
       const updateData: UpdateProductRequest = {
         ...formData,
-        expiryDate: formData.expiryDate
-          ? new Date(formData.expiryDate).toISOString()
-          : undefined,
+        expiryDate: formData.expiryDate ? new Date(formData.expiryDate).toISOString() : undefined,
       };
 
       await updateProduct(token!, id, updateData);
-      toast.success("Product updated successfully");
-      router.push("/admin/products");
+      toast.success('Product updated successfully');
+      router.push('/admin/products');
     } catch (error) {
-      console.error("Error updating product:", error);
-      toast.error("Failed to update product");
+      console.error('Error updating product:', error);
+      toast.error('Failed to update product');
     } finally {
       setSaving(false);
     }
@@ -185,39 +179,32 @@ export default function EditProduct() {
     try {
       if (editingVariation) {
         // Update existing variation
-        const updated = await updateProductVariation(
-          token!,
-          id,
-          editingVariation.id,
-          variationForm
-        );
-        setVariations((prev) =>
-          prev.map((v) => (v.id === editingVariation.id ? updated : v))
-        );
-        toast.success("Variation updated successfully");
+        const updated = await updateProductVariation(token!, id, editingVariation.id, variationForm);
+        setVariations(prev => prev.map(v => v.id === editingVariation.id ? updated : v));
+        toast.success('Variation updated successfully');
       } else {
         // Create new variation
         const created = await createProductVariation(token!, id, variationForm);
-        setVariations((prev) => [...prev, created]);
-        toast.success("Variation created successfully");
+        setVariations(prev => [...prev, created]);
+        toast.success('Variation created successfully');
       }
       setShowVariationDialog(false);
     } catch (error) {
-      console.error("Error saving variation:", error);
-      toast.error("Failed to save variation");
+      console.error('Error saving variation:', error);
+      toast.error('Failed to save variation');
     }
   };
 
   const handleDeleteVariation = async (variationId: string) => {
     if (!confirm('Are you sure you want to delete this variation?')) return;
-    
+
     try {
       await deleteProductVariation(token!, id, variationId);
-      setVariations((prev) => prev.filter((v) => v.id !== variationId));
-      toast.success("Variation deleted successfully");
+      setVariations(prev => prev.filter(v => v.id !== variationId));
+      toast.success('Variation deleted successfully');
     } catch (error) {
-      console.error("Error deleting variation:", error);
-      toast.error("Failed to delete variation");
+      console.error('Error deleting variation:', error);
+      toast.error('Failed to delete variation');
     }
   };
 
@@ -225,7 +212,7 @@ export default function EditProduct() {
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     if (files.length > 10) {
-      toast.error("Maximum 10 images allowed");
+      toast.error('Maximum 10 images allowed');
       return;
     }
     setSelectedFiles(files);
@@ -236,52 +223,42 @@ export default function EditProduct() {
 
     try {
       setUploading(true);
-      const uploadedImages = await addProductImages(
-        token!,
-        id,
-        selectedFiles,
-        images.length === 0
-      );
-      setImages((prev) => [...prev, ...uploadedImages]);
+      const uploadedImages = await addProductImages(token!, id, selectedFiles, images.length === 0);
+      setImages(prev => [...prev, ...uploadedImages]);
       setSelectedFiles([]);
       if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+        fileInputRef.current.value = '';
       }
-      toast.success("Images uploaded successfully");
+      toast.success('Images uploaded successfully');
     } catch (error) {
-      console.error("Error uploading images:", error);
-      toast.error("Failed to upload images");
+      console.error('Error uploading images:', error);
+      toast.error('Failed to upload images');
     } finally {
       setUploading(false);
     }
   };
 
-  const handleImageUpdate = async (
-    imageId: string,
-    updates: UpdateImageRequest
-  ) => {
+  const handleImageUpdate = async (imageId: string, updates: UpdateImageRequest) => {
     try {
       const updated = await updateProductImage(token!, id, imageId, updates);
-      setImages((prev) =>
-        prev.map((img) => (img.id === imageId ? updated : img))
-      );
-      toast.success("Image updated successfully");
+      setImages(prev => prev.map(img => img.id === imageId ? updated : img));
+      toast.success('Image updated successfully');
     } catch (error) {
-      console.error("Error updating image:", error);
-      toast.error("Failed to update image");
+      console.error('Error updating image:', error);
+      toast.error('Failed to update image');
     }
   };
 
   const handleImageDelete = async (imageId: string) => {
     if (!confirm('Are you sure you want to delete this image?')) return;
-    
+
     try {
       await deleteProductImage(token!, id, imageId);
-      setImages((prev) => prev.filter((img) => img.id !== imageId));
-      toast.success("Image deleted successfully");
+      setImages(prev => prev.filter(img => img.id !== imageId));
+      toast.success('Image deleted successfully');
     } catch (error) {
-      console.error("Error deleting image:", error);
-      toast.error("Failed to delete image");
+      console.error('Error deleting image:', error);
+      toast.error('Failed to delete image');
     }
   };
 
@@ -306,7 +283,7 @@ export default function EditProduct() {
       <div className="mx-auto px-4 py-8 container">
         <div className="text-center">
           <h1 className="mb-4 font-bold text-2xl">Product not found</h1>
-          <Button onClick={() => router.push("/admin/products")}>
+          <Button onClick={() => router.push('/admin/products')}>
             <ArrowLeft className="mr-2 w-4 h-4" />
             Back to Products
           </Button>
@@ -323,7 +300,8 @@ export default function EditProduct() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => router.push("/admin/products")}>
+            onClick={() => router.push('/admin/products')}
+          >
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
@@ -336,10 +314,14 @@ export default function EditProduct() {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => router.push(`/admin/products/${id}`)}>
+            onClick={() => router.push(`/admin/products/${id}`)}
+          >
             Cancel
           </Button>
-          <Button onClick={handleUpdateProduct} disabled={saving}>
+          <Button
+            onClick={handleUpdateProduct}
+            disabled={saving}
+          >
             {saving ? (
               <>
                 <div className="mr-2 border-2 border-white border-t-transparent rounded-full w-4 h-4 animate-spin"></div>
@@ -370,7 +352,7 @@ export default function EditProduct() {
                   id="name"
                   value={formData.name || ''}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                                    placeholder="Enter product name"
+                  placeholder="Enter product name"
                 />
               </div>
 
@@ -378,10 +360,8 @@ export default function EditProduct() {
                 <Label htmlFor="description">Description</Label>
                 <Textarea
                   id="description"
-                  value={formData.description || ""}
-                  onChange={(e) =>
-                    handleInputChange("description", e.target.value)
-                  }
+                  value={formData.description || ''}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
                   placeholder="Enter product description"
                   rows={4}
                 />
@@ -417,30 +397,28 @@ export default function EditProduct() {
                   <TableBody>
                     {variations.map((variation) => (
                       <TableRow key={variation.id}>
-                        <TableCell>{variation.name || "Unnamed"}</TableCell>
+                        <TableCell>{variation.name || 'Unnamed'}</TableCell>
                         <TableCell>৳{variation.price}</TableCell>
                         <TableCell>
-                          {variation.salePrice
-                            ? `৳${variation.salePrice}`
-                            : "-"}
+                          {variation.salePrice ? `৳${variation.salePrice}` : '-'}
                         </TableCell>
                         <TableCell>{variation.stockQuantity}</TableCell>
-                        <TableCell>{variation.volume || "-"}</TableCell>
-                        <TableCell>{variation.weightGrams || "-"}</TableCell>
+                        <TableCell>{variation.volume || '-'}</TableCell>
+                        <TableCell>{variation.weightGrams || '-'}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => openVariationDialog(variation)}>
+                              onClick={() => openVariationDialog(variation)}
+                            >
                               <Edit className="w-4 h-4" />
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() =>
-                                handleDeleteVariation(variation.id)
-                              }>
+                              onClick={() => handleDeleteVariation(variation.id)}
+                            >
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
@@ -451,8 +429,7 @@ export default function EditProduct() {
                 </Table>
               ) : (
                 <div className="py-8 text-muted-foreground text-center">
-                  No variations available. Add your first variation to get
-                  started.
+                  No variations available. Add your first variation to get started.
                 </div>
               )}
             </CardContent>
@@ -466,21 +443,23 @@ export default function EditProduct() {
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    onClick={() => fileInputRef.current?.click()}>
+                    onClick={() => fileInputRef.current?.click()}
+                  >
                     <Upload className="mr-2 w-4 h-4" />
                     Select Images
                   </Button>
                   {selectedFiles.length > 0 && (
-                    <Button onClick={handleImageUpload} disabled={uploading}>
+                    <Button
+                      onClick={handleImageUpload}
+                      disabled={uploading}
+                    >
                       {uploading ? (
                         <>
                           <div className="mr-2 border-2 border-white border-t-transparent rounded-full w-4 h-4 animate-spin"></div>
                           Uploading...
                         </>
                       ) : (
-                        `Upload ${selectedFiles.length} image${
-                          selectedFiles.length > 1 ? "s" : ""
-                        }`
+                        `Upload ${selectedFiles.length} image${selectedFiles.length > 1 ? 's' : ''}`
                       )}
                     </Button>
                   )}
@@ -513,14 +492,12 @@ export default function EditProduct() {
               <div className="space-y-4">
                 {product.baseImageUrl && (
                   <div className="relative">
-                    <Image
+                    <img
                       src={product.baseImageUrl}
                       alt={product.name}
                       className="border rounded-lg w-full h-48 object-cover"
                     />
-                    <Badge
-                      className="top-2 right-2 absolute"
-                      variant="secondary">
+                    <Badge className="top-2 right-2 absolute" variant="secondary">
                       Base Image
                     </Badge>
                   </div>
@@ -530,7 +507,7 @@ export default function EditProduct() {
                   <div className="gap-4 grid grid-cols-2 md:grid-cols-3">
                     {images.map((image) => (
                       <div key={image.id} className="group relative">
-                        <Image
+                        <img
                           src={image.imageUrl}
                           alt={image.altText || product.name}
                           className="border rounded-lg w-full h-32 object-cover"
@@ -541,28 +518,24 @@ export default function EditProduct() {
                           <Button
                             size="sm"
                             variant="secondary"
-                            onClick={() =>
-                              handleImageUpdate(image.id, {
-                                isPrimary: !image.isMainImage,
-                              })
-                            }>
-                            <Star
-                              className={`w-4 h-4 ${
-                                image.isMainImage ? "fill-yellow-400" : ""
-                              }`}
-                            />
+                            onClick={() => handleImageUpdate(image.id, { isPrimary: !image.isMainImage })}
+                          >
+                            <Star className={`w-4 h-4 ${image.isMainImage ? 'fill-yellow-400' : ''}`} />
                           </Button>
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handleImageDelete(image.id)}>
+                            onClick={() => handleImageDelete(image.id)}
+                          >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
 
                         {/* Main image badge */}
                         {image.isMainImage && (
-                          <Badge className="top-2 right-2 absolute">Main</Badge>
+                          <Badge className="top-2 right-2 absolute">
+                            Main
+                          </Badge>
                         )}
                       </div>
                     ))}
@@ -591,7 +564,7 @@ export default function EditProduct() {
                     onChange={(e) => setNewTag(e.target.value)}
                     placeholder="Add a tag"
                     onKeyPress={(e) => {
-                      if (e.key === "Enter") {
+                      if (e.key === 'Enter') {
                         e.preventDefault();
                         addTag();
                       }
@@ -601,7 +574,8 @@ export default function EditProduct() {
                     type="button"
                     variant="outline"
                     onClick={addTag}
-                    disabled={!newTag.trim()}>
+                    disabled={!newTag.trim()}
+                  >
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
@@ -609,15 +583,13 @@ export default function EditProduct() {
                 {formData.tags && formData.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {formData.tags.map((tag, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="flex items-center gap-1">
+                      <Badge key={index} variant="secondary" className="flex items-center gap-1">
                         {tag}
                         <button
                           type="button"
                           onClick={() => removeTag(tag)}
-                          className="ml-1 hover:text-red-500">
+                          className="ml-1 hover:text-red-500"
+                        >
                           <X className="w-3 h-3" />
                         </button>
                       </Badge>
@@ -642,9 +614,7 @@ export default function EditProduct() {
                 <Switch
                   id="published"
                   checked={formData.isPublished || false}
-                  onCheckedChange={(checked) =>
-                    handleInputChange("isPublished", checked)
-                  }
+                  onCheckedChange={(checked) => handleInputChange('isPublished', checked)}
                 />
               </div>
 
@@ -655,10 +625,8 @@ export default function EditProduct() {
                 <Input
                   id="expiryDate"
                   type="date"
-                  value={formData.expiryDate || ""}
-                  onChange={(e) =>
-                    handleInputChange("expiryDate", e.target.value)
-                  }
+                  value={formData.expiryDate || ''}
+                  onChange={(e) => handleInputChange('expiryDate', e.target.value)}
                 />
               </div>
             </CardContent>
@@ -673,20 +641,19 @@ export default function EditProduct() {
               <div>
                 <Label>Current Category</Label>
                 <p className="text-muted-foreground text-sm">
-                  {product.category?.name || "Uncategorized"}
+                  {product.category?.name || 'Uncategorized'}
                 </p>
               </div>
 
               <div>
                 <Label>Current Brand</Label>
                 <p className="text-muted-foreground text-sm">
-                  {product.brand?.name || "No Brand"}
+                  {product.brand?.name || 'No Brand'}
                 </p>
               </div>
 
               <p className="text-muted-foreground text-xs">
-                Note: Category and Brand changes require additional
-                implementation
+                Note: Category and Brand changes require additional implementation
               </p>
             </CardContent>
           </Card>
@@ -745,10 +712,10 @@ export default function EditProduct() {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>
-              {editingVariation ? "Edit Variation" : "Add New Variation"}
+              {editingVariation ? 'Edit Variation' : 'Add New Variation'}
             </DialogTitle>
             <DialogDescription>
-              {editingVariation 
+              {editingVariation
                 ? 'Update the variation details below.'
                 : 'Add a new variation to this product.'
               }
@@ -780,12 +747,10 @@ export default function EditProduct() {
                 type="number"
                 step="0.01"
                 value={variationForm.price}
-                onChange={(e) =>
-                  setVariationForm((prev) => ({
-                    ...prev,
-                    price: parseFloat(e.target.value) || 0,
-                  }))
-                }
+                onChange={(e) => setVariationForm(prev => ({
+                  ...prev,
+                  price: parseFloat(e.target.value) || 0
+                }))}
                 className="col-span-3"
               />
             </div>
@@ -797,13 +762,11 @@ export default function EditProduct() {
                 id="salePrice"
                 type="number"
                 step="0.01"
-                value={variationForm.salePrice || ""}
-                onChange={(e) =>
-                  setVariationForm((prev) => ({
-                    ...prev,
-                    salePrice: parseFloat(e.target.value) || undefined,
-                  }))
-                }
+                value={variationForm.salePrice || ''}
+                onChange={(e) => setVariationForm(prev => ({
+                  ...prev,
+                  salePrice: parseFloat(e.target.value) || undefined
+                }))}
                 className="col-span-3"
               />
             </div>
@@ -815,12 +778,10 @@ export default function EditProduct() {
                 id="stockQuantity"
                 type="number"
                 value={variationForm.stockQuantity}
-                onChange={(e) =>
-                  setVariationForm((prev) => ({
-                    ...prev,
-                    stockQuantity: parseInt(e.target.value) || 0,
-                  }))
-                }
+                onChange={(e) => setVariationForm(prev => ({
+                  ...prev,
+                  stockQuantity: parseInt(e.target.value) || 0
+                }))}
                 className="col-span-3"
               />
             </div>
@@ -830,13 +791,11 @@ export default function EditProduct() {
               </Label>
               <Input
                 id="volume"
-                value={variationForm.volume || ""}
-                onChange={(e) =>
-                  setVariationForm((prev) => ({
-                    ...prev,
-                    volume: e.target.value,
-                  }))
-                }
+                value={variationForm.volume || ''}
+                onChange={(e) => setVariationForm(prev => ({
+                  ...prev,
+                  volume: e.target.value
+                }))}
                 placeholder="e.g., 500ml"
                 className="col-span-3"
               />
@@ -848,43 +807,11 @@ export default function EditProduct() {
               <Input
                 id="weightGrams"
                 type="number"
-                value={variationForm.weightGrams || ""}
-                onChange={(e) =>
-                  setVariationForm((prev) => ({
-                    ...prev,
-                    weightGrams: parseInt(e.target.value) || undefined,
-                  }))
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="items-center gap-2 grid grid-cols-4">
-              <Label htmlFor="color" className="text-right">
-                Color
-              </Label>
-              <Input
-                id="color"
-                value={variationForm.color || ''}
+                value={variationForm.weightGrams || ''}
                 onChange={(e) => setVariationForm(prev => ({
                   ...prev,
-                  color: e.target.value
+                  weightGrams: parseInt(e.target.value) || undefined
                 }))}
-                placeholder="e.g., Rose Gold"
-                className="col-span-3"
-              />
-            </div>
-            <div className="items-center gap-2 grid grid-cols-4">
-              <Label htmlFor="size" className="text-right">
-                Size
-              </Label>
-              <Input
-                id="size"
-                value={variationForm.size || ''}
-                onChange={(e) => setVariationForm(prev => ({
-                  ...prev,
-                  size: e.target.value
-                }))}
-                placeholder="e.g., Small"
                 className="col-span-3"
               />
             </div>
@@ -893,11 +820,12 @@ export default function EditProduct() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setShowVariationDialog(false)}>
+              onClick={() => setShowVariationDialog(false)}
+            >
               Cancel
             </Button>
             <Button onClick={handleVariationSubmit}>
-              {editingVariation ? "Update" : "Create"} Variation
+              {editingVariation ? 'Update' : 'Create'} Variation
             </Button>
           </DialogFooter>
         </DialogContent>
