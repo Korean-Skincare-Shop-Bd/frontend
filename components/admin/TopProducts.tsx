@@ -67,6 +67,7 @@ export function TopProducts() {
                   <Image
                     src={product.baseImageUrl}
                     alt={product.name}
+                    fill
                     className="w-full h-full object-cover"
                   />
                 ) : (

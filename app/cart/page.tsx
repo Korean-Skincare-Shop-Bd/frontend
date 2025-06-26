@@ -13,11 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getEnhancedCart, updateCartItemQuantity, removeCartItem, prepareCheckout, CartItem } from '@/lib/api/cart';
 import { getProduct, Product, ProductVariation } from '@/lib/api/products';
 import { useRouter } from 'next/navigation';
-interface CartItemWithProduct {
-  id: string;
-  productId: string;
-  quantity: number;
-  price: number;
+interface CartItemWithProduct extends CartItem {
   product?: Product;
   variation?: ProductVariation;
   loading?: boolean;
