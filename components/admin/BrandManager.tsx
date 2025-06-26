@@ -262,7 +262,9 @@ export function BrandsManager() {
                 <Label className="font-medium text-sm">Brand Logo</Label>
                 <div className="mt-2">
                   {logoPreview ? (
-                    <div className="inline-block relative">                      <Image
+                    <div className="inline-block relative">
+                      {" "}
+                      <Image
                         src={logoPreview}
                         alt="Brand logo"
                         fill
@@ -345,7 +347,9 @@ export function BrandsManager() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6">          {/* Mobile Card View */}
+        <CardContent className="p-0 sm:p-6">
+          {" "}
+          {/* Mobile Card View */}
           <div className="lg:hidden block">
             {filteredBrands.map((brand) => (
               <div key={brand.id} className="p-4 border-b last:border-b-0">
@@ -429,7 +433,6 @@ export function BrandsManager() {
               </div>
             )}
           </div>
-
           {/* Desktop Table View */}
           <div className="hidden lg:block overflow-x-auto">
             <Table>
@@ -535,7 +538,8 @@ export function BrandsManager() {
             </AlertDialogTitle>
             <AlertDialogDescription className="text-sm">
               This action cannot be undone. This will permanently delete the
-              brand &quot;{brandToDelete?.name}&quot; and may affect associated products.
+              brand &quot;{brandToDelete?.name}&quot; and may affect associated
+              products.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:flex-row flex-col gap-2">

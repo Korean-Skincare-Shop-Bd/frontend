@@ -304,7 +304,8 @@ export function ProductsManager() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="flex-shrink-0 bg-gray-100 rounded-lg w-12 h-12 overflow-hidden">
-                          {product.baseImageUrl ? (                            <Image
+                          {product.baseImageUrl ? (
+                            <Image
                               src={product.baseImageUrl}
                               alt={product.name}
                               width={48}
