@@ -11,13 +11,13 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 import {
   Dialog,
@@ -28,11 +28,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { 
-  getProduct, 
-  updateProduct, 
-  Product, 
-  UpdateProductRequest, 
+import {
+  getProduct,
+  updateProduct,
+  Product,
+  UpdateProductRequest,
   ProductVariation,
   ProductImage,
   createProductVariation,
@@ -56,20 +56,21 @@ export default function EditProduct() {
   const [newTag, setNewTag] = useState('');
   const [variations, setVariations] = useState<ProductVariation[]>([]);
   const [images, setImages] = useState<ProductImage[]>([]);
-  
+
   // Variation dialog states
   const [showVariationDialog, setShowVariationDialog] = useState(false);
   const [editingVariation, setEditingVariation] = useState<ProductVariation | null>(null);
   const [variationForm, setVariationForm] = useState<CreateVariationRequest>({
+    name: '',
     price: 0,
     stockQuantity: 0,
   });
-  
+
   // Image upload states
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const router = useRouter();
   const params = useParams();
   const { token } = useAdmin();
@@ -132,7 +133,7 @@ export default function EditProduct() {
   const handleUpdateProduct = async () => {
     try {
       setSaving(true);
-      
+
       const updateData: UpdateProductRequest = {
         ...formData,
         expiryDate: formData.expiryDate ? new Date(formData.expiryDate).toISOString() : undefined,
@@ -154,18 +155,19 @@ export default function EditProduct() {
     if (variation) {
       setEditingVariation(variation);
       setVariationForm({
+        name: variation.name ?? '',
         price: variation.price,
         salePrice: variation.salePrice,
         stockQuantity: variation.stockQuantity,
         volume: variation.volume,
         weightGrams: variation.weightGrams,
-        color: variation.attributes?.color as string,
         size: variation.attributes?.size as string,
         isDefault: false,
       });
     } else {
       setEditingVariation(null);
       setVariationForm({
+        name: '',
         price: 0,
         stockQuantity: 0,
       });
@@ -195,7 +197,7 @@ export default function EditProduct() {
 
   const handleDeleteVariation = async (variationId: string) => {
     if (!confirm('Are you sure you want to delete this variation?')) return;
-    
+
     try {
       await deleteProductVariation(token!, id, variationId);
       setVariations(prev => prev.filter(v => v.id !== variationId));
@@ -218,7 +220,7 @@ export default function EditProduct() {
 
   const handleImageUpload = async () => {
     if (selectedFiles.length === 0) return;
-    
+
     try {
       setUploading(true);
       const uploadedImages = await addProductImages(token!, id, selectedFiles, images.length === 0);
@@ -249,7 +251,7 @@ export default function EditProduct() {
 
   const handleImageDelete = async (imageId: string) => {
     if (!confirm('Are you sure you want to delete this image?')) return;
-    
+
     try {
       await deleteProductImage(token!, id, imageId);
       setImages(prev => prev.filter(img => img.id !== imageId));
@@ -350,10 +352,10 @@ export default function EditProduct() {
                   id="name"
                   value={formData.name || ''}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                                    placeholder="Enter product name"
+                  placeholder="Enter product name"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="description">Description</Label>
                 <Textarea
@@ -473,7 +475,7 @@ export default function EditProduct() {
                 onChange={handleFileSelect}
                 className="hidden"
               />
-              
+
               {selectedFiles.length > 0 && (
                 <div className="bg-gray-50 mb-4 p-4 rounded-lg">
                   <p className="mb-2 font-medium text-sm">Selected files:</p>
@@ -500,7 +502,7 @@ export default function EditProduct() {
                     </Badge>
                   </div>
                 )}
-                
+
                 {images.length > 0 && (
                   <div className="gap-4 grid grid-cols-2 md:grid-cols-3">
                     {images.map((image) => (
@@ -510,7 +512,7 @@ export default function EditProduct() {
                           alt={image.altText || product.name}
                           className="border rounded-lg w-full h-32 object-cover"
                         />
-                        
+
                         {/* Image controls overlay */}
                         <div className="absolute inset-0 flex justify-center items-center gap-2 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
@@ -528,7 +530,7 @@ export default function EditProduct() {
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
-                        
+
                         {/* Main image badge */}
                         {image.isMainImage && (
                           <Badge className="top-2 right-2 absolute">
@@ -539,7 +541,7 @@ export default function EditProduct() {
                     ))}
                   </div>
                 )}
-                
+
                 {!product.baseImageUrl && images.length === 0 && (
                   <div className="py-8 text-muted-foreground text-center">
                     No images uploaded. Upload your first image to get started.
@@ -577,7 +579,7 @@ export default function EditProduct() {
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
-                
+
                 {formData.tags && formData.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {formData.tags.map((tag, index) => (
@@ -615,9 +617,9 @@ export default function EditProduct() {
                   onCheckedChange={(checked) => handleInputChange('isPublished', checked)}
                 />
               </div>
-              
+
               <Separator />
-              
+
               <div>
                 <Label htmlFor="expiryDate">Expiry Date</Label>
                 <Input
@@ -642,14 +644,14 @@ export default function EditProduct() {
                   {product.category?.name || 'Uncategorized'}
                 </p>
               </div>
-              
+
               <div>
                 <Label>Current Brand</Label>
                 <p className="text-muted-foreground text-sm">
                   {product.brand?.name || 'No Brand'}
                 </p>
               </div>
-              
+
               <p className="text-muted-foreground text-xs">
                 Note: Category and Brand changes require additional implementation
               </p>
@@ -669,30 +671,30 @@ export default function EditProduct() {
                     {variations.length}
                   </span>
                 </div>
-                
+
                 <div className="flex justify-between">
                   <span className="text-sm">Total Stock</span>
                   <span className="font-medium text-sm">
                     {variations.reduce((sum, v) => sum + v.stockQuantity, 0)}
                   </span>
                 </div>
-                
+
                 <div className="flex justify-between">
                   <span className="text-sm">Images</span>
                   <span className="font-medium text-sm">
                     {images.length + (product.baseImageUrl ? 1 : 0)}
                   </span>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div className="flex justify-between">
                   <span className="text-sm">Created</span>
                   <span className="font-medium text-sm">
                     {new Date(product.createdAt).toLocaleDateString()}
                   </span>
                 </div>
-                
+
                 <div className="flex justify-between">
                   <span className="text-sm">Updated</span>
                   <span className="font-medium text-sm">
@@ -713,13 +715,29 @@ export default function EditProduct() {
               {editingVariation ? 'Edit Variation' : 'Add New Variation'}
             </DialogTitle>
             <DialogDescription>
-              {editingVariation 
+              {editingVariation
                 ? 'Update the variation details below.'
                 : 'Add a new variation to this product.'
               }
             </DialogDescription>
           </DialogHeader>
           <div className="gap-4 grid py-4">
+            <div className="items-center gap-2 grid grid-cols-4">
+              <Label htmlFor="name" className="text-right">
+                Name *
+              </Label>
+              <Input
+                id="name"
+                type="text"
+                value={variationForm.name}
+                onChange={(e) => setVariationForm(prev => ({
+                  ...prev,
+                  name: e.target.value
+                }))}
+                className="col-span-3"
+                required
+              />
+            </div>
             <div className="items-center gap-2 grid grid-cols-4">
               <Label htmlFor="price" className="text-right">
                 Price *
@@ -794,36 +812,6 @@ export default function EditProduct() {
                   ...prev,
                   weightGrams: parseInt(e.target.value) || undefined
                 }))}
-                className="col-span-3"
-              />
-            </div>
-            <div className="items-center gap-2 grid grid-cols-4">
-              <Label htmlFor="color" className="text-right">
-                Color
-              </Label>
-              <Input
-                id="color"
-                value={variationForm.color || ''}
-                onChange={(e) => setVariationForm(prev => ({
-                  ...prev,
-                  color: e.target.value
-                }))}
-                placeholder="e.g., Rose Gold"
-                className="col-span-3"
-              />
-            </div>
-            <div className="items-center gap-2 grid grid-cols-4">
-              <Label htmlFor="size" className="text-right">
-                Size
-              </Label>
-              <Input
-                id="size"
-                value={variationForm.size || ''}
-                onChange={(e) => setVariationForm(prev => ({
-                  ...prev,
-                  size: e.target.value
-                }))}
-                placeholder="e.g., Small"
                 className="col-span-3"
               />
             </div>

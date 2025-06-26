@@ -240,12 +240,12 @@ export const updateProduct = async (token: string, id: string, productData: Upda
 
 // Add these new interfaces
 export interface CreateVariationRequest {
+  name:string
   price: number;
   salePrice?: number;
   stockQuantity: number;
   volume?: string;
   weightGrams?: number;
-  color?: string;
   size?: string;
   isDefault?: boolean;
 }
@@ -257,7 +257,6 @@ export interface UpdateVariationRequest {
   volume?: string;
   weightGrams?: number;
   color?: string;
-  size?: string;
   isDefault?: boolean;
 }
 
@@ -272,7 +271,10 @@ export const createProductVariation = async (
   productId: string, 
   variationData: CreateVariationRequest
 ): Promise<ProductVariation> => {
-  const response = await fetch(`${API_BASE_URL}/products/${productId}/variations`, {
+
+  const url = `${API_BASE_URL}/products/${productId}/variations?productId=${productId}`;
+
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,

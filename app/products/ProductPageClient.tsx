@@ -92,56 +92,50 @@ export default function ProductsPageContent() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        setLoading(true);
+      setLoading(true);
 
-        const params: GetProductsParams = {
-          page: currentPage,
-          limit: pagination.limit,
-          sortBy,
-          sortOrder
-        };
+      // Build params object
+      const params: GetProductsParams = {
+        page: currentPage,
+        limit: pagination.limit,
+        sortBy,
+        sortOrder,
+      };
 
-        // Add filters
-        if (selectedCategory !== 'all') {
-          params.category = selectedCategory;
-        }
-        if (selectedBrand !== 'all') {
-          params.brand = selectedBrand;
-        }
-        if (priceRange[0] > 0) {
-          params.minPrice = priceRange[0];
-        }
-        if (priceRange[1] < 50000) {
-          params.maxPrice = priceRange[1];
-        }
+      if (selectedCategory !== 'all') {
+        params.category = selectedCategory;
+      }
+      if (selectedBrand !== 'all') {
+        params.brand = selectedBrand;
+      }
+      if (priceRange[0] > 0) {
+        params.minPrice = priceRange[0];
+      }
+      if (priceRange[1] < 50000) {
+        params.maxPrice = priceRange[1];
+      }
+      if (searchQuery) {
+        params.search = searchQuery;
+      }
 
-        // Add search query as a URL parameter
-        const searchParams = new URLSearchParams();
-        Object.entries(params).forEach(([key, value]) => {
-          if (value !== undefined) {
-            searchParams.append(key, value.toString());
-          }
-        });
+      // Fetch products using getProducts API
+      const response = await getProducts(params);
 
-        if (searchQuery) {
-          searchParams.append('search', searchQuery);
-        }
-
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/public?${searchParams.toString()}`);
-
-        if (!response) {
-          throw new Error('Failed to fetch products');
-        }
-
-        const data = await response.json();
-        setProducts(data.products);
-        setPagination(data);
-
+      setProducts(response.products);
+      setPagination({
+        page: response.page,
+        limit: response.limit,
+        total: response.total,
+        totalPages: response.totalPages,
+        hasNext: response.hasNext,
+        hasPrev: response.hasPrev,
+      });
+      setError(null);
       } catch (err) {
-        console.error('Failed to fetch products:', err);
-        setError('Failed to load products');
+      console.error('Failed to fetch products:', err);
+      setError('Failed to load products');
       } finally {
-        setLoading(false);
+      setLoading(false);
       }
     };
 
@@ -223,8 +217,8 @@ export default function ProductsPageContent() {
   const handleAddToCart = async (product: Product, variationId?: string) => {
     try {
       setAddingToCart(product.id);
-
-      const selectedVariation = variationId
+      
+      const selectedVariation = variationId 
         ? product.variations.find(v => v.id === variationId)
         : product.variations[0];
 
@@ -237,15 +231,12 @@ export default function ProductsPageContent() {
         return;
       }
 
-      const response = await addToEnhancedCart({
+      await addToEnhancedCart({
         productId: product.id,
         quantity: 1,
         variantId: selectedVariation.id
       });
       window.dispatchEvent(new Event('cartUpdated'));
-      toast({ description: response.message })
-
-
 
       toast({
         title: "Success",
@@ -262,6 +253,7 @@ export default function ProductsPageContent() {
       setAddingToCart(null);
     }
   };
+
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
       ...prev,

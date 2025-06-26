@@ -766,7 +766,7 @@ export default function CheckoutPage() {
                                                 </div>
                                                 <div className="flex items-center gap-2 text-green-600 text-sm">
                                                     <Package className="w-4 h-4" />
-                                                    <span>30-Day Return Policy</span>
+                                                    <span>Easy Return Policy</span>
                                                 </div>
                                             </div>
 
@@ -886,20 +886,7 @@ export default function CheckoutPage() {
                                         </div>
                                     </div>
 
-                                    <div className="bg-gray-50 dark:bg-gray-800/50 mt-4 p-3 rounded-lg">
-                                        <div className="flex items-start gap-2">
-                                            <AlertCircle className="flex-shrink-0 mt-0.5 w-4 h-4 text-gray-600 dark:text-gray-400" />
-                                            <div className="text-gray-700 dark:text-gray-300 text-sm">
-                                                <p className="mb-1 font-medium">Shipping Notes:</p>
-                                                <ul className="space-y-1 text-xs">
-                                                    <li>• Orders are typically processed within 1-2 business days</li>
-                                                    <li>• Delivery time: 2-3 days for Dhaka, 3-5 days for outside Dhaka</li>
-                                                    <li>• Free shipping may apply for orders above certain amount</li>
-                                                    <li>• Use "Auto-detect Region" for accurate shipping calculation</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    
                                 </CardContent>
                             </Card>
                         </motion.div>
