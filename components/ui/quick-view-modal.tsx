@@ -136,7 +136,7 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                           <div className="text-muted-foreground text-xs">{variation.volume}</div>
                         )}
                         <div className="font-semibold text-sm">
-                          ${(variation.salePrice || variation.price).toFixed(2)}
+                          ৳{Number(variation.salePrice || variation.price).toFixed(2)}
                         </div>
                       </button>
                     ))}
