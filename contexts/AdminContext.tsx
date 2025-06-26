@@ -23,8 +23,15 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [adminData, setAdminData] = useState<{ id: string; email: string; username: string } | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    
     const savedToken = localStorage.getItem('admin_token');
     const savedAdminData = localStorage.getItem('admin_data');
     const savedTimestamp = localStorage.getItem('admin_token_timestamp');
@@ -47,7 +54,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
     
     setLoading(false);
-  }, []);
+  }, [mounted]);
 
   const login = async (credentials: AdminLoginRequest) => {
     try {

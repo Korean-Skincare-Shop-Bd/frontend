@@ -1,23 +1,33 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
-import { ArrowLeft, Edit, Trash2, Eye, Package, DollarSign, Calendar, Tag } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from '@/components/ui/table';
-import { getProduct, Product } from '@/lib/api/products';
-import { useAdmin } from '@/contexts/AdminContext';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import {
+  ArrowLeft,
+  Edit,
+  Trash2,
+  Eye,
+  Package,
+  DollarSign,
+  Calendar,
+  Tag,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { getProduct, Product } from "@/lib/api/products";
+import { useAdmin } from "@/contexts/AdminContext";
+import { toast } from "sonner";
+import Image from "next/image";
 
 export default function ProductDetails() {
   const [product, setProduct] = useState<Product | null>(null);
@@ -36,11 +46,11 @@ export default function ProductDetails() {
   const fetchProduct = async () => {
     try {
       setLoading(true);
-      const productData = await getProduct( id);
+      const productData = await getProduct(id);
       setProduct(productData);
     } catch (error) {
-      console.error('Error fetching product details:', error);
-      toast.error('Failed to fetch product details');
+      console.error("Error fetching product details:", error);
+      toast.error("Failed to fetch product details");
     } finally {
       setLoading(false);
     }
@@ -67,7 +77,7 @@ export default function ProductDetails() {
       <div className="mx-auto px-4 py-8 container">
         <div className="text-center">
           <h1 className="mb-4 font-bold text-2xl">Product not found</h1>
-          <Button onClick={() => router.push('/admin/products')}>
+          <Button onClick={() => router.push("/admin/products")}>
             <ArrowLeft className="mr-2 w-4 h-4" />
             Back to Products
           </Button>
@@ -84,22 +94,21 @@ export default function ProductDetails() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => router.push('/admin/products')}
-          >
+            onClick={() => router.push("/admin/products")}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
             <h1 className="mb-2 font-bold text-3xl">{product.name}</h1>
             <p className="text-muted-foreground">
-              Product Details • Created {new Date(product.createdAt).toLocaleDateString()}
+              Product Details • Created{" "}
+              {new Date(product.createdAt).toLocaleDateString()}
             </p>
           </div>
         </div>
         <div className="flex gap-2">
           <Button
             variant="outline"
-            onClick={() => router.push(`/admin/products/${id}/edit`)}
-          >
+            onClick={() => router.push(`/admin/products/${id}/edit`)}>
             <Edit className="mr-2 w-4 h-4" />
             Edit Product
           </Button>
@@ -121,36 +130,41 @@ export default function ProductDetails() {
               <div className="gap-4 grid grid-cols-2 md:grid-cols-3">
                 {product.baseImageUrl && (
                   <div className="relative">
-                    <img
+                    <Image
                       src={product.baseImageUrl}
                       alt={product.name}
                       className="border rounded-lg w-full h-32 object-cover"
                     />
-                    <Badge className="top-2 right-2 absolute" variant="secondary">
+                    <Badge
+                      className="top-2 right-2 absolute"
+                      variant="secondary">
                       Main
                     </Badge>
                   </div>
                 )}
                 {product.images?.map((image) => (
                   <div key={image.id} className="relative">
-                    <img
+                    <Image
                       src={image.imageUrl}
                       alt={image.altText || product.name}
                       className="border rounded-lg w-full h-32 object-cover"
                     />
                     {image.isMainImage && (
-                      <Badge className="top-2 right-2 absolute" variant="secondary">
+                      <Badge
+                        className="top-2 right-2 absolute"
+                        variant="secondary">
                         Main
                       </Badge>
                     )}
                   </div>
                 ))}
               </div>
-              {!product.baseImageUrl && (!product.images || product.images.length === 0) && (
-                <div className="flex justify-center items-center bg-gray-100 rounded-lg h-32 text-gray-500">
-                  No images available
-                </div>
-              )}
+              {!product.baseImageUrl &&
+                (!product.images || product.images.length === 0) && (
+                  <div className="flex justify-center items-center bg-gray-100 rounded-lg h-32 text-gray-500">
+                    No images available
+                  </div>
+                )}
             </CardContent>
           </Card>
 
@@ -161,7 +175,7 @@ export default function ProductDetails() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-700 leading-relaxed">
-                {product.description || 'No description available.'}
+                {product.description || "No description available."}
               </p>
             </CardContent>
           </Card>
@@ -193,13 +207,13 @@ export default function ProductDetails() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {variation.imageUrl && (
-                              <img
+                              <Image
                                 src={variation.imageUrl}
                                 alt={variation.name || product.name}
                                 className="rounded w-8 h-8 object-cover"
                               />
                             )}
-                            {variation.name || 'Default Variation'}
+                            {variation.name || "Default Variation"}
                           </div>
                         </TableCell>
                         <TableCell>৳{variation.price}</TableCell>
@@ -209,24 +223,33 @@ export default function ProductDetails() {
                               ৳{variation.salePrice}
                             </span>
                           ) : (
-                            '-'
+                            "-"
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge variant={variation.stockQuantity > 0 ? "default" : "destructive"}>
+                          <Badge
+                            variant={
+                              variation.stockQuantity > 0
+                                ? "default"
+                                : "destructive"
+                            }>
                             {variation.stockQuantity}
                           </Badge>
                         </TableCell>
-                        <TableCell>{variation.volume || '-'}</TableCell>
+                        <TableCell>{variation.volume || "-"}</TableCell>
                         <TableCell>
-                          {variation.weightGrams ? `${variation.weightGrams}g` : '-'}
+                          {variation.weightGrams
+                            ? `${variation.weightGrams}g`
+                            : "-"}
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               ) : (
-                <p className="text-muted-foreground">No variations available.</p>
+                <p className="text-muted-foreground">
+                  No variations available.
+                </p>
               )}
             </CardContent>
           </Card>
@@ -243,30 +266,29 @@ export default function ProductDetails() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <Badge 
+              <Badge
                 variant={product.isPublished ? "default" : "secondary"}
-                className="mb-4"
-              >
-                {product.isPublished ? 'Published' : 'Draft'}
+                className="mb-4">
+                {product.isPublished ? "Published" : "Draft"}
               </Badge>
-              
+
               <Separator className="my-4" />
-              
+
               <div className="space-y-3">
                 <div>
                   <p className="font-medium text-sm">Category</p>
                   <p className="text-muted-foreground text-sm">
-                    {product.category?.name || 'Uncategorized'}
+                    {product.category?.name || "Uncategorized"}
                   </p>
                 </div>
-                
+
                 <div>
                   <p className="font-medium text-sm">Brand</p>
                   <p className="text-muted-foreground text-sm">
-                    {product.brand?.name || 'No Brand'}
+                    {product.brand?.name || "No Brand"}
                   </p>
                 </div>
-                
+
                 {product.expiryDate && (
                   <div>
                     <p className="font-medium text-sm">Expiry Date</p>
@@ -293,18 +315,28 @@ export default function ProductDetails() {
                   <div>
                     <p className="font-medium text-sm">Price Range</p>
                     <p className="text-muted-foreground text-sm">
-                      ৳{Math.min(...product.variations.map(v => v.price)).toFixed(2)} - 
-                      ৳{Math.max(...product.variations.map(v => v.price)).toFixed(2)}
+                      ৳
+                      {Math.min(
+                        ...product.variations.map((v) => v.price)
+                      ).toFixed(2)}{" "}
+                      - ৳
+                      {Math.max(
+                        ...product.variations.map((v) => v.price)
+                      ).toFixed(2)}
                     </p>
                   </div>
-                  
+
                   <div>
                     <p className="font-medium text-sm">Total Stock</p>
                     <p className="text-muted-foreground text-sm">
-                      {product.variations.reduce((sum, v) => sum + v.stockQuantity, 0)} units
+                      {product.variations.reduce(
+                        (sum, v) => sum + v.stockQuantity,
+                        0
+                      )}{" "}
+                      units
                     </p>
                   </div>
-                  
+
                   <div>
                     <p className="font-medium text-sm">Variations</p>
                     <p className="text-muted-foreground text-sm">
@@ -313,7 +345,9 @@ export default function ProductDetails() {
                   </div>
                 </div>
               ) : (
-                <p className="text-muted-foreground text-sm">No pricing information available.</p>
+                <p className="text-muted-foreground text-sm">
+                  No pricing information available.
+                </p>
               )}
             </CardContent>
           </Card>
@@ -352,7 +386,7 @@ export default function ProductDetails() {
                     {new Date(product.createdAt).toLocaleString()}
                   </p>
                 </div>
-                
+
                 <div>
                   <p className="font-medium text-sm">Last Updated</p>
                   <p className="text-muted-foreground text-sm">

@@ -13,8 +13,11 @@ import { useToast } from '@/hooks/use-toast';
 import { getEnhancedCart, updateCartItemQuantity, removeCartItem, prepareCheckout, CartItem } from '@/lib/api/cart';
 import { getProduct, Product, ProductVariation } from '@/lib/api/products';
 import { useRouter } from 'next/navigation';
-
-interface CartItemWithProduct extends CartItem {
+interface CartItemWithProduct {
+  id: string;
+  productId: string;
+  quantity: number;
+  price: number;
   product?: Product;
   variation?: ProductVariation;
   loading?: boolean;
@@ -242,7 +245,7 @@ export default function CartPage() {
             <ShoppingBag className="mx-auto mb-4 sm:mb-6 w-16 sm:w-24 h-16 sm:h-24 text-muted-foreground" />
             <h1 className="mb-2 sm:mb-4 font-bold text-2xl sm:text-3xl">Your cart is empty</h1>
             <p className="mb-6 sm:mb-8 px-4 text-muted-foreground text-sm sm:text-base">
-              Looks like you haven't added any items to your cart yet.
+              Looks like you haven&apos;t added any items to your cart yet.
             </p>
             <Button asChild className="w-full sm:w-auto golden-button">
               <Link href="/products">

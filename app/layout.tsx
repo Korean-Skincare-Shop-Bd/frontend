@@ -6,7 +6,6 @@ import { Toaster } from '@/components/ui/sonner';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AdminProvider } from '@/contexts/AdminContext';
-import Head from 'next/head';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -25,19 +24,9 @@ export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
-}) {
-  return (
+}) {  return (
     <html lang="en" suppressHydrationWarning={true}>
-      <Head>
-        <link rel="icon" href="/logo1.png" />
-      </Head>
-      <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
+      <body className={inter.className}>        <ThemeProvider>
           <AdminProvider>
             <div className="flex flex-col min-h-screen">
               <Header />

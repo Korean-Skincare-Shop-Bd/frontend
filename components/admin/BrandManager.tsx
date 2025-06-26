@@ -1,13 +1,21 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Upload, X, MoreHorizontal } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from "react";
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Upload,
+  X,
+  MoreHorizontal,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -15,20 +23,20 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,22 +46,30 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { getBrands, createBrand, updateBrand, deleteBrand, Brand, CreateBrandRequest } from '@/lib/api/brands';
-import { useAdmin } from '@/contexts/AdminContext';
-import { toast } from 'sonner';
+} from "@/components/ui/alert-dialog";
+import {
+  getBrands,
+  createBrand,
+  updateBrand,
+  deleteBrand,
+  Brand,
+  CreateBrandRequest,
+} from "@/lib/api/brands";
+import { useAdmin } from "@/contexts/AdminContext";
+import { toast } from "sonner";
+import Image from "next/image";
 
 export function BrandsManager() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [brandToDelete, setBrandToDelete] = useState<Brand | null>(null);
   const [formData, setFormData] = useState<CreateBrandRequest>({
-    name: '',
-    description: '',
+    name: "",
+    description: "",
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -70,8 +86,8 @@ export function BrandsManager() {
       const response = await getBrands();
       setBrands(response.data.brands);
     } catch (error) {
-      console.error('Error fetching brands:', error);
-      toast.error('Failed to fetch brands');
+      console.error("Error fetching brands:", error);
+      toast.error("Failed to fetch brands");
     } finally {
       setLoading(false);
     }
@@ -94,7 +110,7 @@ export function BrandsManager() {
     if (!token) return;
 
     if (!formData.name.trim()) {
-      toast.error('Brand name is required');
+      toast.error("Brand name is required");
       return;
     }
 
@@ -104,18 +120,18 @@ export function BrandsManager() {
 
       if (editingBrand) {
         await updateBrand(token, editingBrand.id, submitData);
-        toast.success('Brand updated successfully');
+        toast.success("Brand updated successfully");
       } else {
         await createBrand(token, submitData);
-        toast.success('Brand created successfully');
+        toast.success("Brand created successfully");
       }
 
       fetchBrands();
       resetForm();
       setDialogOpen(false);
     } catch (error) {
-      console.error('Error saving brand:', error);
-      toast.error('Failed to save brand');
+      console.error("Error saving brand:", error);
+      toast.error("Failed to save brand");
     } finally {
       setFormLoading(false);
     }
@@ -125,7 +141,7 @@ export function BrandsManager() {
     setEditingBrand(brand);
     setFormData({
       name: brand.name,
-      description: brand.description || '',
+      description: brand.description || "",
     });
     setLogoPreview(brand.logoUrl || null);
     setLogoFile(null);
@@ -137,11 +153,11 @@ export function BrandsManager() {
 
     try {
       await deleteBrand(token, brandToDelete.id);
-      toast.success('Brand deleted successfully');
+      toast.success("Brand deleted successfully");
       fetchBrands();
     } catch (error) {
-      console.error('Error deleting brand:', error);
-      toast.error('Failed to delete brand');
+      console.error("Error deleting brand:", error);
+      toast.error("Failed to delete brand");
     } finally {
       setDeleteDialogOpen(false);
       setBrandToDelete(null);
@@ -150,18 +166,21 @@ export function BrandsManager() {
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      description: '',
+      name: "",
+      description: "",
     });
     setEditingBrand(null);
     setLogoFile(null);
     setLogoPreview(null);
   };
 
-  const filteredBrands = Array.isArray(brands) ? brands.filter(brand =>
-    brand.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    brand.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) : [];
+  const filteredBrands = Array.isArray(brands)
+    ? brands.filter(
+        (brand) =>
+          brand.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          brand.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
 
   if (loading) {
     return (
@@ -183,7 +202,9 @@ export function BrandsManager() {
     <div className="mx-auto px-4 py-8 container">
       <div className="flex md:flex-row flex-col md:justify-between md:items-start gap-4 mb-8">
         <div className="flex-1">
-          <h1 className="mb-2 font-bold text-2xl sm:text-3xl">Brands Management</h1>
+          <h1 className="mb-2 font-bold text-2xl sm:text-3xl">
+            Brands Management
+          </h1>
           <p className="text-muted-foreground text-sm sm:text-base">
             Manage your product brands
           </p>
@@ -198,16 +219,20 @@ export function BrandsManager() {
           <DialogContent className="mx-4 w-full max-w-md">
             <DialogHeader>
               <DialogTitle className="text-lg">
-                {editingBrand ? 'Edit Brand' : 'Create New Brand'}
+                {editingBrand ? "Edit Brand" : "Create New Brand"}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="name" className="font-medium text-sm">Brand Name *</Label>
+                <Label htmlFor="name" className="font-medium text-sm">
+                  Brand Name *
+                </Label>
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, name: e.target.value }))
+                  }
                   placeholder="Enter brand name"
                   required
                   className="mt-1"
@@ -215,11 +240,18 @@ export function BrandsManager() {
               </div>
 
               <div>
-                <Label htmlFor="description" className="font-medium text-sm">Description</Label>
+                <Label htmlFor="description" className="font-medium text-sm">
+                  Description
+                </Label>
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   placeholder="Enter brand description"
                   rows={3}
                   className="mt-1 resize-none"
@@ -231,7 +263,7 @@ export function BrandsManager() {
                 <div className="mt-2">
                   {logoPreview ? (
                     <div className="inline-block relative">
-                      <img
+                      <Image
                         src={logoPreview}
                         alt="Brand logo"
                         className="border rounded-lg w-20 h-20 object-cover"
@@ -244,8 +276,7 @@ export function BrandsManager() {
                         onClick={() => {
                           setLogoFile(null);
                           setLogoPreview(null);
-                        }}
-                      >
+                        }}>
                         <X className="w-3 h-3" />
                       </Button>
                     </div>
@@ -253,7 +284,9 @@ export function BrandsManager() {
                     <label className="flex flex-col justify-center items-center bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 border-dashed rounded-lg w-full h-20 transition-colors cursor-pointer">
                       <div className="flex items-center gap-2">
                         <Upload className="w-4 h-4 text-gray-500" />
-                        <span className="text-gray-500 text-sm">Upload Logo</span>
+                        <span className="text-gray-500 text-sm">
+                          Upload Logo
+                        </span>
                       </div>
                       <input
                         type="file"
@@ -267,22 +300,26 @@ export function BrandsManager() {
               </div>
 
               <div className="flex sm:flex-row flex-col gap-2 pt-4">
-                <Button type="submit" disabled={formLoading} className="flex-1 sm:flex-none">
+                <Button
+                  type="submit"
+                  disabled={formLoading}
+                  className="flex-1 sm:flex-none">
                   {formLoading ? (
                     <div className="flex items-center gap-2">
                       <div className="border-2 border-white border-t-transparent rounded-full w-4 h-4 animate-spin" />
-                      {editingBrand ? 'Updating...' : 'Creating...'}
+                      {editingBrand ? "Updating..." : "Creating..."}
                     </div>
+                  ) : editingBrand ? (
+                    "Update Brand"
                   ) : (
-                    editingBrand ? 'Update Brand' : 'Create Brand'
+                    "Create Brand"
                   )}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setDialogOpen(false)}
-                  className="flex-1 sm:flex-none"
-                >
+                  className="flex-1 sm:flex-none">
                   Cancel
                 </Button>
               </div>
@@ -294,7 +331,9 @@ export function BrandsManager() {
       <Card>
         <CardHeader>
           <div className="flex lg:flex-row flex-col lg:justify-between lg:items-center gap-4">
-            <CardTitle className="text-lg sm:text-xl">All Brands ({brands.length})</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">
+              All Brands ({brands.length})
+            </CardTitle>
             <div className="relative flex-1 lg:flex-none">
               <Search className="top-1/2 left-3 absolute w-4 h-4 text-muted-foreground -translate-y-1/2" />
               <Input
@@ -315,7 +354,7 @@ export function BrandsManager() {
                   <div className="flex flex-1 items-center gap-3 min-w-0">
                     <div className="flex-shrink-0 bg-gray-100 rounded-lg w-12 h-12 overflow-hidden">
                       {brand.logoUrl ? (
-                        <img
+                        <Image
                           src={brand.logoUrl}
                           alt={brand.name}
                           className="w-full h-full object-cover"
@@ -330,12 +369,17 @@ export function BrandsManager() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium truncate">{brand.name}</div>
-                      <div className="text-muted-foreground text-sm">ID: {brand.id}</div>
+                      <div className="text-muted-foreground text-sm">
+                        ID: {brand.id}
+                      </div>
                     </div>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="flex-shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="flex-shrink-0">
                         <MoreHorizontal className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -349,8 +393,7 @@ export function BrandsManager() {
                         onClick={() => {
                           setBrandToDelete(brand);
                           setDeleteDialogOpen(true);
-                        }}
-                      >
+                        }}>
                         <Trash2 className="mr-2 w-4 h-4" />
                         Delete Brand
                       </DropdownMenuItem>
@@ -362,7 +405,7 @@ export function BrandsManager() {
                   <div>
                     <span className="text-muted-foreground">Description:</span>
                     <div className="mt-1 font-medium">
-                      {brand.description || 'No description'}
+                      {brand.description || "No description"}
                     </div>
                   </div>
                   <div className="flex justify-between items-center">
@@ -406,7 +449,7 @@ export function BrandsManager() {
                       <div className="flex items-center gap-3">
                         <div className="flex-shrink-0 bg-gray-100 rounded-lg w-12 h-12 overflow-hidden">
                           {brand.logoUrl ? (
-                            <img
+                            <Image
                               src={brand.logoUrl}
                               alt={brand.name}
                               className="w-full h-full object-cover"
@@ -420,14 +463,18 @@ export function BrandsManager() {
                           )}
                         </div>
                         <div className="min-w-0">
-                          <div className="font-medium truncate">{brand.name}</div>
-                          <div className="text-muted-foreground text-sm">ID: {brand.id}</div>
+                          <div className="font-medium truncate">
+                            {brand.name}
+                          </div>
+                          <div className="text-muted-foreground text-sm">
+                            ID: {brand.id}
+                          </div>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="max-w-xs truncate">
-                        {brand.description || 'No description'}
+                        {brand.description || "No description"}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -457,8 +504,7 @@ export function BrandsManager() {
                             onClick={() => {
                               setBrandToDelete(brand);
                               setDeleteDialogOpen(true);
-                            }}
-                          >
+                            }}>
                             <Trash2 className="mr-2 w-4 h-4" />
                             Delete Brand
                           </DropdownMenuItem>
@@ -482,18 +528,21 @@ export function BrandsManager() {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="mx-4 w-full max-w-lg">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-lg">Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle className="text-lg">
+              Are you sure?
+            </AlertDialogTitle>
             <AlertDialogDescription className="text-sm">
-              This action cannot be undone. This will permanently delete the brand
-              "{brandToDelete?.name}" and may affect associated products.
+              This action cannot be undone. This will permanently delete the
+              brand &quot;{brandToDelete?.name}&quot; and may affect associated products.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="sm:flex-row flex-col gap-2">
-            <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="w-full sm:w-auto">
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="w-full sm:w-auto"
-            >
+              className="w-full sm:w-auto">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

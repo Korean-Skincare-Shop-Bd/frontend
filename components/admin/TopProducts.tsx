@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getProducts, Product } from '@/lib/api/products';
-import { useAdmin } from '@/contexts/AdminContext';
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getProducts, Product } from "@/lib/api/products";
+import { useAdmin } from "@/contexts/AdminContext";
+import Image from "next/image"; // Ensure you have next/image for optimized images
 
 export function TopProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -13,13 +14,13 @@ export function TopProducts() {
   useEffect(() => {
     const fetchProducts = async () => {
       if (!token) return;
-      
+
       try {
         setLoading(true);
-        const response = await getProducts({page: 1, limit:5});
+        const response = await getProducts({ page: 1, limit: 5 });
         setProducts(response.products.slice(0, 3)); // Get top 3 products
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error("Error fetching products:", error);
       } finally {
         setLoading(false);
       }
@@ -63,7 +64,7 @@ export function TopProducts() {
             <div key={product.id} className="flex items-center gap-4">
               <div className="relative bg-gray-100 rounded-lg w-12 h-12 overflow-hidden">
                 {product.baseImageUrl ? (
-                  <img
+                  <Image
                     src={product.baseImageUrl}
                     alt={product.name}
                     className="w-full h-full object-cover"
@@ -88,7 +89,7 @@ export function TopProducts() {
               </div>
             </div>
           ))}
-          
+
           {products.length === 0 && (
             <div className="py-8 text-muted-foreground text-center">
               No products available
