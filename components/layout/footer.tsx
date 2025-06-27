@@ -13,12 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-
-interface Category {
-  id: string;
-  name: string;
-  slug: string;
-}
+import { getCategories, Category } from "@/lib/api/categories";
 
 interface ApiResponse<T> {
   categories: T[];
@@ -28,25 +23,36 @@ export function Footer() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const currentYear = new Date().getFullYear();
+  const fetchCategories = async () => {
+    try {
+      setIsLoadingCategories(true);
+      const response = await getCategories(1, 5);
+      if (
+        response?.categories &&
+        (categories.length !== response.categories.length ||
+          !categories.every((cat, idx) => cat.id === response.categories[idx].id))
+      ) {
+        setCategories(response.categories);
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      setCategories([]);
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setIsLoadingCategories(true);
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/categories?limit=5`
-        );
-        if (!response.ok) throw new Error("Failed to fetch categories");
-        const result: ApiResponse<Category> = await response.json();
-        setCategories(result?.categories || []);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-        setCategories([]);
-      } finally {
-        setIsLoadingCategories(false);
-      }
-    };
+
+
     fetchCategories();
+
+    // Poll every 10 seconds for new categories
+     const interval = setInterval(() => {
+      fetchCategories(); // Refetch every 30 seconds
+    }, 10000); // 30 seconds
+
+    return () => clearInterval(interval); // Cleanup on unmount
   }, []);
 
   return (
@@ -156,11 +162,7 @@ export function Footer() {
               Shop Categories
             </h3>
             <nav className="space-y-3">
-              {isLoadingCategories ? (
-                <div className="text-gray-400 text-sm animate-pulse">
-                  Loading categories...
-                </div>
-              ) : categories.length > 0 ? (
+              { categories.length > 0 ? (
                 categories.map((category) => (
                   <Link
                     key={category.id}

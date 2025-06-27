@@ -46,6 +46,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const handleLogout = () => {
     logout();
+    router.push('/')
   };
 
   return (
@@ -136,54 +137,54 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <div className="hidden lg:flex lg:flex-col bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 border-r lg:w-64">
         <div className="flex flex-col flex-1 pt-5 pb-4 min-h-0 overflow-y-auto">
           <div className="flex items-center px-4">
-            <Crown className="w-8 h-8 text-primary" />
-            <span className="ml-2 font-bold text-xl">Admin Panel</span>
+        <Crown className="w-8 h-8 text-primary" />
+        <span className="ml-2 font-bold text-xl truncate">Admin Panel</span>
           </div>
           <nav className="flex-1 space-y-1 mt-5 px-2">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={cn(
-                  "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
-                  pathname === item.href
-                    ? "bg-primary text-primary-foreground"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
-                )}
-              >
-                <item.icon className="mr-3 w-5 h-5" />
-                {item.name}
-              </Link>
-            ))}
+        {navigation.map((item) => (
+          <Link
+            key={item.name}
+            href={item.href}
+            className={cn(
+          "group flex items-center px-2 py-2 text-sm font-medium rounded-md",
+          pathname === item.href
+            ? "bg-primary text-primary-foreground"
+            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
+            )}
+          >
+            <item.icon className="flex-shrink-0 mr-3 w-5 h-5" />
+            <span className="truncate">{item.name}</span>
+          </Link>
+        ))}
           </nav>
         </div>
         {/* User info and logout at bottom */}
         <div className="flex-shrink-0 p-4 border-gray-200 dark:border-gray-700 border-t">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="flex justify-center items-center bg-primary rounded-full w-8 h-8">
-                <span className="font-medium text-primary-foreground text-sm">
-                  {adminData?.username?.charAt(0).toUpperCase() || 'A'}
-                </span>
-              </div>
-            </div>
-            <div className="flex-1 ml-3">
-              <p className="font-medium text-gray-700 dark:text-gray-200 text-sm">
-                {adminData?.username || 'Admin'}
-              </p>
-              <p className="font-medium text-gray-500 dark:text-gray-400 text-xs">
-                {adminData?.email || 'admin@example.com'}
-              </p>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleLogout}
-              className="ml-2"
-              title="Logout"
-            >
-              <LogOut className="w-4 h-4" />
-            </Button>
+          <div className="flex items-center min-w-0">
+        <div className="flex-shrink-0">
+          <div className="flex justify-center items-center bg-primary rounded-full w-8 h-8">
+            <span className="font-medium text-primary-foreground text-sm">
+          {adminData?.username?.charAt(0).toUpperCase() || 'A'}
+            </span>
+          </div>
+        </div>
+        <div className="flex-1 ml-3 min-w-0">
+          <p className="font-medium text-gray-700 dark:text-gray-200 text-sm truncate">
+            {adminData?.username || 'Admin'}
+          </p>
+          <p className="font-medium text-gray-500 dark:text-gray-400 text-xs truncate">
+            {adminData?.email || 'admin@example.com'}
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleLogout}
+          className="ml-2"
+          title="Logout"
+        >
+          <LogOut className="w-4 h-4" />
+        </Button>
           </div>
         </div>
       </div>
