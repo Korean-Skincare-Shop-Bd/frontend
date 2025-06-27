@@ -78,6 +78,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('admin_token', authToken);
         localStorage.setItem('admin_data', JSON.stringify({ id, email, username }));
         localStorage.setItem('admin_token_timestamp', currentTime.toString());
+        localStorage.setItem('authed', 'true');
       }
     } catch (error) {
       throw error;
@@ -92,6 +93,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_data');
     localStorage.removeItem('admin_token_timestamp');
+    localStorage.removeItem('authed');
   };
 
   return (

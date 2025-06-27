@@ -93,45 +93,68 @@ export function Header() {
   const [mounted, setMounted] = useState(false);
   const { theme, setTheme } = useTheme();
   const router = useRouter();
-  const { isAuthenticated, logout } = useAdmin();
+  const { logout } = useAdmin();
   const { toast } = useToast();
   const [items, setItems] = useState<CartItemWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
   // const sessionIdcookie = getSessionIdCookie();
+  const [authed, setAuthed] = useState<boolean>(false);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      const authedValue = localStorage.getItem("authed") === "true";
+      setAuthed(authedValue);
+      console.log("Auth checked:", authedValue);
+    };
+
+    const interval = setInterval(() => {
+      checkAuth();
+    }, 10000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
 
   // Prevent hydration mismatch for theme
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  const fetchCategories = async () => {
+    try {
+      setIsLoadingCategories(true);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/categories?limit=50`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch categories");
+      }
+
+      const result: ApiResponse<Category> = await response.json();
+
+      if (result) {
+        setCategories(result.categories || []);
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      // Fallback to empty array or show error message
+      setCategories([]);
+    } finally {
+      setIsLoadingCategories(false);
+    }
+  };
+
   // Fetch categories from API
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setIsLoadingCategories(true);
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/categories?limit=50`
-        );
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch categories");
-        }
+    // Poll every 10 seconds for new categories
+    const interval = setInterval(() => {
+      fetchCategories(); // Refetch every 30 seconds
+    }, 10000); // 30 seconds
 
-        const result: ApiResponse<Category> = await response.json();
+    return () => clearInterval(interval); // Cleanup on unmount
 
-        if (result) {
-          setCategories(result.categories || []);
-        }
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-        // Fallback to empty array or show error message
-        setCategories([]);
-      } finally {
-        setIsLoadingCategories(false);
-      }
-    };
-
-    fetchCategories();
   }, []);
 
   useEffect(() => {
@@ -181,36 +204,43 @@ export function Header() {
       window.removeEventListener("cartUpdated", fetchCartData);
     };
   }, [toast]);
+  const fetchBrands = async () => {
+    try {
+      setIsLoadingBrands(true);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/brands?limit=50`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch brands");
+      }
+
+      const result: ApiResponse<Brand> = await response.json();
+
+      if (result) {
+        console.log(result);
+        setBrands(result.data.brands || []);
+      }
+    } catch (error) {
+      console.error("Error fetching brands:", error);
+      // Fallback to empty array or show error message
+      setBrands([]);
+    } finally {
+      setIsLoadingBrands(false);
+    }
+  };
+
 
   // Fetch brands from API
   useEffect(() => {
-    const fetchBrands = async () => {
-      try {
-        setIsLoadingBrands(true);
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/brands?limit=50`
-        );
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch brands");
-        }
 
-        const result: ApiResponse<Brand> = await response.json();
+    // Poll every 10 seconds for new categories
+    const interval = setInterval(() => {
+      fetchBrands();
+    }, 10000); // 30 seconds
 
-        if (result) {
-          console.log(result);
-          setBrands(result.data.brands || []);
-        }
-      } catch (error) {
-        console.error("Error fetching brands:", error);
-        // Fallback to empty array or show error message
-        setBrands([]);
-      } finally {
-        setIsLoadingBrands(false);
-      }
-    };
-
-    fetchBrands();
+    return () => clearInterval(interval); // Cleanup on unmount
   }, []);
 
   useEffect(() => {
@@ -229,8 +259,10 @@ export function Header() {
   };
 
   const toggleAdmin = () => {
+    setAuthed(false);
     logout();
-    router.push(isAdmin ? "/" : "/admin");
+
+    router.push("/");
   };
 
   return (
@@ -277,11 +309,7 @@ export function Header() {
                 <NavigationMenuTrigger>Categories</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="gap-3 grid md:grid-cols-2 p-4 w-[400px] md:w-[500px] lg:w-[600px]">
-                    {isLoadingCategories ? (
-                      <div className="flex justify-center items-center col-span-2 py-4">
-                        <div className="border-2 border-primary border-t-transparent rounded-full w-6 h-6 animate-spin"></div>
-                      </div>
-                    ) : categories.length > 0 ? (
+                    { categories.length > 0 ? (
                       categories.map((category) => (
                         <NavigationMenuLink key={category.id} asChild>
                           <Link
@@ -311,11 +339,7 @@ export function Header() {
                 <NavigationMenuTrigger>Brands</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="gap-3 grid md:grid-cols-2 p-4 w-[400px] md:w-[500px] lg:w-[600px]">
-                    {isLoadingBrands ? (
-                      <div className="flex justify-center items-center col-span-2 py-4">
-                        <div className="border-2 border-primary border-t-transparent rounded-full w-6 h-6 animate-spin"></div>
-                      </div>
-                    ) : brands.length > 0 ? (
+                    { brands.length > 0 ? (
                       brands.map((brand) => (
                         <NavigationMenuLink key={brand.id} asChild>
                           <Link
@@ -422,7 +446,7 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  {isAuthenticated && (
+                  {authed && (
                     <DropdownMenuItem onClick={toggleAdmin}>
                       <LogOut className="mr-2 w-4 h-4" />
                       Logout
@@ -475,14 +499,7 @@ export function Header() {
                 <div>
                   <h3 className="py-2 font-medium text-lg">Categories</h3>
                   <div className="space-y-2 pl-4">
-                    {isLoadingCategories ? (
-                      <div className="flex items-center py-2">
-                        <div className="mr-2 border-2 border-primary border-t-transparent rounded-full w-4 h-4 animate-spin"></div>
-                        <span className="text-muted-foreground text-sm">
-                          Loading...
-                        </span>
-                      </div>
-                    ) : categories.length > 0 ? (
+                    { categories.length > 0 ? (
                       categories.map((category) => (
                         <Link
                           key={category.id}
@@ -502,14 +519,7 @@ export function Header() {
                 <div>
                   <h3 className="py-2 font-medium text-lg">Brands</h3>
                   <div className="space-y-2 pl-4">
-                    {isLoadingBrands ? (
-                      <div className="flex items-center py-2">
-                        <div className="mr-2 border-2 border-primary border-t-transparent rounded-full w-4 h-4 animate-spin"></div>
-                        <span className="text-muted-foreground text-sm">
-                          Loading...
-                        </span>
-                      </div>
-                    ) : brands.length > 0 ? (
+                    {brands.length > 0 ? (
                       brands.map((brand) => (
                         <Link
                           key={brand.id}

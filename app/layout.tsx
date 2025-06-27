@@ -6,8 +6,10 @@ import { Toaster } from '@/components/ui/sonner';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { AdminProvider } from '@/contexts/AdminContext';
-
+import { getCategories } from "@/lib/api/categories";
+export const dynamic = 'force-dynamic';
 const inter = Inter({ subsets: ['latin'] });
+
 
 export const metadata: Metadata = {
   title: 'KOREAN SKINCARE SHOP',
@@ -20,18 +22,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
-}) {  return (
+}) {  
+  const { categories } = await getCategories(1, 5);
+  return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className={inter.className}>        <ThemeProvider>
           <AdminProvider>
             <div className="flex flex-col min-h-screen">
               <Header />
               <main className="flex-1">{children}</main>
-              <Footer />
+              <Footer/>
             </div>
             <Toaster />
           </AdminProvider>

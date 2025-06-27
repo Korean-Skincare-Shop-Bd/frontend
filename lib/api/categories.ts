@@ -18,8 +18,16 @@ export interface CreateCategoryRequest {
     image?: File;
 }
 
-export const getCategories = async (page = 1, limit = 50): Promise<{ categories: Category[] }> => {
-    const response = await fetch(`${API_BASE_URL}/categories?page=${page}&limit=${limit}`);
+export const getCategories = async (page = 1, limit: number = 20): Promise<{ categories: Category[] }> => {
+    const params = new URLSearchParams({ page: page.toString() });
+    if (limit !== undefined) {
+        params.append('limit', limit.toString());
+    }
+    const response = await fetch(`${API_BASE_URL}/categories?${params.toString()}`,
+        {
+            cache: "no-store", // ✅ forces live fetch in dev
+        }
+    );
 
     if (!response.ok) {
         throw new Error('Failed to fetch categories');
