@@ -439,7 +439,8 @@ export function CreateProductForm() {
                         <Image
                           src={URL.createObjectURL(mainImage)}
                           alt="Main product"
-                          fill
+                          width={128}
+                          height={128}
                           className="rounded-lg w-32 h-32 object-cover"
                         />
                         <Button
@@ -481,12 +482,14 @@ export function CreateProductForm() {
                       <div className="gap-4 grid grid-cols-4">
                         {additionalImages.map((image, index) => (
                           <div key={index} className="relative">
-                            <Image
-                              src={URL.createObjectURL(image)}
-                              alt={`Additional ${index + 1}`}
-                              fill
-                              className="rounded-lg w-full h-24 object-cover"
-                            />
+                            <div className="relative w-full h-24 overflow-hidden rounded-lg">
+                              <Image
+                                src={URL.createObjectURL(image)}
+                                alt={`Additional ${index + 1}`}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
                             <Button
                               type="button"
                               variant="destructive"

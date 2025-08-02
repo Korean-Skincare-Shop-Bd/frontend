@@ -217,15 +217,17 @@ export const OrderDetailDialog = ({
                         <td className="flex items-center gap-2 px-3 py-2">
                           {item.productVariation?.imageUrl ||
                           item.productVariation?.product?.baseImageUrl ? (
-                            <Image
-                              src={
-                                item.productVariation.imageUrl ||
-                                item.productVariation.product.baseImageUrl
-                              }
-                              alt={item.productName}
-                              fill
-                              className="border rounded w-10 h-10 object-cover"
-                            />
+                            <div className="relative w-10 h-10 overflow-hidden rounded border">
+                              <Image
+                                src={
+                                  item.productVariation.imageUrl ||
+                                  item.productVariation.product.baseImageUrl
+                                }
+                                alt={item.productName}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
                           ) : (
                             <div className="flex justify-center items-center bg-gray-100 border rounded w-10 h-10 text-gray-400">
                               <Package className="w-5 h-5" />

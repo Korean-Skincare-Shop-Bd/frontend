@@ -34,6 +34,7 @@ import { getProducts, Product, deleteProduct } from '@/lib/api/products';
 import { useAdmin } from '@/contexts/AdminContext';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 export function ProductsManager() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -153,7 +154,7 @@ export function ProductsManager() {
                   <div className="flex flex-1 items-center gap-3 min-w-0">
                     <div className="flex-shrink-0 bg-gray-100 rounded-lg w-12 h-12 overflow-hidden">
                       {product.baseImageUrl ? (
-                        <img
+                        <Image
                           src={product.baseImageUrl}
                           alt={product.name}
                           width={48}
@@ -267,7 +268,7 @@ export function ProductsManager() {
                       <div className="flex items-center gap-3">
                         <div className="flex-shrink-0 bg-gray-100 rounded-lg w-12 h-12 overflow-hidden">
                           {product.baseImageUrl ? (
-                            <img
+                            <Image
                               src={product.baseImageUrl}
                               alt={product.name}
                               width={48}

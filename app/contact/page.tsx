@@ -59,7 +59,7 @@ const ContactPage: React.FC = () => {
             <h1 className="font-bold text-foreground text-3xl">Contact Us</h1>
           </div>
           <p className="text-muted-foreground">
-            We're here to help! Reach out to us with any questions or concerns.
+            We&apos;re here to help! Reach out to us with any questions or concerns.
           </p>
         </div>
 
@@ -95,13 +95,12 @@ const ContactPage: React.FC = () => {
                   <div>
                     <h3 className="font-medium text-foreground">Address</h3>
                     <p className="text-muted-foreground">
-                      123 Business Street<br />
-                      Dhaka 1000, Bangladesh
+                      Dhaka, Bangladesh
                     </p>
                   </div>
                 </div>
                 
-                <div className="flex items-start gap-3">
+                {/* <div className="flex items-start gap-3">
                   <Clock className="flex-shrink-0 mt-1 w-5 h-5 text-primary" />
                   <div>
                     <h3 className="font-medium text-foreground">Business Hours</h3>
@@ -111,7 +110,7 @@ const ContactPage: React.FC = () => {
                       <p>Sunday: Closed</p>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
 

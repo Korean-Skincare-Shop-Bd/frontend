@@ -130,12 +130,14 @@ export default function ProductDetails() {
               <div className="gap-4 grid grid-cols-2 md:grid-cols-3">
                 {product.baseImageUrl && (
                   <div className="relative">
-                    <Image
-                      src={product.baseImageUrl}
-                      alt={product.name}
-                      fill
-                      className="border rounded-lg w-full h-32 object-cover"
-                    />
+                    <div className="relative w-full h-32 overflow-hidden rounded-lg border">
+                      <Image
+                        src={product.baseImageUrl}
+                        alt={product.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
                     <Badge
                       className="top-2 right-2 absolute"
                       variant="secondary">
@@ -145,12 +147,14 @@ export default function ProductDetails() {
                 )}
                 {product.images?.map((image) => (
                   <div key={image.id} className="relative">
-                    <Image
-                      src={image.imageUrl}
-                      alt={image.altText || product.name}
-                      fill
-                      className="border rounded-lg w-full h-32 object-cover"
-                    />
+                    <div className="relative w-full h-32 overflow-hidden rounded-lg border">
+                      <Image
+                        src={image.imageUrl}
+                        alt={image.altText || product.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
                     {image.isMainImage && (
                       <Badge
                         className="top-2 right-2 absolute"
@@ -209,12 +213,14 @@ export default function ProductDetails() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {variation.imageUrl && (
-                              <Image
-                                src={variation.imageUrl}
-                                alt={variation.name || product.name}
-                                fill
-                                className="rounded w-8 h-8 object-cover"
-                              />
+                              <div className="relative w-8 h-8 overflow-hidden rounded">
+                                <Image
+                                  src={variation.imageUrl}
+                                  alt={variation.name || product.name}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
                             )}
                             {variation.name || "Default Variation"}
                           </div>

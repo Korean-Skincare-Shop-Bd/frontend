@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import Image from 'next/image';
 import { ArrowLeft, Save, X, Plus, Trash2, Upload, Edit, Star } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -492,12 +493,14 @@ export default function EditProduct() {
               <div className="space-y-4">
                 {product.baseImageUrl && (
                   <div className="relative">
-                    <img
-                      src={product.baseImageUrl}
-                      alt={product.name}
-                      fill
-                      className="border rounded-lg w-full h-48 object-cover"
-                    />
+                    <div className="relative w-full h-48 overflow-hidden rounded-lg border">
+                      <Image
+                        src={product.baseImageUrl}
+                        alt={product.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
                     <Badge className="top-2 right-2 absolute" variant="secondary">
                       Base Image
                     </Badge>
@@ -508,12 +511,14 @@ export default function EditProduct() {
                   <div className="gap-4 grid grid-cols-2 md:grid-cols-3">
                     {images.map((image) => (
                       <div key={image.id} className="group relative">
-                        <img
-                          src={image.imageUrl}
-                          alt={image.altText || product.name}
-                          fill
-                          className="border rounded-lg w-full h-32 object-cover"
-                        />
+                        <div className="relative w-full h-32 overflow-hidden rounded-lg border">
+                          <Image
+                            src={image.imageUrl}
+                            alt={image.altText || product.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
 
                         {/* Image controls overlay */}
                         <div className="absolute inset-0 flex justify-center items-center gap-2 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity">
