@@ -5,7 +5,6 @@ import { Order } from "@/lib/api/orders";
 import { Badge } from "../ui/badge";
 import Image from "next/image";
 
-
 const ORDER_STATUSES = {
   PENDING: "PENDING",
   CONFIRMED: "CONFIRMED",

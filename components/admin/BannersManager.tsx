@@ -81,6 +81,7 @@ export function BannersManager() {
     try {
       setLoading(true);
       const data = await getBanners(token);
+      console.log("Fetched banners:", data.banners); // Debug log
       setBanners(data.banners);
     } catch (error) {
       console.error("Error fetching banners:", error);
@@ -222,12 +223,19 @@ export function BannersManager() {
                 <div className="mt-2">
                   {" "}
                   {imagePreview ? (
-                    <div className="relative">
+                    <div className="relative w-full h-32 bg-gray-100">
                       <Image
                         src={imagePreview}
                         alt="Banner preview"
                         fill
-                        className="border rounded-lg w-full h-32 object-cover"
+                        className="border rounded-lg object-cover"
+                        onError={(e) => {
+                          console.error(
+                            "Preview image failed to load:",
+                            imagePreview
+                          );
+                          console.error("Error:", e);
+                        }}
                       />
                       <Button
                         type="button"
@@ -334,14 +342,23 @@ export function BannersManager() {
         <div className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {(Array.isArray(banners) ? banners : []).map((banner) => (
             <Card key={banner.id} className="overflow-hidden">
-              {" "}
-              <div className="relative">
-                <Image
-                  src={banner.imageUrl}
-                  alt="Banner"
-                  fill
-                  className="w-full h-48 object-cover"
-                />
+              <div className="relative w-full h-48 bg-gray-100">
+                {banner.imageUrl ? (
+                  <Image
+                    src={banner.imageUrl}
+                    alt="Banner"
+                    fill
+                    className="object-cover"
+                    onError={(e) => {
+                      console.error("Image failed to load:", banner.imageUrl);
+                      console.error("Error:", e);
+                    }}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full bg-gray-200">
+                    <span className="text-gray-500 text-sm">No image</span>
+                  </div>
+                )}
                 <div className="top-2 right-2 absolute flex gap-2">
                   <Badge variant={banner.isActive ? "default" : "secondary"}>
                     {banner.isActive ? "Active" : "Inactive"}
