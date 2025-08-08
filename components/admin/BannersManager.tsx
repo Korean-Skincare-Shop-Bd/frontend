@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Plus,
   Edit,
@@ -59,6 +59,8 @@ export function BannersManager() {
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bannerToDelete, setBannerToDelete] = useState<Banner | null>(null);
+  const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const [previewBanner, setPreviewBanner] = useState<Banner | null>(null);
   const [formData, setFormData] = useState<{
     linkUrl: string;
     isActive: boolean;
@@ -71,11 +73,7 @@ export function BannersManager() {
   const [formLoading, setFormLoading] = useState(false);
   const { token } = useAdmin();
 
-  useEffect(() => {
-    fetchBanners();
-  }, [token]);
-
-  const fetchBanners = async () => {
+  const fetchBanners = useCallback(async () => {
     if (!token) return;
 
     try {
@@ -89,7 +87,11 @@ export function BannersManager() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchBanners();
+  }, [fetchBanners]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -168,6 +170,11 @@ export function BannersManager() {
       setDeleteDialogOpen(false);
       setBannerToDelete(null);
     }
+  };
+
+  const handlePreview = (banner: Banner) => {
+    setPreviewBanner(banner);
+    setPreviewDialogOpen(true);
   };
 
   const resetForm = () => {
@@ -401,7 +408,7 @@ export function BannersManager() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handlePreview(banner)}>
                         <Eye className="mr-2 w-4 h-4" />
                         Preview
                       </DropdownMenuItem>
@@ -422,6 +429,89 @@ export function BannersManager() {
           ))}
         </div>
       )}
+
+      {/* Preview Dialog */}
+      <Dialog open={previewDialogOpen} onOpenChange={setPreviewDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Banner Preview</DialogTitle>
+          </DialogHeader>
+          {previewBanner && (
+            <div className="space-y-4">
+              <div className="relative w-full h-64 md:h-96 bg-gray-100 rounded-lg overflow-hidden">
+                {previewBanner.imageUrl ? (
+                  <Image
+                    src={previewBanner.imageUrl}
+                    alt="Banner Preview"
+                    fill
+                    className="object-contain"
+                    onError={(e) => {
+                      console.error(
+                        "Preview image failed to load:",
+                        previewBanner.imageUrl
+                      );
+                    }}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center w-full h-full">
+                    <span className="text-gray-500">No image available</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <strong className="text-gray-700">Status:</strong>
+                  <Badge
+                    variant={previewBanner.isActive ? "default" : "secondary"}
+                    className="ml-2">
+                    {previewBanner.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
+
+                <div>
+                  <strong className="text-gray-700">Created:</strong>
+                  <span className="ml-2">
+                    {new Date(previewBanner.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+
+                {previewBanner.linkUrl && (
+                  <div className="md:col-span-2">
+                    <strong className="text-gray-700">Link URL:</strong>
+                    <a
+                      href={previewBanner.linkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline ml-2 break-all">
+                      {previewBanner.linkUrl}
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => handleEdit(previewBanner)}
+                  className="flex-1">
+                  <Edit className="mr-2 w-4 h-4" />
+                  Edit Banner
+                </Button>
+                {previewBanner.linkUrl && (
+                  <Button
+                    variant="outline"
+                    onClick={() => window.open(previewBanner.linkUrl, "_blank")}
+                    className="flex-1">
+                    <ExternalLink className="mr-2 w-4 h-4" />
+                    Test Link
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
