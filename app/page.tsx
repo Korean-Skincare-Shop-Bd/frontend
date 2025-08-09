@@ -11,11 +11,11 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       <HeroSection />
-      <BrandsShowcase />
       <TopProducts />
       <SaleProducts/>
       <HOTProducts/>
       <ReviewsSection />
+      <BrandsShowcase />
     </div>
   );
 }
