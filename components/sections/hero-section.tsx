@@ -164,8 +164,10 @@ export function HeroSection() {
                 src={banners[currentSlide].imageUrl}
                 alt={banners[currentSlide].cta || "Banner image"}
                 fill
-                className="object-cover cursor-pointer"
+                className="object-contain bg-gray-100 dark:bg-gray-800 cursor-pointer"
                 priority
+                quality={95}
+                sizes="100vw"
               />
             </Link>
 
