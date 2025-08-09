@@ -1,13 +1,13 @@
 // components/ui/quick-view-modal.tsx
 "use client";
 
-import { useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { X, ShoppingBag, Plus, Minus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Product } from '@/lib/api/products';
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { X, ShoppingBag, Plus, Minus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Product } from "@/lib/api/products";
 
 interface QuickViewModalProps {
   product: Product | null;
@@ -15,35 +15,44 @@ interface QuickViewModalProps {
   onClose: () => void;
 }
 
-export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps) {
+export function QuickViewModal({
+  product,
+  isOpen,
+  onClose,
+}: QuickViewModalProps) {
   const [selectedVariation, setSelectedVariation] = useState(0);
   const [quantity, setQuantity] = useState(1);
 
   if (!isOpen || !product) return null;
 
   const getMainImage = (product: Product): string => {
-    const mainImage = product.images?.find(img => img.isMainImage);
-    return mainImage?.imageUrl || product.baseImageUrl || '/placeholder-product.png';
+    const mainImage = product.images?.find((img) => img.isMainImage);
+    return (
+      mainImage?.imageUrl || product.baseImageUrl || "/placeholder-product.png"
+    );
   };
 
-  const currentVariation = product.variations[selectedVariation] || product.variations[0];
+  const currentVariation =
+    product.variations[selectedVariation] || product.variations[0];
   const price = currentVariation?.salePrice || currentVariation?.price || 0;
-  const originalPrice = currentVariation?.salePrice ? currentVariation.price : null;
+  const originalPrice = currentVariation?.salePrice
+    ? currentVariation.price
+    : null;
 
   return (
-    <div className="z-50 fixed inset-0 flex justify-center items-center bg-black/50 p-4" onClick={onClose}>
-      <div 
+    <div
+      className="z-50 fixed inset-0 flex justify-center items-center bg-black/50 p-4"
+      onClick={onClose}>
+      <div
         className="bg-white dark:bg-gray-900 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
+        onClick={(e) => e.stopPropagation()}>
         <div className="relative p-6">
           {/* Close Button */}
           <Button
             variant="ghost"
             size="icon"
             className="top-4 right-4 z-10 absolute"
-            onClick={onClose}
-          >
+            onClick={onClose}>
             <X className="w-5 h-5" />
           </Button>
 
@@ -57,15 +66,17 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                 className="object-cover"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.src = '/placeholder-product.png';
+                  target.src = "/placeholder-product.png";
                 }}
               />
-              
+
               {/* Additional Images */}
               {product.images && product.images.length > 1 && (
                 <div className="right-2 bottom-2 left-2 absolute flex gap-2 overflow-x-auto">
                   {product.images.slice(0, 4).map((image, index) => (
-                    <div key={image.id} className="relative flex-shrink-0 rounded-md w-16 h-16 overflow-hidden">
+                    <div
+                      key={image.id}
+                      className="relative flex-shrink-0 rounded-md w-16 h-16 overflow-hidden">
                       <Image
                         src={image.imageUrl}
                         alt={`${product.name} ${index + 1}`}
@@ -81,9 +92,11 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
             {/* Product Details */}
             <div className="space-y-4">
               <div>
-                <p className="mb-1 text-muted-foreground text-sm">{product.brand?.name}</p>
+                <p className="mb-1 text-muted-foreground text-sm">
+                  {product.brand?.name}
+                </p>
                 <h2 className="mb-2 font-bold text-2xl">{product.name}</h2>
-                
+
                 {/* Price */}
                 <div className="flex items-center gap-2 mb-4">
                   <span className="font-bold text-2xl golden-text">
@@ -110,9 +123,9 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
               {product.description && (
                 <div>
                   <h3 className="mb-2 font-semibold">Description</h3>
-                  <p className="text-muted-foreground text-sm line-clamp-3">
+                  <div className="text-muted-foreground text-sm line-clamp-3 whitespace-pre-wrap">
                     {product.description}
-                  </p>
+                  </div>
                 </div>
               )}
 
@@ -127,16 +140,20 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                         onClick={() => setSelectedVariation(index)}
                         className={`p-2 text-sm border rounded-md text-left ${
                           selectedVariation === index
-                            ? 'border-primary bg-primary/10'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
+                            ? "border-primary bg-primary/10"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}>
                         <div className="font-medium">{variation.name}</div>
                         {variation.volume && (
-                          <div className="text-muted-foreground text-xs">{variation.volume}</div>
+                          <div className="text-muted-foreground text-xs">
+                            {variation.volume}
+                          </div>
                         )}
                         <div className="font-semibold text-sm">
-                          ৳{Number(variation.salePrice || variation.price).toFixed(2)}
+                          ৳
+                          {Number(
+                            variation.salePrice || variation.price
+                          ).toFixed(2)}
                         </div>
                       </button>
                     ))}
@@ -151,16 +168,14 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  >
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}>
                     <Minus className="w-4 h-4" />
                   </Button>
                   <span className="w-12 text-center">{quantity}</span>
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => setQuantity(quantity + 1)}
-                  >
+                    onClick={() => setQuantity(quantity + 1)}>
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
@@ -183,7 +198,9 @@ export function QuickViewModal({ product, isOpen, onClose }: QuickViewModalProps
               {currentVariation && (
                 <div className="text-muted-foreground text-sm">
                   {currentVariation.stockQuantity > 0 ? (
-                    <span className="text-green-600">In Stock ({currentVariation.stockQuantity} available)</span>
+                    <span className="text-green-600">
+                      In Stock ({currentVariation.stockQuantity} available)
+                    </span>
                   ) : (
                     <span className="text-red-600">Out of Stock</span>
                   )}

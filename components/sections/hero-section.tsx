@@ -108,7 +108,7 @@ export function HeroSection() {
 
   if (loading) {
     return (
-      <section className="relative bg-gray-200 dark:bg-gray-800 h-[300px] md:h-[400px] lg:h-[500px] overflow-hidden animate-pulse">
+      <section className="relative bg-gray-200 dark:bg-gray-800 w-full aspect-[3/2] overflow-hidden animate-pulse">
         <div className="absolute inset-0 flex justify-center items-center">
           <div className="text-center">
             <div className="bg-gray-300 dark:bg-gray-700 mx-auto mb-4 rounded w-48 h-8"></div>
@@ -122,7 +122,7 @@ export function HeroSection() {
 
   if (banners.length === 0) {
     return (
-      <section className="relative bg-gradient-to-br from-primary-100 dark:from-gray-800 to-primary-200 dark:to-gray-900 h-[300px] md:h-[400px] lg:h-[500px] overflow-hidden">
+      <section className="relative bg-gradient-to-br from-primary-100 dark:from-gray-800 to-primary-200 dark:to-gray-900 w-full aspect-[3/2] overflow-hidden">
         <div className="absolute inset-0 flex justify-center items-center">
           <div className="mx-auto px-4 text-center container">
             <h1 className="mb-4 font-bold text-2xl md:text-3xl lg:text-4xl leading-tight golden-text">
@@ -149,7 +149,7 @@ export function HeroSection() {
   }
 
   return (
-    <section className="relative h-[300px] md:h-[400px] lg:h-[500px] overflow-hidden">
+    <section className="relative w-full aspect-[3/2] overflow-hidden">
       <AnimatePresence mode="wait">
         <motion.div
           key={currentSlide}

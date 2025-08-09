@@ -180,9 +180,9 @@ export default function ProductDetails() {
               <CardTitle>Description</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-700 leading-relaxed">
+              <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
                 {product.description || "No description available."}
-              </p>
+              </div>
             </CardContent>
           </Card>
 

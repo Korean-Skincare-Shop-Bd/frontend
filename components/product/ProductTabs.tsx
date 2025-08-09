@@ -1,12 +1,15 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ProductReviews } from './ProductReviews';
-import { Product } from '@/lib/api/products';
-import { getAllShippingCharges, ShippingChargesResponse } from '@/lib/api/shipping';
+import { useEffect, useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ProductReviews } from "./ProductReviews";
+import { Product } from "@/lib/api/products";
+import {
+  getAllShippingCharges,
+  ShippingChargesResponse,
+} from "@/lib/api/shipping";
 
 interface ProductTabsProps {
   product: Product;
@@ -15,12 +18,14 @@ interface ProductTabsProps {
 
 export function ProductTabs({ product, onReviewSubmitted }: ProductTabsProps) {
   const reviewCount = product.reviews.length;
-  const [shippingCharges, setShippingCharges] = useState<ShippingChargesResponse['data'] | null>(null);
+  const [shippingCharges, setShippingCharges] = useState<
+    ShippingChargesResponse["data"] | null
+  >(null);
 
   useEffect(() => {
     getAllShippingCharges()
       .then((res: ShippingChargesResponse) => setShippingCharges(res.data))
-      .catch((err) => console.error('Error loading shipping charges:', err));
+      .catch((err) => console.error("Error loading shipping charges:", err));
   }, []);
 
   return (
@@ -37,7 +42,9 @@ export function ProductTabs({ product, onReviewSubmitted }: ProductTabsProps) {
         <Card>
           <CardContent className="p-6">
             <h3 className="mb-4 font-semibold">Product Description</h3>
-            <p className="mb-6 text-muted-foreground">{product.description}</p>
+            <div className="mb-6 text-muted-foreground whitespace-pre-wrap">
+              {product.description}
+            </div>
 
             {product.tags?.length > 0 && (
               <>
@@ -68,18 +75,24 @@ export function ProductTabs({ product, onReviewSubmitted }: ProductTabsProps) {
                 </div>
                 <div>
                   <p className="font-medium text-sm">Category</p>
-                  <p className="text-muted-foreground">{product.category?.name}</p>
+                  <p className="text-muted-foreground">
+                    {product.category?.name}
+                  </p>
                 </div>
                 {product.variations[0]?.volume && (
                   <div>
                     <p className="font-medium text-sm">Volume</p>
-                    <p className="text-muted-foreground">{product.variations[0].volume}</p>
+                    <p className="text-muted-foreground">
+                      {product.variations[0].volume}
+                    </p>
                   </div>
                 )}
                 {product.variations[0]?.weightGrams && (
                   <div>
                     <p className="font-medium text-sm">Weight</p>
-                    <p className="text-muted-foreground">{product.variations[0].weightGrams}g</p>
+                    <p className="text-muted-foreground">
+                      {product.variations[0].weightGrams}g
+                    </p>
                   </div>
                 )}
               </div>
@@ -94,7 +107,8 @@ export function ProductTabs({ product, onReviewSubmitted }: ProductTabsProps) {
           <CardContent className="p-6">
             <h3 className="mb-4 font-semibold">Shipping Information</h3>
             <p className="mb-4 text-muted-foreground">
-              We offer standard shipping on all orders, with delivery times varying by location.
+              We offer standard shipping on all orders, with delivery times
+              varying by location.
             </p>
 
             {shippingCharges ? (
@@ -112,7 +126,9 @@ export function ProductTabs({ product, onReviewSubmitted }: ProductTabsProps) {
                     <ul className="space-y-1 ml-6 text-muted-foreground text-sm list-disc">
                       {shippingCharges.details.map((item) => (
                         <li key={item.id}>
-                          <strong className="capitalize">{item.region.replace('_', ' ')}:</strong>{' '}
+                          <strong className="capitalize">
+                            {item.region.replace("_", " ")}:
+                          </strong>{" "}
                           ৳{item.charge} — {item.description}
                         </li>
                       ))}
@@ -121,7 +137,9 @@ export function ProductTabs({ product, onReviewSubmitted }: ProductTabsProps) {
                 )}
               </div>
             ) : (
-              <p className="text-muted-foreground">Loading shipping details...</p>
+              <p className="text-muted-foreground">
+                Loading shipping details...
+              </p>
             )}
           </CardContent>
         </Card>
