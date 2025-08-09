@@ -262,13 +262,12 @@ export function BrandsManager() {
                 <Label className="font-medium text-sm">Brand Logo</Label>
                 <div className="mt-2">
                   {logoPreview ? (
-                    <div className="inline-block relative">
-                      {" "}
+                    <div className="relative inline-block w-20 h-20">
                       <Image
                         src={logoPreview}
                         alt="Brand logo"
                         fill
-                        className="border rounded-lg w-20 h-20 object-cover"
+                        className="border rounded-lg object-cover"
                       />
                       <Button
                         type="button"
@@ -355,13 +354,13 @@ export function BrandsManager() {
               <div key={brand.id} className="p-4 border-b last:border-b-0">
                 <div className="flex justify-between items-start gap-3 mb-3">
                   <div className="flex flex-1 items-center gap-3 min-w-0">
-                    <div className="flex-shrink-0 bg-gray-100 rounded-lg w-12 h-12 overflow-hidden">
+                    <div className="relative flex-shrink-0 bg-gray-100 rounded-lg w-12 h-12 overflow-hidden">
                       {brand.logoUrl ? (
                         <Image
                           src={brand.logoUrl}
                           alt={brand.name}
                           fill
-                          className="w-full h-full object-cover"
+                          className="object-cover"
                         />
                       ) : (
                         <div className="flex justify-center items-center bg-gradient-to-br from-blue-500 to-purple-600 w-full h-full">
@@ -450,14 +449,13 @@ export function BrandsManager() {
                   <TableRow key={brand.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 bg-gray-100 rounded-lg w-12 h-12 overflow-hidden">
+                        <div className="relative flex-shrink-0 bg-gray-100 rounded-lg w-12 h-12 overflow-hidden">
                           {brand.logoUrl ? (
                             <Image
                               src={brand.logoUrl}
                               alt={brand.name}
-                              width={48}
-                              height={48}
-                              className="w-full h-full object-cover"
+                              fill
+                              className="object-cover"
                             />
                           ) : (
                             <div className="flex justify-center items-center bg-gradient-to-br from-blue-500 to-purple-600 w-full h-full">

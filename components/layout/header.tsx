@@ -114,7 +114,6 @@ export function Header() {
     return () => clearInterval(interval);
   }, []);
 
-
   // Prevent hydration mismatch for theme
   useEffect(() => {
     setMounted(true);
@@ -147,14 +146,12 @@ export function Header() {
 
   // Fetch categories from API
   useEffect(() => {
-
     // Poll every 10 seconds for new categories
     const interval = setInterval(() => {
       fetchCategories(); // Refetch every 30 seconds
     }, 10000); // 30 seconds
 
     return () => clearInterval(interval); // Cleanup on unmount
-
   }, []);
 
   useEffect(() => {
@@ -162,8 +159,30 @@ export function Header() {
       try {
         setLoading(true);
 
+        // Check if session exists first
+        const sessionId = await getSessionIdCookie();
+        if (!sessionId) {
+          // No session means empty cart
+          setItems([]);
+          setCartItems(0);
+          setLoading(false);
+          return;
+        }
+
         // Get cart items
         const cartResponse = await getEnhancedCart();
+
+        // Check if cart is empty or invalid
+        if (
+          !cartResponse?.data?.cart?.items ||
+          cartResponse.data.cart.items.length === 0
+        ) {
+          setItems([]);
+          setCartItems(0);
+          setLoading(false);
+          return;
+        }
+
         const cartItems = cartResponse.data.cart.items;
 
         // Convert cart items to our interface
@@ -187,6 +206,9 @@ export function Header() {
         // Fetch product details for each item
       } catch (error) {
         console.error("Failed to fetch cart:", error);
+        // Set empty cart on error
+        setItems([]);
+        setCartItems(0);
         toast({
           title: "Error",
           description: "Failed to load cart items",
@@ -230,11 +252,8 @@ export function Header() {
     }
   };
 
-
   // Fetch brands from API
   useEffect(() => {
-
-
     // Poll every 10 seconds for new categories
     const interval = setInterval(() => {
       fetchBrands();
@@ -309,7 +328,7 @@ export function Header() {
                 <NavigationMenuTrigger>Categories</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="gap-3 grid md:grid-cols-2 p-4 w-[400px] md:w-[500px] lg:w-[600px]">
-                    { categories.length > 0 ? (
+                    {categories.length > 0 ? (
                       categories.map((category) => (
                         <NavigationMenuLink key={category.id} asChild>
                           <Link
@@ -339,7 +358,7 @@ export function Header() {
                 <NavigationMenuTrigger>Brands</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="gap-3 grid md:grid-cols-2 p-4 w-[400px] md:w-[500px] lg:w-[600px]">
-                    { brands.length > 0 ? (
+                    {brands.length > 0 ? (
                       brands.map((brand) => (
                         <NavigationMenuLink key={brand.id} asChild>
                           <Link
@@ -502,7 +521,7 @@ export function Header() {
                 <div>
                   <h3 className="py-2 font-medium text-lg">Categories</h3>
                   <div className="space-y-2 pl-4">
-                    { categories.length > 0 ? (
+                    {categories.length > 0 ? (
                       categories.map((category) => (
                         <Link
                           key={category.id}

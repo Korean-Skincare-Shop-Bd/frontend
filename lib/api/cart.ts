@@ -1,8 +1,12 @@
-'use client';
+"use client";
 
-import { toast } from '@/hooks/use-toast';
+import { toast } from "@/hooks/use-toast";
 // import { useToast } from '@/hooks/use-toast';
-import { setSessionIdCookie, getSessionIdCookie, removeSessionIdCookie } from '../cookies/session';
+import {
+  setSessionIdCookie,
+  getSessionIdCookie,
+  removeSessionIdCookie,
+} from "../cookies/session";
 // import { Description } from '@radix-ui/react-toast';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -52,81 +56,86 @@ export interface AddToCartRequest {
 
 // --- API Functions ---
 export const addToEnhancedCart = async (
-  cartData: Omit<AddToCartRequest, 'sessionId'>
+  cartData: Omit<AddToCartRequest, "sessionId">
 ): Promise<EnhancedCartResponse> => {
   const existingSessionId = await getSessionIdCookie();
   // const toast = useToast()
   const body = existingSessionId
     ? { ...cartData, sessionId: existingSessionId }
     : cartData;
-  console.log(body)
+  console.log(body);
   try {
     const response = await fetch(`${API_BASE_URL}/enhanced-cart/add`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
       // credentials: 'include',
-      next: { tags: ['cart'] } // For revalidation
+      next: { tags: ["cart"] }, // For revalidation
     });
 
     const data = await response.json();
-    console.log(data)
+    console.log(data);
     // toast.toast({ description: data.message })
 
     if (!response.ok) {
-      throw new Error(data?.message || 'Failed to add item to cart');
+      throw new Error(data?.message || "Failed to add item to cart");
     }
 
     if (data?.data?.sessionId) {
       await setSessionIdCookie(data.data.sessionId, false);
     }
 
+    // Dispatch cart update event
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("cartUpdated"));
+    }
+
     return data;
   } catch (error) {
-    console.error('Cart API Error:', error);
+    console.error("Cart API Error:", error);
     throw error;
   }
 };
 
 export const getEnhancedCart = async (): Promise<EnhancedCartResponse> => {
   const sessionId = await getSessionIdCookie();
-  if (!sessionId){
+  if (!sessionId) {
     return {
-      message: 'No session found',
+      message: "No session found",
       data: {
         cart: {
-          sessionId: '',
+          sessionId: "",
           items: [],
           itemCount: 0,
           totalPrice: 0,
-          createdAt: '',
-          updatedAt: '',
-          expiresAt: ''
+          createdAt: "",
+          updatedAt: "",
+          expiresAt: "",
         },
-        sessionId: '',
+        sessionId: "",
         isNewCart: false,
         reservation: null,
-        enhanced: false
-      }
+        enhanced: false,
+      },
     };
   }
 
   try {
     const response = await fetch(`${API_BASE_URL}/enhanced-cart/${sessionId}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
       // credentials: 'include',
-      next: { tags: ['cart'] } // For revalidation
+      next: { tags: ["cart"] }, // For revalidation
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch enhanced cart');
+      throw new Error("Failed to fetch enhanced cart");
     }
-    console.log(response.body)
+    console.log(response.body);
 
     return response.json();
   } catch (error) {
-    console.error('Cart API Error:', error);
+    console.error("Cart API Error:", error);
     throw error;
   }
 };
@@ -136,22 +145,22 @@ export async function updateCartItemQuantity(
   variationId: string,
   quantity: number
 ) {
-  console.log(variationId)
+  console.log(variationId);
   const sessionId = await getSessionIdCookie();
   if (!sessionId) {
-    throw new Error('No cart session found. Please create a cart first.');
+    throw new Error("No cart session found. Please create a cart first.");
   }
 
   try {
     const response = await fetch(
       `${API_BASE_URL}/enhanced-cart/variation/${variationId}/quantity?variationId=${variationId}&enhanced_cart_session_id=${sessionId}`,
       {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ quantity, sessionId }),
-      next: { tags: ['cart'] },
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ quantity, sessionId }),
+        next: { tags: ["cart"] },
       }
     );
 
@@ -159,14 +168,21 @@ export async function updateCartItemQuantity(
 
     if (!response.ok) {
       // Attach error details if available
-      const errorMsg = data?.message || 'Failed to update cart item quantity';
-      const errorDetails = data?.details ? ` Details: ${JSON.stringify(data.details)}` : '';
+      const errorMsg = data?.message || "Failed to update cart item quantity";
+      const errorDetails = data?.details
+        ? ` Details: ${JSON.stringify(data.details)}`
+        : "";
       throw new Error(`${errorMsg}${errorDetails}`);
+    }
+
+    // Dispatch cart update event
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("cartUpdated"));
     }
 
     return data;
   } catch (error) {
-    console.error('Cart API Error:', error);
+    console.error("Cart API Error:", error);
     throw error;
   }
 }
@@ -177,16 +193,19 @@ export async function updateCartItemsStockBulk(
   stockUpdates: Array<{ variationId: string; stockQuantity: number }>
 ) {
   try {
-    const response = await fetch(`${API_BASE_URL}/enhanced-cart/stock/bulk-update`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({ stockUpdates }),
-      credentials: 'include',
-      next: { tags: ['cart'] }
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/enhanced-cart/stock/bulk-update`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ stockUpdates }),
+        credentials: "include",
+        next: { tags: ["cart"] },
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -195,16 +214,13 @@ export async function updateCartItemsStockBulk(
 
     return await response.json();
   } catch (error) {
-    console.error('Cart API Error:', error);
+    console.error("Cart API Error:", error);
     throw error;
   }
 }
 
 // Server Action for cart operations
-export async function removeCartItem(
-  productId: string,
-  variantId: string,
-) {
+export async function removeCartItem(productId: string, variantId: string) {
   try {
     const requestBody: {
       productId: string;
@@ -212,53 +228,66 @@ export async function removeCartItem(
       sessionId?: string;
     } = {
       productId,
-      variantId
+      variantId,
     };
 
     // Add sessionId to body if provided (Method 2 - Explicit)
     const sessionId = await getSessionIdCookie();
     if (sessionId) {
       requestBody.sessionId = sessionId;
-    }
-    else{
-      toast({ description: 'No session ID found. Please refresh the page or try again.' });
+    } else {
+      toast({
+        description:
+          "No session ID found. Please refresh the page or try again.",
+      });
       return;
     }
 
-    const response = await fetch(`${API_BASE_URL}/enhanced-cart/remove?enhanced_cart_session_id=${sessionId}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-      next: { tags: ['cart'] }
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/enhanced-cart/remove?enhanced_cart_session_id=${sessionId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+        next: { tags: ["cart"] },
+      }
+    );
 
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Failed to remove item from cart: ${errorText}`);
     }
 
+    // Dispatch cart update event
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("cartUpdated"));
+    }
+
     return await response.json();
   } catch (error) {
-    console.error('Cart API Error:', error);
+    console.error("Cart API Error:", error);
     throw error;
   }
 }
 export const prepareCheckout = async (): Promise<any> => {
   const sessionId = await getSessionIdCookie();
-  if (!sessionId) throw new Error('No cart session found');
+  if (!sessionId) throw new Error("No cart session found");
 
   try {
-    const response = await fetch(`${API_BASE_URL}/enhanced-cart/${sessionId}/prepare-checkout`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      // credentials: 'include',
-      next: { tags: ['cart'] }
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/enhanced-cart/${sessionId}/prepare-checkout`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // credentials: 'include',
+        next: { tags: ["cart"] },
+      }
+    );
 
     if (!response.ok) {
-      throw new Error('Failed to prepare cart for checkout');
+      throw new Error("Failed to prepare cart for checkout");
     }
 
     const data = response.json();
@@ -267,7 +296,16 @@ export const prepareCheckout = async (): Promise<any> => {
 
     return data;
   } catch (error) {
-    console.error('Checkout Preparation Error:', error);
+    console.error("Checkout Preparation Error:", error);
     throw error;
+  }
+};
+
+// Clear cart after successful order
+export const clearCart = async (): Promise<void> => {
+  await removeSessionIdCookie();
+  // Dispatch cart update event
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("cartUpdated"));
   }
 };

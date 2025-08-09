@@ -1,68 +1,87 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
 import {
-    CreditCard,
-    Truck,
-    ShieldCheck,
-    Clock,
-    AlertCircle,
-    CheckCircle,
-    Package,
-    User,
-    Mail,
-    Phone,
-    MapPin,
-    FileText,
-    Loader2,
-    Calculator,
-    ShoppingCart
-} from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
-import { processCheckout, checkCheckoutReadiness, type CheckoutRequest, type CheckoutReadinessResponse } from '@/lib/api/orders';
-import { getEnhancedCart, type EnhancedCartResponse } from '@/lib/api/cart';
-import { getAllShippingCharges, calculateShippingCharge, type ShippingChargesResponse } from '@/lib/api/shipping';
-import { getSessionIdCookie } from '@/lib/cookies/session';
-import { getProduct, Product, ProductVariation } from '@/lib/api/products';
+  CreditCard,
+  Truck,
+  ShieldCheck,
+  Clock,
+  AlertCircle,
+  CheckCircle,
+  Package,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  FileText,
+  Loader2,
+  Calculator,
+  ShoppingCart,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
+import {
+  processCheckout,
+  checkCheckoutReadiness,
+  type CheckoutRequest,
+  type CheckoutReadinessResponse,
+} from "@/lib/api/orders";
+import {
+  getEnhancedCart,
+  clearCart,
+  type EnhancedCartResponse,
+} from "@/lib/api/cart";
+import {
+  getAllShippingCharges,
+  calculateShippingCharge,
+  type ShippingChargesResponse,
+} from "@/lib/api/shipping";
+import { getSessionIdCookie } from "@/lib/cookies/session";
+import { getProduct, Product, ProductVariation } from "@/lib/api/products";
 
 const paymentMethods = [
-    {
-        id: 'CASH_ON_DELIVERY',
-        name: 'Cash on Delivery',
-        description: 'Pay when you receive your order',
-        icon: Package,
-        available: true
-    },
-    // {
-    //     id: 'CARD',
-    //     name: 'Credit/Debit Card',
-    //     description: 'Secure online payment',
-    //     icon: CreditCard,
-    //     available: true
-    // },
-    // {
-    //     id: 'MOBILE_BANKING',
-    //     name: 'Mobile Banking',
-    //     description: 'bKash, Nagad, Rocket',
-    //     icon: Phone,
-    //     available: true
-    // }
+  {
+    id: "CASH_ON_DELIVERY",
+    name: "Cash on Delivery",
+    description: "Pay when you receive your order",
+    icon: Package,
+    available: true,
+  },
+  // {
+  //     id: 'CARD',
+  //     name: 'Credit/Debit Card',
+  //     description: 'Secure online payment',
+  //     icon: CreditCard,
+  //     available: true
+  // },
+  // {
+  //     id: 'MOBILE_BANKING',
+  //     name: 'Mobile Banking',
+  //     description: 'bKash, Nagad, Rocket',
+  //     icon: Phone,
+  //     available: true
+  // }
 ];
 
 const regions = [
-    { value: 'dhaka', label: 'Dhaka' },
-    { value: 'outside_dhaka', label: 'Outside Dhaka' }
+  { value: "dhaka", label: "Dhaka" },
+  { value: "outside_dhaka", label: "Outside Dhaka" },
 ];
 interface CartItemWithProduct {
   id: string;
@@ -74,299 +93,327 @@ interface CartItemWithProduct {
   loading?: boolean;
 }
 export default function CheckoutPage() {
-    const router = useRouter();
-    //   const searchParams = useSearchParams();
-    const { toast } = useToast();
+  const router = useRouter();
+  //   const searchParams = useSearchParams();
+  const { toast } = useToast();
 
-    const [sessionId, setSessionId] = useState<string>('');
-    //   const [readiness, setReadiness] = useState<CheckoutReadinessResponse | null>(null);
-    const [cartData, setCartData] = useState<EnhancedCartResponse | null>(null);
-    const [shippingCharges, setShippingCharges] = useState<ShippingChargesResponse | null>(null);
-    const [selectedRegion, setSelectedRegion] = useState<'dhaka' | 'outside_dhaka'>('dhaka');
-    const [shippingCost, setShippingCost] = useState<number>(0);
-    const [calculatingShipping, setCalculatingShipping] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [processing, setProcessing] = useState(false);
-    const [formData, setFormData] = useState<CheckoutRequest>({
-        sessionId: '',
-        customerName: '',
-        email: '',
-        phone: '',
-        shippingAddress: '',
-        billingAddress: '',
-        paymentMethod: 'CASH_ON_DELIVERY',
-        notes: ''
-    });
-    const [sameAsBilling, setSameAsBilling] = useState(true);
-    const [items, setItems] = useState<CartItemWithProduct[]>([]);
+  const [sessionId, setSessionId] = useState<string>("");
+  //   const [readiness, setReadiness] = useState<CheckoutReadinessResponse | null>(null);
+  const [cartData, setCartData] = useState<EnhancedCartResponse | null>(null);
+  const [shippingCharges, setShippingCharges] =
+    useState<ShippingChargesResponse | null>(null);
+  const [selectedRegion, setSelectedRegion] = useState<
+    "dhaka" | "outside_dhaka"
+  >("dhaka");
+  const [shippingCost, setShippingCost] = useState<number>(0);
+  const [calculatingShipping, setCalculatingShipping] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
+  const [formData, setFormData] = useState<CheckoutRequest>({
+    sessionId: "",
+    customerName: "",
+    email: "",
+    phone: "",
+    shippingAddress: "",
+    billingAddress: "",
+    paymentMethod: "CASH_ON_DELIVERY",
+    notes: "",
+  });
+  const [sameAsBilling, setSameAsBilling] = useState(true);
+  const [items, setItems] = useState<CartItemWithProduct[]>([]);
 
-    useEffect(() => {
-        const fetchSessionId = async () => {
-            const id = await getSessionIdCookie();
-            setSessionId(id || '');
-            setFormData(prev => ({
-                ...prev,
-                sessionId: id || ''
-            }));
-        };
-        fetchSessionId();
-    }, []);
-
-    useEffect(() => {
-        if (!sessionId) {
-            toast({
-                title: "Error",
-                description: "No cart session found. Please add items to cart first.",
-                variant: "destructive"
-            });
-            // router.push('/cart');
-            return;
-        }
-
-        Promise.all([
-            //   checkReadiness(),
-            fetchCartData(),
-            fetchShippingCharges()
-        ]);
-    }, [sessionId]);
-
-
-    const fetchCartData = async () => {
-        try {
-            const data = await getEnhancedCart();
-            console.log(data)
-            setCartData(data);
-            const cartItems = data.data.cart.items;
-            
-                    // Convert cart items to our interface
-                    const cartItemsWithProduct: CartItemWithProduct[] = cartItems.map(item => ({
-                      id: item.productId, // Using productId as ID for now
-                      productId: item.productId,
-                      quantity: item.quantity,
-                      price: Number(item.totalPrice),
-                      loading: true
-                    }));
-            
-                    setItems(cartItemsWithProduct);
-            
-                    // Fetch product details for each item
-                    const updatedItems = await Promise.all(
-                      cartItemsWithProduct.map(async (item) => {
-                        try {
-                          const product = await getProduct(item.productId);
-            
-                          // Find the appropriate variation based on price or use first variation
-                          const variation = product.variations.find(v =>
-                            v.price === item.price || v.salePrice === item.price
-                          ) || product.variations[0];
-            
-                          return {
-                            ...item,
-                            product,
-                            variation,
-                            loading: false
-                          };
-                        } catch (error) {
-                          console.error(`Failed to fetch product ${item.productId}:`, error);
-                          return {
-                            ...item,
-                            loading: false
-                          };
-                        }
-                      })
-                    );
-            
-                    setItems(updatedItems);
-        } catch (error: any) {
-            toast({
-                title: "Error",
-                description: error.message || "Failed to fetch cart data",
-                variant: "destructive"
-            });
-        }
+  useEffect(() => {
+    const fetchSessionId = async () => {
+      const id = await getSessionIdCookie();
+      setSessionId(id || "");
+      setFormData((prev) => ({
+        ...prev,
+        sessionId: id || "",
+      }));
     };
+    fetchSessionId();
+  }, []);
 
-    const fetchShippingCharges = async () => {
-        try {
-            const data = await getAllShippingCharges();
-            setShippingCharges(data);
-            setShippingCost(data.data.dhaka); // Default to Dhaka
-            setLoading(false);
-        } catch (error: any) {
-            toast({
-                title: "Error",
-                description: error.message || "Failed to fetch shipping charges",
-                variant: "destructive"
-            });
-            setLoading(false);
-        }
-    };
-
-    const handleRegionChange = (region: 'dhaka' | 'outside_dhaka') => {
-        setSelectedRegion(region);
-        if (shippingCharges) {
-            const cost = region === 'dhaka' ? shippingCharges.data.dhaka : shippingCharges.data.outsideDhaka;
-            setShippingCost(cost);
-        }
-    };
-
-    const calculateShippingFromAddress = async () => {
-        if (!formData.shippingAddress.trim()) {
-            toast({
-                title: "Missing Address",
-                description: "Please enter your shipping address first",
-                variant: "destructive"
-            });
-            return;
-        }
-
-        try {
-            setCalculatingShipping(true);
-            const result = await calculateShippingCharge({
-                address: formData.shippingAddress
-            });
-
-            const detectedRegion = result.data.region;
-            setSelectedRegion(detectedRegion);
-            setShippingCost(result.data.charge);
-
-            toast({
-                title: "Shipping Calculated",
-                description: `Detected region: ${result.data.isDhaka ? 'Dhaka' : 'Outside Dhaka'}. Shipping cost: ৳${result.data.charge}`,
-            });
-        } catch (error: any) {
-            toast({
-                title: "Calculation Failed",
-                description: error.message || "Failed to calculate shipping from address",
-                variant: "destructive"
-            });
-        } finally {
-            setCalculatingShipping(false);
-        }
-    };
-
-    const handleInputChange = (field: keyof CheckoutRequest, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
-
-        // Auto-fill billing address if same as shipping
-        if (field === 'shippingAddress' && sameAsBilling) {
-            setFormData(prev => ({
-                ...prev,
-                billingAddress: value
-            }));
-        }
-    };
-
-    const handleSameAsBillingChange = (checked: boolean) => {
-        setSameAsBilling(checked);
-        if (checked) {
-            setFormData(prev => ({
-                ...prev,
-                billingAddress: prev.shippingAddress
-            }));
-        }
-    };
-
-    const validateForm = () => {
-        const required = ['customerName', 'email', 'phone', 'shippingAddress', 'billingAddress'];
-        const missing = required.filter(field => !formData[field as keyof CheckoutRequest]);
-
-        if (missing.length > 0) {
-            toast({
-                title: "Missing Information",
-                description: "Please fill in all required fields",
-                variant: "destructive"
-            });
-            return false;
-        }
-
-        // Email validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(formData.email)) {
-            toast({
-                title: "Invalid Email",
-                description: "Please enter a valid email address",
-                variant: "destructive"
-            });
-            return false;
-        }
-
-        return true;
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!validateForm()) return;
-
-        try {
-            setProcessing(true);
-            const result = await processCheckout(formData);
-
-            toast({
-                title: "Order Placed Successfully!",
-                description: `Your order ${result.data.orderId} has been created.`,
-            });
-
-            // Redirect to order confirmation page
-            router.push(`/`);
-        } catch (error: any) {
-            toast({
-                title: "Checkout Failed",
-                description: error.message || "Failed to process your order",
-                variant: "destructive"
-            });
-        } finally {
-            setProcessing(false);
-        }
-    };
-
-    const subtotal = items.reduce(
-        (sum, item) =>
-            sum +
-            ((Number(item.variation?.salePrice) || Number(item.variation?.price) || Number(item.price)) * item.quantity),
-        0
-    );
-    const total = subtotal + shippingCost;
-
-    if (loading) {
-        return (
-            <div className="bg-gradient-to-br from-primary-50 dark:from-gray-900 to-orange-50 dark:to-gray-800 py-8 min-h-screen">
-                <div className="mx-auto px-4 container">
-                    <div className="mx-auto max-w-4xl">
-                        <div className="py-12 text-center">
-                            <Loader2 className="mx-auto mb-4 w-8 h-8 animate-spin" />
-                            <p className="text-muted-foreground">Checking your cart...</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
+  useEffect(() => {
+    if (!sessionId) {
+      toast({
+        title: "Error",
+        description: "No cart session found. Please add items to cart first.",
+        variant: "destructive",
+      });
+      // router.push('/cart');
+      return;
     }
 
-    return (
-        <div className="bg-gradient-to-br from-primary-50 dark:from-gray-900 to-orange-50 dark:to-gray-800 py-8 min-h-screen">
-            <div className="mx-auto px-4 container">
-                <div className="mx-auto max-w-4xl">
-                    {/* Header */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mb-8 text-center"
-                    >
-                        <h1 className="mb-2 font-bold text-3xl md:text-4xl golden-text">
-                            Secure Checkout
-                        </h1>
-                        <p className="text-muted-foreground">
-                            Complete your order with our enhanced security features
-                        </p>
-                    </motion.div>
+    Promise.all([
+      //   checkReadiness(),
+      fetchCartData(),
+      fetchShippingCharges(),
+    ]);
+  }, [sessionId]);
 
-                    {/* Readiness Status */}
-                    {/* {readiness && (
+  const fetchCartData = async () => {
+    try {
+      const data = await getEnhancedCart();
+      console.log(data);
+      setCartData(data);
+      const cartItems = data.data.cart.items;
+
+      // Convert cart items to our interface
+      const cartItemsWithProduct: CartItemWithProduct[] = cartItems.map(
+        (item) => ({
+          id: item.productId, // Using productId as ID for now
+          productId: item.productId,
+          quantity: item.quantity,
+          price: Number(item.totalPrice),
+          loading: true,
+        })
+      );
+
+      setItems(cartItemsWithProduct);
+
+      // Fetch product details for each item
+      const updatedItems = await Promise.all(
+        cartItemsWithProduct.map(async (item) => {
+          try {
+            const product = await getProduct(item.productId);
+
+            // Find the appropriate variation based on price or use first variation
+            const variation =
+              product.variations.find(
+                (v) => v.price === item.price || v.salePrice === item.price
+              ) || product.variations[0];
+
+            return {
+              ...item,
+              product,
+              variation,
+              loading: false,
+            };
+          } catch (error) {
+            console.error(`Failed to fetch product ${item.productId}:`, error);
+            return {
+              ...item,
+              loading: false,
+            };
+          }
+        })
+      );
+
+      setItems(updatedItems);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch cart data",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchShippingCharges = async () => {
+    try {
+      const data = await getAllShippingCharges();
+      setShippingCharges(data);
+      setShippingCost(data.data.dhaka); // Default to Dhaka
+      setLoading(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to fetch shipping charges",
+        variant: "destructive",
+      });
+      setLoading(false);
+    }
+  };
+
+  const handleRegionChange = (region: "dhaka" | "outside_dhaka") => {
+    setSelectedRegion(region);
+    if (shippingCharges) {
+      const cost =
+        region === "dhaka"
+          ? shippingCharges.data.dhaka
+          : shippingCharges.data.outsideDhaka;
+      setShippingCost(cost);
+    }
+  };
+
+  const calculateShippingFromAddress = async () => {
+    if (!formData.shippingAddress.trim()) {
+      toast({
+        title: "Missing Address",
+        description: "Please enter your shipping address first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setCalculatingShipping(true);
+      const result = await calculateShippingCharge({
+        address: formData.shippingAddress,
+      });
+
+      const detectedRegion = result.data.region;
+      setSelectedRegion(detectedRegion);
+      setShippingCost(result.data.charge);
+
+      toast({
+        title: "Shipping Calculated",
+        description: `Detected region: ${
+          result.data.isDhaka ? "Dhaka" : "Outside Dhaka"
+        }. Shipping cost: ৳${result.data.charge}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Calculation Failed",
+        description:
+          error.message || "Failed to calculate shipping from address",
+        variant: "destructive",
+      });
+    } finally {
+      setCalculatingShipping(false);
+    }
+  };
+
+  const handleInputChange = (field: keyof CheckoutRequest, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    // Auto-fill billing address if same as shipping
+    if (field === "shippingAddress" && sameAsBilling) {
+      setFormData((prev) => ({
+        ...prev,
+        billingAddress: value,
+      }));
+    }
+  };
+
+  const handleSameAsBillingChange = (checked: boolean) => {
+    setSameAsBilling(checked);
+    if (checked) {
+      setFormData((prev) => ({
+        ...prev,
+        billingAddress: prev.shippingAddress,
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const required = [
+      "customerName",
+      "email",
+      "phone",
+      "shippingAddress",
+      "billingAddress",
+    ];
+    const missing = required.filter(
+      (field) => !formData[field as keyof CheckoutRequest]
+    );
+
+    if (missing.length > 0) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) return;
+
+    try {
+      setProcessing(true);
+      const result = await processCheckout(formData);
+
+      toast({
+        title: "Order Placed Successfully!",
+        description: `Your order ${result.data.orderId} has been created.`,
+      });
+
+      // Clear cart items in state
+      setItems([]);
+      setCartData(null);
+
+      // Clear cart session and trigger update event
+      await clearCart();
+
+      // Redirect to order confirmation page
+      router.push(`/`);
+    } catch (error: any) {
+      toast({
+        title: "Checkout Failed",
+        description: error.message || "Failed to process your order",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const subtotal = items.reduce(
+    (sum, item) =>
+      sum +
+      (Number(item.variation?.salePrice) ||
+        Number(item.variation?.price) ||
+        Number(item.price)) *
+        item.quantity,
+    0
+  );
+  const total = subtotal + shippingCost;
+
+  if (loading) {
+    return (
+      <div className="bg-gradient-to-br from-primary-50 dark:from-gray-900 to-orange-50 dark:to-gray-800 py-8 min-h-screen">
+        <div className="mx-auto px-4 container">
+          <div className="mx-auto max-w-4xl">
+            <div className="py-12 text-center">
+              <Loader2 className="mx-auto mb-4 w-8 h-8 animate-spin" />
+              <p className="text-muted-foreground">Checking your cart...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gradient-to-br from-primary-50 dark:from-gray-900 to-orange-50 dark:to-gray-800 py-8 min-h-screen">
+      <div className="mx-auto px-4 container">
+        <div className="mx-auto max-w-4xl">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 text-center">
+            <h1 className="mb-2 font-bold text-3xl md:text-4xl golden-text">
+              Secure Checkout
+            </h1>
+            <p className="text-muted-foreground">
+              Complete your order with our enhanced security features
+            </p>
+          </motion.div>
+
+          {/* Readiness Status */}
+          {/* {readiness && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -409,503 +456,598 @@ export default function CheckoutPage() {
             </motion.div>
           )} */}
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="gap-6 grid grid-cols-1 lg:grid-cols-3">
-                            {/* Left Column - Customer Information */}
-                            <div className="space-y-6 lg:col-span-2">
-                                {/* Customer Details */}
-                                <motion.div
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.2 }}
-                                >
-                                    <Card className="glass-effect">
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center gap-2">
-                                                <User className="w-5 h-5" />
-                                                Customer Information
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4">
-                                            <div>
-                                                <Label htmlFor="customerName">Full Name *</Label>
-                                                <Input
-                                                    id="customerName"
-                                                    value={formData.customerName}
-                                                    onChange={(e) => handleInputChange('customerName', e.target.value)}
-                                                    placeholder="Enter your full name"
-                                                    required
-                                                />
-                                            </div>
-                                            <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
-                                                <div>
-                                                    <Label htmlFor="email">Email Address *</Label>
-                                                    <Input
-                                                        id="email"
-                                                        type="email"
-                                                        value={formData.email}
-                                                        onChange={(e) => handleInputChange('email', e.target.value)}
-                                                        placeholder="your@email.com"
-                                                        required
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <Label htmlFor="phone">Phone Number *</Label>
-                                                    <Input
-                                                        id="phone"
-                                                        value={formData.phone}
-                                                        onChange={(e) => handleInputChange('phone', e.target.value)}
-                                                        placeholder="+880 1234 567890"
-                                                        required
-                                                    />
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </motion.div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="gap-6 grid grid-cols-1 lg:grid-cols-3">
+              {/* Left Column - Customer Information */}
+              <div className="space-y-6 lg:col-span-2">
+                {/* Customer Details */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}>
+                  <Card className="glass-effect">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <User className="w-5 h-5" />
+                        Customer Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label htmlFor="customerName">Full Name *</Label>
+                        <Input
+                          id="customerName"
+                          value={formData.customerName}
+                          onChange={(e) =>
+                            handleInputChange("customerName", e.target.value)
+                          }
+                          placeholder="Enter your full name"
+                          required
+                        />
+                      </div>
+                      <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
+                        <div>
+                          <Label htmlFor="email">Email Address *</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={formData.email}
+                            onChange={(e) =>
+                              handleInputChange("email", e.target.value)
+                            }
+                            placeholder="your@email.com"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="phone">Phone Number *</Label>
+                          <Input
+                            id="phone"
+                            value={formData.phone}
+                            onChange={(e) =>
+                              handleInputChange("phone", e.target.value)
+                            }
+                            placeholder="+880 1234 567890"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
 
-                                {/* Shipping Address */}
-                                <motion.div
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.3 }}
-                                >
-                                    <Card className="glass-effect">
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center gap-2">
-                                                <Truck className="w-5 h-5" />
-                                                Shipping Address
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4">
-                                            <div>
-                                                <Label htmlFor="shippingAddress">Address *</Label>
-                                                <Textarea
-                                                    id="shippingAddress"
-                                                    value={formData.shippingAddress}
-                                                    onChange={(e) => handleInputChange('shippingAddress', e.target.value)}
-                                                    placeholder="Enter your complete shipping address"
-                                                    rows={3}
-                                                    required
-                                                />
-                                            </div>
+                {/* Shipping Address */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}>
+                  <Card className="glass-effect">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Truck className="w-5 h-5" />
+                        Shipping Address
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label htmlFor="shippingAddress">Address *</Label>
+                        <Textarea
+                          id="shippingAddress"
+                          value={formData.shippingAddress}
+                          onChange={(e) =>
+                            handleInputChange("shippingAddress", e.target.value)
+                          }
+                          placeholder="Enter your complete shipping address"
+                          rows={3}
+                          required
+                        />
+                      </div>
 
-                                            {/* Region Selection */}
-                                            <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
-                                                <div>
-                                                    <Label htmlFor="region">Region *</Label>
-                                                    <Select value={selectedRegion} onValueChange={handleRegionChange}>
-                                                        <SelectTrigger>
-                                                            <SelectValue placeholder="Select region" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {regions.map((region) => (
-                                                                <SelectItem key={region.value} value={region.value}>
-                                                                    {region.label}
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                                <div className="flex items-end">
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        onClick={calculateShippingFromAddress}
-                                                        disabled={calculatingShipping || !formData.shippingAddress.trim()}
-                                                        className="w-full"
-                                                    >
-                                                        {calculatingShipping ? (
-                                                            <div className="flex items-center gap-2">
-                                                                <Loader2 className="w-4 h-4 animate-spin" />
-                                                                Calculating...
-                                                            </div>
-                                                        ) : (
-                                                            <div className="flex items-center gap-2">
-                                                                <Calculator className="w-4 h-4" />
-                                                                Auto-detect Region
-                                                            </div>
-                                                        )}
-                                                    </Button>
-                                                </div>
-                                            </div>
+                      {/* Region Selection */}
+                      <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
+                        <div>
+                          <Label htmlFor="region">Region *</Label>
+                          <Select
+                            value={selectedRegion}
+                            onValueChange={handleRegionChange}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select region" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {regions.map((region) => (
+                                <SelectItem
+                                  key={region.value}
+                                  value={region.value}>
+                                  {region.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-end">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={calculateShippingFromAddress}
+                            disabled={
+                              calculatingShipping ||
+                              !formData.shippingAddress.trim()
+                            }
+                            className="w-full">
+                            {calculatingShipping ? (
+                              <div className="flex items-center gap-2">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Calculating...
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <Calculator className="w-4 h-4" />
+                                Auto-detect Region
+                              </div>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
 
-                                            {/* Shipping Cost Display */}
-                                            <div className="bg-blue-50 dark:bg-blue-950/20 p-3 border border-blue-200 dark:border-blue-800 rounded-lg">
-                                                <div className="flex justify-between items-center">
-                                                    <span className="font-medium text-blue-700 dark:text-blue-300 text-sm">
-                                                        Shipping Cost ({selectedRegion === 'dhaka' ? 'Dhaka' : 'Outside Dhaka'})
-                                                    </span>
-                                                    <span className="font-bold text-blue-700 dark:text-blue-300">
-                                                        ৳{Number(shippingCost).toFixed(2)}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </motion.div>
+                      {/* Shipping Cost Display */}
+                      <div className="bg-blue-50 dark:bg-blue-950/20 p-3 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-blue-700 dark:text-blue-300 text-sm">
+                            Shipping Cost (
+                            {selectedRegion === "dhaka"
+                              ? "Dhaka"
+                              : "Outside Dhaka"}
+                            )
+                          </span>
+                          <span className="font-bold text-blue-700 dark:text-blue-300">
+                            ৳{Number(shippingCost).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
 
-                                {/* Billing Address */}
-                                <motion.div
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.4 }}
-                                >
-                                    <Card className="glass-effect">
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center gap-2">
-                                                <MapPin className="w-5 h-5" />
-                                                Billing Address
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4">
-                                            <div className="flex items-center space-x-2">
-                                                <input
-                                                    type="checkbox"
-                                                    id="sameAsBilling"
-                                                    checked={sameAsBilling}
-                                                    onChange={(e) => handleSameAsBillingChange(e.target.checked)}
-                                                    className="border-gray-300 rounded"
-                                                />
-                                                <Label htmlFor="sameAsBilling">Same as shipping address</Label>
-                                            </div>
-                                            <div>
-                                                <Label htmlFor="billingAddress">Address *</Label>
-                                                <Textarea
-                                                    id="billingAddress"
-                                                    value={formData.billingAddress}
-                                                    onChange={(e) => handleInputChange('billingAddress', e.target.value)}
-                                                    placeholder="Enter your billing address"
-                                                    rows={3}
-                                                    disabled={sameAsBilling}
-                                                    required
-                                                />
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </motion.div>
+                {/* Billing Address */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}>
+                  <Card className="glass-effect">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <MapPin className="w-5 h-5" />
+                        Billing Address
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="sameAsBilling"
+                          checked={sameAsBilling}
+                          onChange={(e) =>
+                            handleSameAsBillingChange(e.target.checked)
+                          }
+                          className="border-gray-300 rounded"
+                        />
+                        <Label htmlFor="sameAsBilling">
+                          Same as shipping address
+                        </Label>
+                      </div>
+                      <div>
+                        <Label htmlFor="billingAddress">Address *</Label>
+                        <Textarea
+                          id="billingAddress"
+                          value={formData.billingAddress}
+                          onChange={(e) =>
+                            handleInputChange("billingAddress", e.target.value)
+                          }
+                          placeholder="Enter your billing address"
+                          rows={3}
+                          disabled={sameAsBilling}
+                          required
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
 
-                                {/* Payment Method */}
-                                <motion.div
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.5 }}
-                                >
-                                    <Card className="glass-effect">
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center gap-2">
-                                                <CreditCard className="w-5 h-5" />
-                                                Payment Method
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <RadioGroup
-                                                value={formData.paymentMethod}
-                                                onValueChange={(value) => handleInputChange('paymentMethod', value)}
-                                            >
-                                                {paymentMethods.map((method) => {
-                                                    const IconComponent = method.icon;
-                                                    return (
-                                                        <div
-                                                            key={method.id}
-                                                            className={`flex items-center space-x-3 p-4 rounded-lg border-2 transition-colors ${formData.paymentMethod === method.id
-                                                                    ? 'border-primary bg-primary/5'
-                                                                    : 'border-gray-200 dark:border-gray-700 hover:border-primary/50'
-                                                                } ${!method.available ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                                                        >
-                                                            <RadioGroupItem
-                                                                value={method.id}
-                                                                id={method.id}
-                                                                disabled={!method.available}
-                                                            />
-                                                            <IconComponent className="w-5 h-5 text-primary" />
-                                                            <div className="flex-1">
-                                                                <Label htmlFor={method.id} className="font-medium cursor-pointer">
-                                                                    {method.name}
-                                                                </Label>
-                                                                <p className="text-muted-foreground text-sm">
-                                                                    {method.description}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </RadioGroup>
-                                        </CardContent>
-                                    </Card>
-                                </motion.div>
-
-                                {/* Order Notes */}
-                                <motion.div
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.6 }}
-                                >
-                                    <Card className="glass-effect">
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center gap-2">
-                                                <FileText className="w-5 h-5" />
-                                                Order Notes (Optional)
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <Textarea
-                                                value={formData.notes}
-                                                onChange={(e) => handleInputChange('notes', e.target.value)}
-                                                placeholder="Any special instructions for your order..."
-                                                rows={3}
-                                            />
-                                        </CardContent>
-                                    </Card>
-                                </motion.div>
+                {/* Payment Method */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 }}>
+                  <Card className="glass-effect">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CreditCard className="w-5 h-5" />
+                        Payment Method
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <RadioGroup
+                        value={formData.paymentMethod}
+                        onValueChange={(value) =>
+                          handleInputChange("paymentMethod", value)
+                        }>
+                        {paymentMethods.map((method) => {
+                          const IconComponent = method.icon;
+                          return (
+                            <div
+                              key={method.id}
+                              className={`flex items-center space-x-3 p-4 rounded-lg border-2 transition-colors ${
+                                formData.paymentMethod === method.id
+                                  ? "border-primary bg-primary/5"
+                                  : "border-gray-200 dark:border-gray-700 hover:border-primary/50"
+                              } ${
+                                !method.available
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : "cursor-pointer"
+                              }`}>
+                              <RadioGroupItem
+                                value={method.id}
+                                id={method.id}
+                                disabled={!method.available}
+                              />
+                              <IconComponent className="w-5 h-5 text-primary" />
+                              <div className="flex-1">
+                                <Label
+                                  htmlFor={method.id}
+                                  className="font-medium cursor-pointer">
+                                  {method.name}
+                                </Label>
+                                <p className="text-muted-foreground text-sm">
+                                  {method.description}
+                                </p>
+                              </div>
                             </div>
+                          );
+                        })}
+                      </RadioGroup>
+                    </CardContent>
+                  </Card>
+                </motion.div>
 
-                            {/* Right Column - Order Summary */}
-                            <div className="lg:col-span-1">
-                                <motion.div
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.7 }}
-                                    className="top-8 sticky"
-                                >
-                                    <Card className="glass-effect">
-                                        <CardHeader>
-                                            <CardTitle className="flex items-center gap-2">
-                                                <ShoppingCart className="w-5 h-5" />
-                                                Order Summary
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4">
-                                            {/* Cart Items */}
-                                            {items && items.length > 0 && (
-                                                <div className="space-y-3">
-                                                    <h4 className="font-medium text-sm">Items in Cart</h4>
-                                                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                                                        {items.map((item) => (
-                                                            <div key={item.productId} className="flex justify-between items-start text-sm">
-                                                                <div className="flex-1 pr-2">
-                                                                    <p className="font-medium line-clamp-1">
-                                                                        {item.product?.name || 'Product name unavailable'}
-                                                                    </p>
-                                                                    <span className="font-bold text-sm sm:text-base golden-text">
-                                                                        ৳{(Number(item.variation?.salePrice) || Number(item.variation?.price) || Number(item.price)).toFixed(2)}
-                                                                    </span>
-                                                                    {item.variation?.price && item.variation?.salePrice && Number(item.variation.price) > Number(item.variation.salePrice) && (
-                                                                        <span className="ml-2 text-muted-foreground text-xs sm:text-sm line-through">
-                                                                            ৳{Number(item.variation.price).toFixed(2)}
-                                                                        </span>
-                                                                    )}
-                                                                    <p className="text-muted-foreground text-xs">
-                                                                        Qty: {item.quantity} × ৳{(Number(item.variation?.salePrice) || Number(item.variation?.price) || Number(item.price)).toFixed(2)}
-                                                                    </p>
-                                                                </div>
-                                                                <span className="font-medium">
-                                                                    ৳{((Number(item.variation?.salePrice) || Number(item.variation?.price) || Number(item.price)) * item.quantity).toFixed(2)}
-                                                                </span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                    <Separator />
-                                                </div>
-                                            )}
+                {/* Order Notes */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 }}>
+                  <Card className="glass-effect">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <FileText className="w-5 h-5" />
+                        Order Notes (Optional)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Textarea
+                        value={formData.notes}
+                        onChange={(e) =>
+                          handleInputChange("notes", e.target.value)
+                        }
+                        placeholder="Any special instructions for your order..."
+                        rows={3}
+                      />
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </div>
 
-                                            {/* Summary Calculations */}
-                                            {items && (
-                                                <>
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-muted-foreground text-sm">
-                                                            Items ({items.length})
-                                                        </span>
-                                                        <span className="font-medium">
-                                                            ৳{Number(subtotal).toFixed(2)}
-                                                        </span>
-                                                    </div>
+              {/* Right Column - Order Summary */}
+              <div className="lg:col-span-1">
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.7 }}
+                  className="top-8 sticky">
+                  <Card className="glass-effect">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <ShoppingCart className="w-5 h-5" />
+                        Order Summary
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Cart Items */}
+                      {items && items.length > 0 && (
+                        <div className="space-y-3">
+                          <h4 className="font-medium text-sm">Items in Cart</h4>
+                          <div className="space-y-2 max-h-40 overflow-y-auto">
+                            {items.map((item) => (
+                              <div
+                                key={item.productId}
+                                className="flex justify-between items-start text-sm">
+                                <div className="flex-1 pr-2">
+                                  <p className="font-medium line-clamp-1">
+                                    {item.product?.name ||
+                                      "Product name unavailable"}
+                                  </p>
+                                  <span className="font-bold text-sm sm:text-base golden-text">
+                                    ৳
+                                    {(
+                                      Number(item.variation?.salePrice) ||
+                                      Number(item.variation?.price) ||
+                                      Number(item.price)
+                                    ).toFixed(2)}
+                                  </span>
+                                  {item.variation?.price &&
+                                    item.variation?.salePrice &&
+                                    Number(item.variation.price) >
+                                      Number(item.variation.salePrice) && (
+                                      <span className="ml-2 text-muted-foreground text-xs sm:text-sm line-through">
+                                        ৳
+                                        {Number(item.variation.price).toFixed(
+                                          2
+                                        )}
+                                      </span>
+                                    )}
+                                  <p className="text-muted-foreground text-xs">
+                                    Qty: {item.quantity} × ৳
+                                    {(
+                                      Number(item.variation?.salePrice) ||
+                                      Number(item.variation?.price) ||
+                                      Number(item.price)
+                                    ).toFixed(2)}
+                                  </p>
+                                </div>
+                                <span className="font-medium">
+                                  ৳
+                                  {(
+                                    (Number(item.variation?.salePrice) ||
+                                      Number(item.variation?.price) ||
+                                      Number(item.price)) * item.quantity
+                                  ).toFixed(2)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          <Separator />
+                        </div>
+                      )}
 
-                                                    <Separator />
+                      {/* Summary Calculations */}
+                      {items && (
+                        <>
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground text-sm">
+                              Items ({items.length})
+                            </span>
+                            <span className="font-medium">
+                              ৳{Number(subtotal).toFixed(2)}
+                            </span>
+                          </div>
 
-                                                    <div className="space-y-2">
-                                                        <div className="flex justify-between items-center text-sm">
-                                                            <span className="text-muted-foreground">Subtotal</span>
-                                                            <span>৳{Number(subtotal).toFixed(2)}</span>
-                                                        </div>
-                                                        <div className="flex justify-between items-center text-sm">
-                                                            <span className="text-muted-foreground">
-                                                                Shipping ({selectedRegion === 'dhaka' ? 'Dhaka' : 'Outside Dhaka'})
-                                                            </span>
-                                                            <span className={shippingCost === 0 ? "text-green-600" : ""}>
-                                                                {shippingCost === 0 ? 'Free' : `৳${Number(shippingCost).toFixed(2)}`}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex justify-between items-center text-sm">
-                                                            <span className="text-muted-foreground">Tax</span>
-                                                            <span>৳0.00</span>
-                                                        </div>
-                                                    </div>
+                          <Separator />
 
-                                                    <Separator />
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center text-sm">
+                              <span className="text-muted-foreground">
+                                Subtotal
+                              </span>
+                              <span>৳{Number(subtotal).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm">
+                              <span className="text-muted-foreground">
+                                Shipping (
+                                {selectedRegion === "dhaka"
+                                  ? "Dhaka"
+                                  : "Outside Dhaka"}
+                                )
+                              </span>
+                              <span
+                                className={
+                                  shippingCost === 0 ? "text-green-600" : ""
+                                }>
+                                {shippingCost === 0
+                                  ? "Free"
+                                  : `৳${Number(shippingCost).toFixed(2)}`}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm">
+                              <span className="text-muted-foreground">Tax</span>
+                              <span>৳0.00</span>
+                            </div>
+                          </div>
 
-                                                    <div className="flex justify-between items-center font-bold text-lg">
-                                                        <span>Total</span>
-                                                        <span className="golden-text">
-                                                            ৳{Number(total).toFixed(2)}
-                                                        </span>
-                                                    </div>
-                                                </>
-                                            )}
+                          <Separator />
 
-                                            <div className="space-y-3 pt-4">
-                                                <div className="flex items-center gap-2 text-green-600 text-sm">
-                                                    <ShieldCheck className="w-4 h-4" />
-                                                    <span>SSL Secured Checkout</span>
-                                                </div>
-                                                <div className="flex items-center gap-2 text-green-600 text-sm">
-                                                    <Truck className="w-4 h-4" />
-                                                    <span>
-                                                        {shippingCost === 0 ? 'Free Shipping' : `Shipping: ৳${shippingCost}`}
-                                                    </span>
-                                                </div>
-                                                {/* <div className="flex items-center gap-2 text-green-600 text-sm">
+                          <div className="flex justify-between items-center font-bold text-lg">
+                            <span>Total</span>
+                            <span className="golden-text">
+                              ৳{Number(total).toFixed(2)}
+                            </span>
+                          </div>
+                        </>
+                      )}
+
+                      <div className="space-y-3 pt-4">
+                        <div className="flex items-center gap-2 text-green-600 text-sm">
+                          <ShieldCheck className="w-4 h-4" />
+                          <span>SSL Secured Checkout</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-green-600 text-sm">
+                          <Truck className="w-4 h-4" />
+                          <span>
+                            {shippingCost === 0
+                              ? "Free Shipping"
+                              : `Shipping: ৳${shippingCost}`}
+                          </span>
+                        </div>
+                        {/* <div className="flex items-center gap-2 text-green-600 text-sm">
                                                     <Package className="w-4 h-4" />
                                                     <span>30-Day Return Policy</span>
                                                 </div> */}
-                                            </div>
+                      </div>
 
-                                            <Button
-                                                type="submit"
-                                                className="w-full h-12 text-lg golden-button"
-                                                disabled={processing}
-                                            >
-                                                {processing ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                                        Processing...
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex items-center gap-2">
-                                                        <ShieldCheck className="w-5 h-5" />
-                                                        Place Order - ৳{Number(total).toFixed(2)}
-                                                    </div>
-                                                )}
-                                            </Button>
+                      <Button
+                        type="submit"
+                        className="w-full h-12 text-lg golden-button"
+                        disabled={processing}>
+                        {processing ? (
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Processing...
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <ShieldCheck className="w-5 h-5" />
+                            Place Order - ৳{Number(total).toFixed(2)}
+                          </div>
+                        )}
+                      </Button>
 
-                                            <p className="text-muted-foreground text-xs text-center">
-                                                By placing your order, you agree to our{' '}
-                                                <a href="/terms" className="text-primary hover:underline">
-                                                    Terms of Service
-                                                </a>{' '}
-                                                and{' '}
-                                                <a href="/privacy" className="text-primary hover:underline">
-                                                    Privacy Policy
-                                                </a>
-                                            </p>
-                                        </CardContent>
-                                    </Card>
-                                </motion.div>
-                            </div>
-                        </div>
-                    </form>
-
-                    {/* Security Features */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.8 }}
-                        className="mt-8"
-                    >
-                        <Card className="glass-effect">
-                            <CardContent className="p-6">
-                                <h3 className="mb-4 font-semibold text-center">Enhanced Security Features</h3>
-                                <div className="gap-4 grid grid-cols-1 md:grid-cols-3 text-center">
-                                    <div className="flex flex-col items-center gap-2">
-                                        <ShieldCheck className="w-8 h-8 text-green-600" />
-                                        <div>
-                                            <p className="font-medium">Two-Phase Commit</p>
-                                            <p className="text-muted-foreground text-xs">Bulletproof transaction processing</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col items-center gap-2">
-                                        <Package className="w-8 h-8 text-blue-600" />
-                                        <div>
-                                            <p className="font-medium">Stock Reservation</p>
-                                            <p className="text-muted-foreground text-xs">Items reserved during checkout</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col items-center gap-2">
-                                        <CreditCard className="w-8 h-8 text-purple-600" />
-                                        <div>
-                                            <p className="font-medium">Server-Side Pricing</p>
-                                            <p className="text-muted-foreground text-xs">Real-time price validation</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-
-                    {/* Shipping Information */}
-                    {shippingCharges && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.9 }}
-                            className="mt-6"
-                        >
-                            <Card className="glass-effect">
-                                <CardHeader>
-                                    <CardTitle className="flex justify-center items-center gap-2 text-center">
-                                        <Truck className="w-5 h-5" />
-                                        Shipping Information
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
-                                        <div className="bg-blue-50 dark:bg-blue-950/20 p-4 border border-blue-200 dark:border-blue-800 rounded-lg">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <MapPin className="w-4 h-4 text-blue-600" />
-                                                <h4 className="font-medium text-blue-700 dark:text-blue-300">Dhaka Region</h4>
-                                            </div>
-                                            <p className="mb-1 text-blue-600 dark:text-blue-400 text-sm">
-                                                Shipping Cost: <span className="font-bold">৳{shippingCharges.data.dhaka}</span>
-                                            </p>
-                                            <p className="text-blue-600 dark:text-blue-400 text-xs">
-                                                Delivery within Dhaka city limits
-                                            </p>
-                                        </div>
-
-                                        <div className="bg-orange-50 dark:bg-orange-950/20 p-4 border border-orange-200 dark:border-orange-800 rounded-lg">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <MapPin className="w-4 h-4 text-orange-600" />
-                                                <h4 className="font-medium text-orange-700 dark:text-orange-300">Outside Dhaka</h4>
-                                            </div>
-                                            <p className="mb-1 text-orange-600 dark:text-orange-400 text-sm">
-                                                Shipping Cost: <span className="font-bold">৳{shippingCharges.data.outsideDhaka}</span>
-                                            </p>
-                                            <p className="text-orange-600 dark:text-orange-400 text-xs">
-                                                Delivery outside Dhaka city
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-gray-50 dark:bg-gray-800/50 mt-4 p-3 rounded-lg">
-                                        <div className="flex items-start gap-2">
-                                            <AlertCircle className="flex-shrink-0 mt-0.5 w-4 h-4 text-gray-600 dark:text-gray-400" />
-                                            <div className="text-gray-700 dark:text-gray-300 text-sm">
-                                                <p className="mb-1 font-medium">Shipping Notes:</p>
-                                                <ul className="space-y-1 text-xs">
-                                                    <li>• Orders are typically processed within 1-2 business days</li>
-                                                    <li>• Delivery time: 2-3 days for Dhaka, 3-5 days for outside Dhaka</li>
-                                                    <li>• Free shipping may apply for orders above certain amount</li>
-                                                    <li>• Use "Auto-detect Region" for accurate shipping calculation</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </motion.div>
-                    )}
-                </div>
+                      <p className="text-muted-foreground text-xs text-center">
+                        By placing your order, you agree to our{" "}
+                        <a
+                          href="/terms"
+                          className="text-primary hover:underline">
+                          Terms of Service
+                        </a>{" "}
+                        and{" "}
+                        <a
+                          href="/privacy"
+                          className="text-primary hover:underline">
+                          Privacy Policy
+                        </a>
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </div>
             </div>
+          </form>
+
+          {/* Security Features */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="mt-8">
+            <Card className="glass-effect">
+              <CardContent className="p-6">
+                <h3 className="mb-4 font-semibold text-center">
+                  Enhanced Security Features
+                </h3>
+                <div className="gap-4 grid grid-cols-1 md:grid-cols-3 text-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <ShieldCheck className="w-8 h-8 text-green-600" />
+                    <div>
+                      <p className="font-medium">Two-Phase Commit</p>
+                      <p className="text-muted-foreground text-xs">
+                        Bulletproof transaction processing
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <Package className="w-8 h-8 text-blue-600" />
+                    <div>
+                      <p className="font-medium">Stock Reservation</p>
+                      <p className="text-muted-foreground text-xs">
+                        Items reserved during checkout
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <CreditCard className="w-8 h-8 text-purple-600" />
+                    <div>
+                      <p className="font-medium">Server-Side Pricing</p>
+                      <p className="text-muted-foreground text-xs">
+                        Real-time price validation
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Shipping Information */}
+          {shippingCharges && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.9 }}
+              className="mt-6">
+              <Card className="glass-effect">
+                <CardHeader>
+                  <CardTitle className="flex justify-center items-center gap-2 text-center">
+                    <Truck className="w-5 h-5" />
+                    Shipping Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
+                    <div className="bg-blue-50 dark:bg-blue-950/20 p-4 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <MapPin className="w-4 h-4 text-blue-600" />
+                        <h4 className="font-medium text-blue-700 dark:text-blue-300">
+                          Dhaka Region
+                        </h4>
+                      </div>
+                      <p className="mb-1 text-blue-600 dark:text-blue-400 text-sm">
+                        Shipping Cost:{" "}
+                        <span className="font-bold">
+                          ৳{shippingCharges.data.dhaka}
+                        </span>
+                      </p>
+                      <p className="text-blue-600 dark:text-blue-400 text-xs">
+                        Delivery within Dhaka city limits
+                      </p>
+                    </div>
+
+                    <div className="bg-orange-50 dark:bg-orange-950/20 p-4 border border-orange-200 dark:border-orange-800 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <MapPin className="w-4 h-4 text-orange-600" />
+                        <h4 className="font-medium text-orange-700 dark:text-orange-300">
+                          Outside Dhaka
+                        </h4>
+                      </div>
+                      <p className="mb-1 text-orange-600 dark:text-orange-400 text-sm">
+                        Shipping Cost:{" "}
+                        <span className="font-bold">
+                          ৳{shippingCharges.data.outsideDhaka}
+                        </span>
+                      </p>
+                      <p className="text-orange-600 dark:text-orange-400 text-xs">
+                        Delivery outside Dhaka city
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 dark:bg-gray-800/50 mt-4 p-3 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="flex-shrink-0 mt-0.5 w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      <div className="text-gray-700 dark:text-gray-300 text-sm">
+                        <p className="mb-1 font-medium">Shipping Notes:</p>
+                        <ul className="space-y-1 text-xs">
+                          <li>
+                            • Orders are typically processed within 1-2 business
+                            days
+                          </li>
+                          <li>
+                            • Delivery time: 2-3 days for Dhaka, 3-5 days for
+                            outside Dhaka
+                          </li>
+                          <li>
+                            • Free shipping may apply for orders above certain
+                            amount
+                          </li>
+                          <li>
+                            • Use "Auto-detect Region" for accurate shipping
+                            calculation
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
         </div>
-    );
+      </div>
+    </div>
+  );
 }
