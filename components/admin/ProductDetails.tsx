@@ -46,6 +46,7 @@ export default function ProductDetails() {
   const fetchProduct = async () => {
     try {
       setLoading(true);
+      // Use regular function to get product details
       const productData = await getProduct(id);
       setProduct(productData);
     } catch (error) {

@@ -17,6 +17,7 @@ export function TopProducts() {
 
       try {
         setLoading(true);
+        // Use admin function to get both published and unpublished products
         const response = await getProducts({ page: 1, limit: 5 });
         setProducts(response.products.slice(0, 3)); // Get top 3 products
       } catch (error) {

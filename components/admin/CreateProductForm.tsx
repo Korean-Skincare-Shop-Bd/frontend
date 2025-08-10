@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Upload, X, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -29,7 +28,7 @@ export function CreateProductForm() {
     price: 0,
     stockQuantity: 0,
     description: "",
-    isPublished: false,
+    isPublished: true,
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -40,11 +39,7 @@ export function CreateProductForm() {
   const { token } = useAdmin();
   const router = useRouter();
 
-  useEffect(() => {
-    fetchInitialData();
-  }, [token]);
-
-  const fetchInitialData = async () => {
+  const fetchInitialData = useCallback(async () => {
     if (!token) return;
 
     try {
@@ -62,7 +57,11 @@ export function CreateProductForm() {
     } finally {
       setLoadingData(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
 
   const handleInputChange = (field: keyof CreateProductRequest, value: any) => {
     setFormData((prev) => ({
@@ -528,30 +527,6 @@ export function CreateProductForm() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Publish Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Publish Settings</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="published">Published</Label>
-                  <Switch
-                    id="published"
-                    checked={formData.isPublished}
-                    onCheckedChange={(checked) =>
-                      handleInputChange("isPublished", checked)
-                    }
-                  />
-                </div>
-                <p className="text-muted-foreground text-sm">
-                  {formData.isPublished
-                    ? "Product will be visible to customers"
-                    : "Product will be saved as draft"}
-                </p>
-              </CardContent>
-            </Card>
-
             {/* Actions */}
             <Card>
               <CardContent className="space-y-4 pt-6">

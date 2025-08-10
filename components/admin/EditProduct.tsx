@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
 import {
@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -87,16 +86,10 @@ export default function EditProduct() {
   const { token } = useAdmin();
   const id = params?.id as string;
 
-  useEffect(() => {
-    if (id && token) {
-      fetchProduct();
-    }
-  }, [id, token]);
-
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
       setLoading(true);
-      const productData = await getProduct(id);
+      const productData = await getProduct(id!);
       setProduct(productData);
       setFormData({
         name: productData.name,
@@ -104,7 +97,6 @@ export default function EditProduct() {
         categoryId: productData.categoryId,
         brandId: productData.brandId,
         tags: productData.tags || [],
-        isPublished: productData.isPublished,
         expiryDate: productData.expiryDate
           ? productData.expiryDate.split("T")[0]
           : "",
@@ -117,7 +109,13 @@ export default function EditProduct() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id && token) {
+      fetchProduct();
+    }
+  }, [id, token, fetchProduct]);
 
   const handleInputChange = (field: keyof UpdateProductRequest, value: any) => {
     setFormData((prev) => ({
@@ -154,7 +152,12 @@ export default function EditProduct() {
           : undefined,
       };
 
-      await updateProduct(token!, id, updateData);
+      // Remove null values to prevent API validation errors
+      const cleanedData = Object.fromEntries(
+        Object.entries(updateData).filter(([_, value]) => value !== null && value !== undefined)
+      ) as UpdateProductRequest;
+
+      await updateProduct(token!, id, cleanedData);
       toast.success("Product updated successfully");
       router.push("/admin/products");
     } catch (error) {
@@ -176,8 +179,8 @@ export default function EditProduct() {
         stockQuantity: variation.stockQuantity,
         volume: variation.volume,
         weightGrams: variation.weightGrams,
-        size: variation.attributes?.size as string,
-        isDefault: false,
+        attributes: variation.attributes,
+        tags: variation.tags as ("HOT" | "NEW" | "SALE" | "FEATURED")[] || [],
       });
     } else {
       setEditingVariation(null);
@@ -192,13 +195,37 @@ export default function EditProduct() {
 
   const handleVariationSubmit = async () => {
     try {
+      // Clean and format the data before sending
+      const cleanedData: CreateVariationRequest | UpdateVariationRequest = {
+        name: variationForm.name.trim(),
+        price: Number(variationForm.price),
+        ...(variationForm.salePrice && variationForm.salePrice > 0 && {
+          salePrice: Number(variationForm.salePrice)
+        }),
+        ...(variationForm.volume && variationForm.volume.trim() && {
+          volume: variationForm.volume.trim()
+        }),
+        ...(variationForm.stockQuantity !== undefined && {
+          stockQuantity: Number(variationForm.stockQuantity) || 0
+        }),
+        ...(variationForm.attributes && Object.keys(variationForm.attributes).length > 0 && {
+          attributes: variationForm.attributes
+        }),
+        ...(variationForm.tags && variationForm.tags.length > 0 && {
+          tags: variationForm.tags
+        }),
+        ...(variationForm.weightGrams && variationForm.weightGrams > 0 && {
+          weightGrams: Number(variationForm.weightGrams)
+        }),
+      };
+
       if (editingVariation) {
         // Update existing variation
         const updated = await updateProductVariation(
           token!,
           id,
           editingVariation.id,
-          variationForm
+          cleanedData as UpdateVariationRequest
         );
         setVariations((prev) =>
           prev.map((v) => (v.id === editingVariation.id ? updated : v))
@@ -206,7 +233,7 @@ export default function EditProduct() {
         toast.success("Variation updated successfully");
       } else {
         // Create new variation
-        const created = await createProductVariation(token!, id, variationForm);
+        const created = await createProductVariation(token!, id, cleanedData as CreateVariationRequest);
         setVariations((prev) => [...prev, created]);
         toast.success("Variation created successfully");
       }
@@ -646,39 +673,6 @@ export default function EditProduct() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Publish Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Publish Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex justify-between items-center">
-                <Label htmlFor="published">Published</Label>
-                <Switch
-                  id="published"
-                  checked={formData.isPublished || false}
-                  onCheckedChange={(checked) =>
-                    handleInputChange("isPublished", checked)
-                  }
-                />
-              </div>
-
-              <Separator />
-
-              <div>
-                <Label htmlFor="expiryDate">Expiry Date</Label>
-                <Input
-                  id="expiryDate"
-                  type="date"
-                  value={formData.expiryDate || ""}
-                  onChange={(e) =>
-                    handleInputChange("expiryDate", e.target.value)
-                  }
-                />
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Category & Brand */}
           <Card>
             <CardHeader>
@@ -697,6 +691,20 @@ export default function EditProduct() {
                 <p className="text-muted-foreground text-sm">
                   {product.brand?.name || "No Brand"}
                 </p>
+              </div>
+
+              <Separator />
+
+              <div>
+                <Label htmlFor="expiryDate">Expiry Date</Label>
+                <Input
+                  id="expiryDate"
+                  type="date"
+                  value={formData.expiryDate || ""}
+                  onChange={(e) =>
+                    handleInputChange("expiryDate", e.target.value)
+                  }
+                />
               </div>
 
               <p className="text-muted-foreground text-xs">
@@ -795,7 +803,8 @@ export default function EditProduct() {
                 id="price"
                 type="number"
                 step="0.01"
-                value={variationForm.price}
+                min="0.01"
+                value={variationForm.price || ""}
                 onChange={(e) =>
                   setVariationForm((prev) => ({
                     ...prev,
@@ -803,6 +812,7 @@ export default function EditProduct() {
                   }))
                 }
                 className="col-span-3"
+                required
               />
             </div>
             <div className="items-center gap-2 grid grid-cols-4">
@@ -813,11 +823,12 @@ export default function EditProduct() {
                 id="salePrice"
                 type="number"
                 step="0.01"
+                min="0.01"
                 value={variationForm.salePrice || ""}
                 onChange={(e) =>
                   setVariationForm((prev) => ({
                     ...prev,
-                    salePrice: parseFloat(e.target.value) || undefined,
+                    salePrice: e.target.value ? parseFloat(e.target.value) : undefined,
                   }))
                 }
                 className="col-span-3"
@@ -830,7 +841,8 @@ export default function EditProduct() {
               <Input
                 id="stockQuantity"
                 type="number"
-                value={variationForm.stockQuantity}
+                min="0"
+                value={variationForm.stockQuantity || ""}
                 onChange={(e) =>
                   setVariationForm((prev) => ({
                     ...prev,
@@ -838,6 +850,7 @@ export default function EditProduct() {
                   }))
                 }
                 className="col-span-3"
+                required
               />
             </div>
             <div className="items-center gap-2 grid grid-cols-4">
@@ -864,15 +877,54 @@ export default function EditProduct() {
               <Input
                 id="weightGrams"
                 type="number"
+                step="0.1"
+                min="0"
                 value={variationForm.weightGrams || ""}
                 onChange={(e) =>
                   setVariationForm((prev) => ({
                     ...prev,
-                    weightGrams: parseInt(e.target.value) || undefined,
+                    weightGrams: e.target.value ? parseFloat(e.target.value) : undefined,
                   }))
                 }
                 className="col-span-3"
               />
+            </div>
+            <div className="items-center gap-2 grid grid-cols-4">
+              <Label htmlFor="tags" className="text-right">
+                Tags
+              </Label>
+              <div className="col-span-3 space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  {["HOT", "NEW", "SALE", "FEATURED"].map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant={
+                        variationForm.tags?.includes(tag as any) 
+                          ? "default" 
+                          : "outline"
+                      }
+                      className="cursor-pointer"
+                      onClick={() => {
+                        const currentTags = variationForm.tags || [];
+                        const updatedTags = currentTags.includes(tag as any)
+                          ? currentTags.filter(t => t !== tag)
+                          : [...currentTags, tag as ("HOT" | "NEW" | "SALE" | "FEATURED")];
+                        setVariationForm(prev => ({
+                          ...prev,
+                          tags: updatedTags
+                        }));
+                      }}
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+                {variationForm.tags && variationForm.tags.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Selected: {variationForm.tags.join(", ")}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
           <DialogFooter>

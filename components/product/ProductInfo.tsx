@@ -219,7 +219,7 @@ export function ProductInfo({
             <span>{new Date(product.expiryDate).toLocaleDateString()}</span>
           </div>
         )}
-        <p className="text-gray-600 text-lg leading-relaxed">{description}</p>
+        {/* <p className="text-gray-600 text-lg leading-relaxed">{description}</p> */}
       </div>
 
       {/* Variants Section */}

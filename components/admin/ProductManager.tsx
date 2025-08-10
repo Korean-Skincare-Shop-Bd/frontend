@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Edit, Trash2, Eye, MoreHorizontal } from 'lucide-react';
+import { Plus, Search, Filter, Edit, Trash2, Eye, MoreHorizontal, Globe, EyeOff } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { getProducts, Product, deleteProduct } from '@/lib/api/products';
+import { getProducts, Product, deleteProduct, publishProduct, unpublishProduct } from '@/lib/api/products';
 import { useAdmin } from '@/contexts/AdminContext';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -44,6 +44,7 @@ export function ProductsManager() {
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
+  const [publishingProductId, setPublishingProductId] = useState<string | null>(null);
   const { token } = useAdmin();
   const router = useRouter();
 
@@ -56,7 +57,12 @@ export function ProductsManager() {
 
     try {
       setLoading(true);
-      const params = { page: currentPage, limit: 20 };
+      const params = { 
+        page: currentPage, 
+        limit: 20,
+        ...(searchQuery && { search: searchQuery })
+      };
+      // Use regular function to get all products
       const response = await getProducts(params);
       setProducts(response.products);
       setTotalProducts(response.total);
@@ -65,6 +71,34 @@ export function ProductsManager() {
       toast.error('Failed to fetch products');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePublishToggle = async (product: Product) => {
+    if (!token) return;
+    
+    try {
+      setPublishingProductId(product.id);
+      
+      if (product.isPublished) {
+        await unpublishProduct(token, product.id);
+        toast.success(`${product.name} unpublished successfully`);
+      } else {
+        await publishProduct(token, product.id);
+        toast.success(`${product.name} published successfully`);
+      }
+      
+      // Update the product in the list
+      setProducts(prev => prev.map(p => 
+        p.id === product.id 
+          ? { ...p, isPublished: !p.isPublished }
+          : p
+      ));
+    } catch (error: any) {
+      console.error('Error toggling publish status:', error);
+      toast.error(error.message || 'Failed to update publish status');
+    } finally {
+      setPublishingProductId(null);
     }
   };
 
@@ -115,13 +149,15 @@ export function ProductsManager() {
             Manage your product catalog
           </p>
         </div>
-        <Button
-          onClick={() => router.push('/admin/products/create')}
-          className="w-full md:w-auto"
-        >
-          <Plus className="mr-2 w-4 h-4" />
-          Add Product
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => router.push('/admin/products/create')}
+            className="w-full md:w-auto"
+          >
+            <Plus className="mr-2 w-4 h-4" />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -188,6 +224,22 @@ export function ProductsManager() {
                       <DropdownMenuItem onClick={() => router.push(`/admin/products/${product.id}/edit`)}>
                         <Edit className="mr-2 w-4 h-4" />
                         Edit Product
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handlePublishToggle(product)}
+                        disabled={publishingProductId === product.id}
+                      >
+                        {product.isPublished ? (
+                          <>
+                            <EyeOff className="mr-2 w-4 h-4" />
+                            Unpublish
+                          </>
+                        ) : (
+                          <>
+                            <Globe className="mr-2 w-4 h-4" />
+                            Publish
+                          </>
+                        )}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-600"
