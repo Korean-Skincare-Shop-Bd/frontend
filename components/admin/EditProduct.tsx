@@ -12,6 +12,7 @@ import {
   Upload,
   Edit,
   Star,
+  Undo,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,12 @@ export default function EditProduct() {
   const [variations, setVariations] = useState<ProductVariation[]>([]);
   const [images, setImages] = useState<ProductImage[]>([]);
 
+  // New state for image management
+  const [newMainImage, setNewMainImage] = useState<File | null>(null);
+  const [newAdditionalImages, setNewAdditionalImages] = useState<File[]>([]);
+  const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
+  const [deleteMainImage, setDeleteMainImage] = useState(false);
+
   // Variation dialog states
   const [showVariationDialog, setShowVariationDialog] = useState(false);
   const [editingVariation, setEditingVariation] =
@@ -77,9 +84,8 @@ export default function EditProduct() {
   });
 
   // Image upload states
-  const [uploading, setUploading] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const additionalImagesInputRef = useRef<HTMLInputElement>(null);
 
   const router = useRouter();
   const params = useParams();
@@ -103,6 +109,15 @@ export default function EditProduct() {
       });
       setVariations(productData.variations || []);
       setImages(productData.images || []);
+
+      // Debug: Log the product data to understand the structure
+      console.log("Product data:", productData);
+      console.log("Base image URL:", productData.baseImageUrl);
+      console.log("Images array:", productData.images);
+      console.log(
+        "Main image in array:",
+        productData.images?.find((img) => img.isMainImage)
+      );
     } catch (error) {
       console.error("Error fetching product:", error);
       toast.error("Failed to fetch product");
@@ -145,23 +160,39 @@ export default function EditProduct() {
     try {
       setSaving(true);
 
+      // Handle main image deletion by finding the main image and adding it to removeImageIds
+      let finalImagesToRemove = [...imagesToRemove];
+      if (deleteMainImage) {
+        const mainImage = images.find((img) => img.isMainImage);
+        if (mainImage && !finalImagesToRemove.includes(mainImage.id)) {
+          finalImagesToRemove.push(mainImage.id);
+        }
+      }
+
       const updateData: UpdateProductRequest = {
         ...formData,
         expiryDate: formData.expiryDate
           ? new Date(formData.expiryDate).toISOString()
           : undefined,
+        // Include image management data
+        image: newMainImage || undefined,
+        additionalImages:
+          newAdditionalImages.length > 0 ? newAdditionalImages : undefined,
+        removeImageIds:
+          finalImagesToRemove.length > 0 ? finalImagesToRemove : undefined,
       };
 
-      // Remove null values to prevent API validation errors
-      const cleanedData = Object.fromEntries(
-        Object.entries(updateData).filter(
-          ([_, value]) => value !== null && value !== undefined
-        )
-      ) as UpdateProductRequest;
-
-      await updateProduct(token!, id, cleanedData);
+      await updateProduct(token!, id, updateData);
       toast.success("Product updated successfully");
-      router.push("/admin/products");
+
+      // Reset image management state
+      setNewMainImage(null);
+      setNewAdditionalImages([]);
+      setImagesToRemove([]);
+      setDeleteMainImage(false);
+
+      // Refresh product data to get updated images
+      await fetchProduct();
     } catch (error) {
       console.error("Error updating product:", error);
       toast.error("Failed to update product");
@@ -269,67 +300,39 @@ export default function EditProduct() {
   };
 
   // Image management functions
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || []);
-    if (files.length > 10) {
-      toast.error("Maximum 10 images allowed");
+  const handleMainImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNewMainImage(file);
+    }
+  };
+
+  const handleAdditionalImagesChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = Array.from(e.target.files || []);
+    if (newAdditionalImages.length + files.length > 10) {
+      toast.error("Maximum 10 additional images allowed");
       return;
     }
-    setSelectedFiles(files);
+    setNewAdditionalImages((prev) => [...prev, ...files]);
   };
 
-  const handleImageUpload = async () => {
-    if (selectedFiles.length === 0) return;
+  const removeNewAdditionalImage = (index: number) => {
+    setNewAdditionalImages((prev) => prev.filter((_, i) => i !== index));
+  };
 
-    try {
-      setUploading(true);
-      const uploadedImages = await addProductImages(
-        token!,
-        id,
-        selectedFiles,
-        images.length === 0
-      );
-      setImages((prev) => [...prev, ...uploadedImages]);
-      setSelectedFiles([]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+  const markImageForRemoval = (imageId: string) => {
+    setImagesToRemove((prev) => {
+      if (prev.includes(imageId)) {
+        return prev.filter((id) => id !== imageId);
       }
-      toast.success("Images uploaded successfully");
-    } catch (error) {
-      console.error("Error uploading images:", error);
-      toast.error("Failed to upload images");
-    } finally {
-      setUploading(false);
-    }
+      return [...prev, imageId];
+    });
   };
 
-  const handleImageUpdate = async (
-    imageId: string,
-    updates: UpdateImageRequest
-  ) => {
-    try {
-      const updated = await updateProductImage(token!, id, imageId, updates);
-      setImages((prev) =>
-        prev.map((img) => (img.id === imageId ? updated : img))
-      );
-      toast.success("Image updated successfully");
-    } catch (error) {
-      console.error("Error updating image:", error);
-      toast.error("Failed to update image");
-    }
-  };
-
-  const handleImageDelete = async (imageId: string) => {
-    if (!confirm("Are you sure you want to delete this image?")) return;
-
-    try {
-      await deleteProductImage(token!, id, imageId);
-      setImages((prev) => prev.filter((img) => img.id !== imageId));
-      toast.success("Image deleted successfully");
-    } catch (error) {
-      console.error("Error deleting image:", error);
-      toast.error("Failed to delete image");
-    }
+  const isImageMarkedForRemoval = (imageId: string) => {
+    return imagesToRemove.includes(imageId);
   };
 
   if (loading) {
@@ -508,79 +511,218 @@ export default function EditProduct() {
           {/* Product Images */}
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Product Images</CardTitle>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}>
-                    <Upload className="mr-2 w-4 h-4" />
-                    Select Images
-                  </Button>
-                  {selectedFiles.length > 0 && (
-                    <Button onClick={handleImageUpload} disabled={uploading}>
-                      {uploading ? (
-                        <>
-                          <div className="mr-2 border-2 border-white border-t-transparent rounded-full w-4 h-4 animate-spin"></div>
-                          Uploading...
-                        </>
-                      ) : (
-                        `Upload ${selectedFiles.length} image${
-                          selectedFiles.length > 1 ? "s" : ""
-                        }`
-                      )}
-                    </Button>
+              <CardTitle>Product Images</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Main Image Management */}
+              <div className="space-y-4">
+                <Label className="text-lg font-semibold">Main Image</Label>
+
+                <div className="flex flex-wrap gap-4">
+                  {/* Current Main Image */}
+                  {product.baseImageUrl && !deleteMainImage && (
+                    <div className="relative">
+                      <div className="group relative w-32 h-32 overflow-hidden rounded-lg border-2 border-gray-300">
+                        <Image
+                          src={product.baseImageUrl}
+                          alt={product.name}
+                          width={128}
+                          height={128}
+                          className="object-cover"
+                        />
+
+                        {/* Hover overlay with controls */}
+                        <div className="absolute inset-0 flex justify-center items-center gap-1 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                              console.log("Deleting main image");
+                              console.log("Images array:", images);
+                              console.log(
+                                "Main image in array:",
+                                images.find((img) => img.isMainImage)
+                              );
+                              setDeleteMainImage(true);
+                            }}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      <Badge
+                        className="absolute top-1 left-1 text-xs"
+                        variant="secondary">
+                        Current Main
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Marked for deletion state */}
+                  {product.baseImageUrl && deleteMainImage && (
+                    <div className="relative">
+                      <div className="relative w-32 h-32 overflow-hidden rounded-lg border-2 border-red-500 opacity-50 grayscale">
+                        <Image
+                          src={product.baseImageUrl}
+                          alt={product.name}
+                          width={128}
+                          height={128}
+                          className="object-cover"
+                        />
+                      </div>
+                      <Badge
+                        className="absolute top-1 left-1 text-xs"
+                        variant="destructive">
+                        Will Delete
+                      </Badge>
+                      <Button
+                        type="button"
+                        variant="default"
+                        size="icon"
+                        className="absolute -top-2 -right-2 w-6 h-6"
+                        onClick={() => setDeleteMainImage(false)}>
+                        <Undo className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* New Main Image Upload */}
+                  {newMainImage ? (
+                    <div className="relative">
+                      <div className="relative w-32 h-32 overflow-hidden rounded-lg border-2 border-green-500">
+                        <Image
+                          src={URL.createObjectURL(newMainImage)}
+                          alt="New main image"
+                          width={128}
+                          height={128}
+                          className="object-cover"
+                        />
+                      </div>
+                      <Badge
+                        className="absolute top-1 left-1 text-xs"
+                        variant="default">
+                        New Main
+                      </Badge>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 w-6 h-6"
+                        onClick={() => setNewMainImage(null)}>
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col justify-center items-center bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 border-dashed rounded-lg w-32 h-32 cursor-pointer">
+                      <Upload className="mb-2 w-6 h-6 text-gray-500" />
+                      <p className="text-gray-500 text-xs text-center px-2">
+                        {product.baseImageUrl && !deleteMainImage
+                          ? "Replace"
+                          : "Upload"}{" "}
+                        main image
+                      </p>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleMainImageChange}
+                      />
+                    </label>
                   )}
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
 
-              {selectedFiles.length > 0 && (
-                <div className="bg-gray-50 mb-4 p-4 rounded-lg">
-                  <p className="mb-2 font-medium text-sm">Selected files:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedFiles.map((file, index) => (
-                      <Badge key={index} variant="secondary">
-                        {file.name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="space-y-4">
-                {product.baseImageUrl && (
-                  <div className="relative">
-                    <div className="relative w-full h-48 overflow-hidden rounded-lg border">
-                      <Image
-                        src={product.baseImageUrl}
-                        alt={product.name}
-                        fill
-                        className="object-cover"
-                      />
+                {/* Main image info */}
+                {deleteMainImage && images.length > 0 && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2 text-yellow-800">
+                      <Star className="w-4 h-4" />
+                      <span className="text-sm font-medium">
+                        One of your additional images will automatically become
+                        the new main image
+                      </span>
                     </div>
-                    <Badge
-                      className="top-2 right-2 absolute"
-                      variant="secondary">
-                      Base Image
-                    </Badge>
+                  </div>
+                )}
+              </div>
+
+              {/* Additional Images Management */}
+              <div className="space-y-4">
+                <Label className="text-lg font-semibold">
+                  Additional Images
+                </Label>
+
+                {/* New Additional Images */}
+                {newAdditionalImages.length > 0 && (
+                  <div>
+                    <p className="mb-3 text-sm font-medium text-gray-700">
+                      New images to add:
+                    </p>
+                    <div className="gap-3 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6">
+                      {newAdditionalImages.map((image, index) => (
+                        <div key={index} className="relative group">
+                          <div className="relative w-full h-20 overflow-hidden rounded-lg border-2 border-green-500">
+                            <Image
+                              src={URL.createObjectURL(image)}
+                              alt={`New additional ${index + 1}`}
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute -top-2 -right-2 w-5 h-5"
+                            onClick={() => removeNewAdditionalImage(index)}>
+                            <X className="w-3 h-3" />
+                          </Button>
+                          <Badge
+                            className="absolute top-1 left-1 text-xs"
+                            variant="default">
+                            New
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
-                {images.length > 0 && (
-                  <div className="gap-4 grid grid-cols-2 md:grid-cols-3">
+                {/* Upload More Button */}
+                {newAdditionalImages.length < 10 && (
+                  <label className="flex flex-col justify-center items-center bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 border-dashed rounded-lg w-full h-20 cursor-pointer transition-colors">
+                    <div className="flex items-center gap-2">
+                      <Plus className="w-4 h-4 text-gray-500" />
+                      <span className="text-gray-500 text-sm">
+                        Add More Images ({newAdditionalImages.length}/10)
+                      </span>
+                    </div>
+                    <input
+                      ref={additionalImagesInputRef}
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      multiple
+                      onChange={handleAdditionalImagesChange}
+                    />
+                  </label>
+                )}
+              </div>
+
+              {/* Current Additional Images */}
+              {images.length > 0 && (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-gray-700">
+                    Current additional images:
+                  </p>
+                  <div className="gap-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
                     {images.map((image) => (
                       <div key={image.id} className="group relative">
-                        <div className="relative w-full h-32 overflow-hidden rounded-lg border">
+                        <div
+                          className={`relative w-full h-24 overflow-hidden rounded-lg border-2 transition-all ${
+                            isImageMarkedForRemoval(image.id)
+                              ? "border-red-500 opacity-50 grayscale"
+                              : "border-gray-300 hover:border-gray-400"
+                          }`}>
                           <Image
                             src={image.imageUrl}
                             alt={image.altText || product.name}
@@ -590,44 +732,108 @@ export default function EditProduct() {
                         </div>
 
                         {/* Image controls overlay */}
-                        <div className="absolute inset-0 flex justify-center items-center gap-2 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute inset-0 flex justify-center items-center gap-1 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
                           <Button
+                            type="button"
                             size="sm"
-                            variant="secondary"
-                            onClick={() =>
-                              handleImageUpdate(image.id, {
-                                isPrimary: !image.isMainImage,
-                              })
-                            }>
-                            <Star
-                              className={`w-4 h-4 ${
-                                image.isMainImage ? "fill-yellow-400" : ""
-                              }`}
-                            />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleImageDelete(image.id)}>
-                            <Trash2 className="w-4 h-4" />
+                            variant={
+                              isImageMarkedForRemoval(image.id)
+                                ? "default"
+                                : "destructive"
+                            }
+                            onClick={() => markImageForRemoval(image.id)}>
+                            {isImageMarkedForRemoval(image.id) ? (
+                              <Undo className="w-3 h-3" />
+                            ) : (
+                              <Trash2 className="w-3 h-3" />
+                            )}
                           </Button>
                         </div>
 
-                        {/* Main image badge */}
+                        {/* Status badges */}
                         {image.isMainImage && (
-                          <Badge className="top-2 right-2 absolute">Main</Badge>
+                          <Badge
+                            className="absolute top-1 left-1 text-xs"
+                            variant="secondary">
+                            Main
+                          </Badge>
+                        )}
+                        {isImageMarkedForRemoval(image.id) && (
+                          <Badge
+                            className="absolute top-1 right-1 text-xs"
+                            variant="destructive">
+                            Will Remove
+                          </Badge>
                         )}
                       </div>
                     ))}
                   </div>
-                )}
+                </div>
+              )}
 
-                {!product.baseImageUrl && images.length === 0 && (
-                  <div className="py-8 text-muted-foreground text-center">
-                    No images uploaded. Upload your first image to get started.
+              {/* Image Management Summary */}
+              {(newMainImage ||
+                deleteMainImage ||
+                newAdditionalImages.length > 0 ||
+                imagesToRemove.length > 0) && (
+                <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                  <h4 className="font-medium text-sm mb-2 text-blue-900">
+                    Pending Image Changes:
+                  </h4>
+                  <ul className="text-sm space-y-1">
+                    {deleteMainImage && (
+                      <li className="flex items-center gap-2">
+                        <Trash2 className="w-3 h-3 text-red-600" />
+                        <span>Current main image will be deleted</span>
+                        {images.filter(
+                          (img) => !imagesToRemove.includes(img.id)
+                        ).length > 0 && (
+                          <span className="text-gray-600">
+                            (one additional image will become main)
+                          </span>
+                        )}
+                      </li>
+                    )}
+                    {newMainImage && (
+                      <li className="flex items-center gap-2">
+                        <Plus className="w-3 h-3 text-green-600" />
+                        <span>New main image will be uploaded</span>
+                      </li>
+                    )}
+                    {newAdditionalImages.length > 0 && (
+                      <li className="flex items-center gap-2">
+                        <Plus className="w-3 h-3 text-green-600" />
+                        <span>
+                          {newAdditionalImages.length} additional images will be
+                          added
+                        </span>
+                      </li>
+                    )}
+                    {imagesToRemove.length > 0 && (
+                      <li className="flex items-center gap-2">
+                        <Trash2 className="w-3 h-3 text-red-600" />
+                        <span>
+                          {imagesToRemove.length} additional images will be
+                          removed
+                        </span>
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {!product.baseImageUrl &&
+                images.length === 0 &&
+                newMainImage === null && (
+                  <div className="py-12 text-center text-muted-foreground">
+                    <Upload className="mx-auto mb-4 w-12 h-12 text-gray-400" />
+                    <h3 className="mb-2 font-medium">No images uploaded</h3>
+                    <p className="text-sm">
+                      Upload your first image to get started
+                    </p>
                   </div>
                 )}
-              </div>
             </CardContent>
           </Card>
 

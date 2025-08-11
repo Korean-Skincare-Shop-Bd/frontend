@@ -313,20 +313,37 @@ export const updateProduct = async (
   id: string,
   productData: UpdateProductRequest
 ): Promise<Product> => {
-  // Filter out null values to prevent API validation errors
-  const cleanedData = Object.fromEntries(
-    Object.entries(productData).filter(
-      ([_, value]) => value !== null && value !== undefined
-    )
-  );
+  const formData = new FormData();
+
+  // Add all fields to FormData, filtering out null/undefined values
+  Object.entries(productData).forEach(([key, value]) => {
+    if (value !== null && value !== undefined) {
+      if (key === "additionalImages" && Array.isArray(value)) {
+        // Handle multiple file uploads for additional images
+        value.forEach((file) => formData.append("additionalImages", file));
+      } else if (key === "removeImageIds" && Array.isArray(value)) {
+        // Convert array to comma-separated string
+        formData.append("removeImageIds", value.join(","));
+      } else if (key === "tags" && Array.isArray(value)) {
+        // Convert tags array to comma-separated string
+        formData.append("tags", value.join(","));
+      } else if (value instanceof File) {
+        // Handle single file upload (main image)
+        formData.append(key, value);
+      } else {
+        // Handle regular form fields
+        formData.append(key, value.toString());
+      }
+    }
+  });
 
   const response = await fetch(`${API_BASE_URL}/products/${id}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
+      // Don't set Content-Type header - let browser set it for multipart/form-data
     },
-    body: JSON.stringify(cleanedData),
+    body: formData,
   });
 
   if (!response.ok) {
@@ -565,5 +582,10 @@ export interface UpdateProductRequest {
   tags?: string[];
   isPublished?: boolean;
   expiryDate?: string;
-  // Remove variations and images from here since they're handled separately
+  baseImageUrl?: string;
+  // Image management fields
+  removeImageIds?: string[];
+  // File upload fields
+  image?: File;
+  additionalImages?: File[];
 }
