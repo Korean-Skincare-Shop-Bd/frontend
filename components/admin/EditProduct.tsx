@@ -154,7 +154,9 @@ export default function EditProduct() {
 
       // Remove null values to prevent API validation errors
       const cleanedData = Object.fromEntries(
-        Object.entries(updateData).filter(([_, value]) => value !== null && value !== undefined)
+        Object.entries(updateData).filter(
+          ([_, value]) => value !== null && value !== undefined
+        )
       ) as UpdateProductRequest;
 
       await updateProduct(token!, id, cleanedData);
@@ -180,7 +182,7 @@ export default function EditProduct() {
         volume: variation.volume,
         weightGrams: variation.weightGrams,
         attributes: variation.attributes,
-        tags: variation.tags as ("HOT" | "NEW" | "SALE" | "FEATURED")[] || [],
+        tags: (variation.tags as ("HOT" | "NEW" | "SALE" | "FEATURED")[]) || [],
       });
     } else {
       setEditingVariation(null);
@@ -199,24 +201,29 @@ export default function EditProduct() {
       const cleanedData: CreateVariationRequest | UpdateVariationRequest = {
         name: variationForm.name.trim(),
         price: Number(variationForm.price),
-        ...(variationForm.salePrice && variationForm.salePrice > 0 && {
-          salePrice: Number(variationForm.salePrice)
-        }),
-        ...(variationForm.volume && variationForm.volume.trim() && {
-          volume: variationForm.volume.trim()
-        }),
+        ...(variationForm.salePrice &&
+          variationForm.salePrice > 0 && {
+            salePrice: Number(variationForm.salePrice),
+          }),
+        ...(variationForm.volume &&
+          variationForm.volume.trim() && {
+            volume: variationForm.volume.trim(),
+          }),
         ...(variationForm.stockQuantity !== undefined && {
-          stockQuantity: Number(variationForm.stockQuantity) || 0
+          stockQuantity: Number(variationForm.stockQuantity) || 0,
         }),
-        ...(variationForm.attributes && Object.keys(variationForm.attributes).length > 0 && {
-          attributes: variationForm.attributes
-        }),
-        ...(variationForm.tags && variationForm.tags.length > 0 && {
-          tags: variationForm.tags
-        }),
-        ...(variationForm.weightGrams && variationForm.weightGrams > 0 && {
-          weightGrams: Number(variationForm.weightGrams)
-        }),
+        ...(variationForm.attributes &&
+          Object.keys(variationForm.attributes).length > 0 && {
+            attributes: variationForm.attributes,
+          }),
+        ...(variationForm.tags &&
+          variationForm.tags.length > 0 && {
+            tags: variationForm.tags,
+          }),
+        ...(variationForm.weightGrams &&
+          variationForm.weightGrams > 0 && {
+            weightGrams: Number(variationForm.weightGrams),
+          }),
       };
 
       if (editingVariation) {
@@ -233,7 +240,11 @@ export default function EditProduct() {
         toast.success("Variation updated successfully");
       } else {
         // Create new variation
-        const created = await createProductVariation(token!, id, cleanedData as CreateVariationRequest);
+        const created = await createProductVariation(
+          token!,
+          id,
+          cleanedData as CreateVariationRequest
+        );
         setVariations((prev) => [...prev, created]);
         toast.success("Variation created successfully");
       }
@@ -828,7 +839,9 @@ export default function EditProduct() {
                 onChange={(e) =>
                   setVariationForm((prev) => ({
                     ...prev,
-                    salePrice: e.target.value ? parseFloat(e.target.value) : undefined,
+                    salePrice: e.target.value
+                      ? parseFloat(e.target.value)
+                      : undefined,
                   }))
                 }
                 className="col-span-3"
@@ -883,7 +896,9 @@ export default function EditProduct() {
                 onChange={(e) =>
                   setVariationForm((prev) => ({
                     ...prev,
-                    weightGrams: e.target.value ? parseFloat(e.target.value) : undefined,
+                    weightGrams: e.target.value
+                      ? parseFloat(e.target.value)
+                      : undefined,
                   }))
                 }
                 className="col-span-3"
@@ -899,22 +914,24 @@ export default function EditProduct() {
                     <Badge
                       key={tag}
                       variant={
-                        variationForm.tags?.includes(tag as any) 
-                          ? "default" 
+                        variationForm.tags?.includes(tag as any)
+                          ? "default"
                           : "outline"
                       }
                       className="cursor-pointer"
                       onClick={() => {
                         const currentTags = variationForm.tags || [];
                         const updatedTags = currentTags.includes(tag as any)
-                          ? currentTags.filter(t => t !== tag)
-                          : [...currentTags, tag as ("HOT" | "NEW" | "SALE" | "FEATURED")];
-                        setVariationForm(prev => ({
+                          ? currentTags.filter((t) => t !== tag)
+                          : [
+                              ...currentTags,
+                              tag as "HOT" | "NEW" | "SALE" | "FEATURED",
+                            ];
+                        setVariationForm((prev) => ({
                           ...prev,
-                          tags: updatedTags
+                          tags: updatedTags,
                         }));
-                      }}
-                    >
+                      }}>
                       {tag}
                     </Badge>
                   ))}

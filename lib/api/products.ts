@@ -25,17 +25,17 @@ export interface Product {
   };
   variations: ProductVariation[];
   images: ProductImage[];
-  maxPrice:number;
-  minPrice:number;
-  reviews:ProductReview[];
+  maxPrice: number;
+  minPrice: number;
+  reviews: ProductReview[];
 }
-export interface ProductReview{
-  id:string
-  email:string
-  customerName:string,
-  rating:number
-  comment:string
-  createdAt:string
+export interface ProductReview {
+  id: string;
+  email: string;
+  customerName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
 }
 
 export interface ProductVariation {
@@ -87,12 +87,12 @@ export interface CreateProductRequest {
 export interface ProductsResponse {
   data: any;
   products: Product[];
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
 }
 
 export interface GetProductsParams {
@@ -103,8 +103,8 @@ export interface GetProductsParams {
   minPrice?: number;
   maxPrice?: number;
   search?: string;
-  sortBy?: 'price' | 'name' | 'createdAt' | 'rating' | 'expiryDate';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "price" | "name" | "createdAt" | "rating" | "expiryDate";
+  sortOrder?: "asc" | "desc";
   variationTags?: string | string[];
   tags?: string[];
   categoryId?: string;
@@ -120,7 +120,9 @@ export interface GetProductsParams {
   includeBrand?: boolean;
 }
 
-export const getProducts = async (params: GetProductsParams = {}): Promise<ProductsResponse> => {
+export const getProducts = async (
+  params: GetProductsParams = {}
+): Promise<ProductsResponse> => {
   const {
     page = 1,
     limit = 20,
@@ -129,8 +131,8 @@ export const getProducts = async (params: GetProductsParams = {}): Promise<Produ
     minPrice,
     maxPrice,
     search,
-    sortBy = 'createdAt',
-    sortOrder = 'desc',
+    sortBy = "createdAt",
+    sortOrder = "desc",
     variationTags,
     tags,
     categoryId,
@@ -153,78 +155,92 @@ export const getProducts = async (params: GetProductsParams = {}): Promise<Produ
     sortOrder,
   });
 
-  if (category) searchParams.append('category', category);
-  if (brand) searchParams.append('brand', brand);
-  if (categoryId) searchParams.append('categoryId', categoryId);
-  if (brandId) searchParams.append('brandId', brandId);
-  if (minPrice !== undefined) searchParams.append('minPrice', minPrice.toString());
-  if (maxPrice !== undefined) searchParams.append('maxPrice', maxPrice.toString());
-  if (search !== undefined) searchParams.append('search', search);
-  if (inStock !== undefined) searchParams.append('inStock', inStock.toString());
-  if (isExpired !== undefined) searchParams.append('isExpired', isExpired.toString());
-  if (expiresWithin !== undefined) searchParams.append('expiresWithin', expiresWithin.toString());
-  if (featured !== undefined) searchParams.append('featured', featured.toString());
-  if (includeVariations) searchParams.append('includeVariations', 'true');
-  if (includeImages) searchParams.append('includeImages', 'true');
-  if (includeReviews) searchParams.append('includeReviews', 'true');
-  if (includeCategory) searchParams.append('includeCategory', 'true');
-  if (includeBrand) searchParams.append('includeBrand', 'true');
-  
+  if (category) searchParams.append("category", category);
+  if (brand) searchParams.append("brand", brand);
+  if (categoryId) searchParams.append("categoryId", categoryId);
+  if (brandId) searchParams.append("brandId", brandId);
+  if (minPrice !== undefined)
+    searchParams.append("minPrice", minPrice.toString());
+  if (maxPrice !== undefined)
+    searchParams.append("maxPrice", maxPrice.toString());
+  if (search !== undefined) searchParams.append("search", search);
+  if (inStock !== undefined) searchParams.append("inStock", inStock.toString());
+  if (isExpired !== undefined)
+    searchParams.append("isExpired", isExpired.toString());
+  if (expiresWithin !== undefined)
+    searchParams.append("expiresWithin", expiresWithin.toString());
+  if (featured !== undefined)
+    searchParams.append("featured", featured.toString());
+  if (includeVariations) searchParams.append("includeVariations", "true");
+  if (includeImages) searchParams.append("includeImages", "true");
+  if (includeReviews) searchParams.append("includeReviews", "true");
+  if (includeCategory) searchParams.append("includeCategory", "true");
+  if (includeBrand) searchParams.append("includeBrand", "true");
+
   // Handle tags array
   if (tags && tags.length > 0) {
-    tags.forEach(tag => searchParams.append('tags', tag));
+    tags.forEach((tag) => searchParams.append("tags", tag));
   }
-  
+
   // Handle variationTags
   if (variationTags !== undefined) {
     if (Array.isArray(variationTags)) {
-      variationTags.forEach(tag => searchParams.append('variationTags', tag));
+      variationTags.forEach((tag) => searchParams.append("variationTags", tag));
     } else {
-      searchParams.append('variationTags', variationTags);
+      searchParams.append("variationTags", variationTags);
     }
   }
 
-  const response = await fetch(`${API_BASE_URL}/products/public?${searchParams.toString()}`);
+  const response = await fetch(
+    `${API_BASE_URL}/products/public?${searchParams.toString()}`
+  );
 
   if (!response.ok) {
-    throw new Error('Failed to fetch products');
+    throw new Error("Failed to fetch products");
   }
 
   return response.json();
 };
-export const deleteProduct = async (token: string, id: string): Promise<{ message: string }> => {
+export const deleteProduct = async (
+  token: string,
+  id: string
+): Promise<{ message: string }> => {
   const response = await fetch(`${API_BASE_URL}/products/${id}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
   });
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error('Product not found');
+      throw new Error("Product not found");
     }
     if (response.status === 401) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized");
     }
-    throw new Error('Failed to delete product');
+    throw new Error("Failed to delete product");
   }
 
   return await response.json();
 };
-export const createProduct = async (token: string, productData: CreateProductRequest): Promise<Product> => {
+export const createProduct = async (
+  token: string,
+  productData: CreateProductRequest
+): Promise<Product> => {
   const formData = new FormData();
-  
+
   // Ensure isPublished defaults to true if not specified
   const dataWithDefaults = {
     ...productData,
-    isPublished: productData.isPublished !== undefined ? productData.isPublished : true
+    isPublished:
+      productData.isPublished !== undefined ? productData.isPublished : true,
   };
-  
+
   Object.entries(dataWithDefaults).forEach(([key, value]) => {
     if (value !== undefined && value !== null) {
-      if (key === 'additionalImages' && Array.isArray(value)) {
-        value.forEach((file) => formData.append('additionalImages', file));
+      if (key === "additionalImages" && Array.isArray(value)) {
+        value.forEach((file) => formData.append("additionalImages", file));
       } else if (value instanceof File) {
         formData.append(key, value);
       } else {
@@ -234,22 +250,22 @@ export const createProduct = async (token: string, productData: CreateProductReq
   });
 
   const response = await fetch(`${API_BASE_URL}/products`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: formData,
   });
 
   if (!response.ok) {
-    throw new Error('Failed to create product');
+    throw new Error("Failed to create product");
   }
 
   const result = await response.json();
   return result.data;
 };
 export const getProduct = async (
-  id: string, 
+  id: string,
   params: {
     includeVariations?: boolean;
     includeImages?: boolean;
@@ -268,51 +284,59 @@ export const getProduct = async (
 
   const searchParams = new URLSearchParams();
 
-  if (includeVariations) searchParams.append('includeVariations', 'true');
-  if (includeImages) searchParams.append('includeImages', 'true');
-  if (includeReviews) searchParams.append('includeReviews', 'true');
-  if (includeCategory) searchParams.append('includeCategory', 'true');
-  if (includeBrand) searchParams.append('includeBrand', 'true');
+  if (includeVariations) searchParams.append("includeVariations", "true");
+  if (includeImages) searchParams.append("includeImages", "true");
+  if (includeReviews) searchParams.append("includeReviews", "true");
+  if (includeCategory) searchParams.append("includeCategory", "true");
+  if (includeBrand) searchParams.append("includeBrand", "true");
 
-  const response = await fetch(`${API_BASE_URL}/products/public/${id}?${searchParams.toString()}`);
+  const response = await fetch(
+    `${API_BASE_URL}/products/public/${id}?${searchParams.toString()}`
+  );
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error('Product not found');
+      throw new Error("Product not found");
     }
     if (response.status === 401) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized");
     }
-    throw new Error('Failed to fetch product');
+    throw new Error("Failed to fetch product");
   }
 
   const result = await response.json();
   return result;
 };
 
-export const updateProduct = async (token: string, id: string, productData: UpdateProductRequest): Promise<Product> => {
+export const updateProduct = async (
+  token: string,
+  id: string,
+  productData: UpdateProductRequest
+): Promise<Product> => {
   // Filter out null values to prevent API validation errors
   const cleanedData = Object.fromEntries(
-    Object.entries(productData).filter(([_, value]) => value !== null && value !== undefined)
+    Object.entries(productData).filter(
+      ([_, value]) => value !== null && value !== undefined
+    )
   );
 
   const response = await fetch(`${API_BASE_URL}/products/${id}`, {
-    method: 'PUT',
+    method: "PUT",
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(cleanedData),
   });
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error('Product not found');
+      throw new Error("Product not found");
     }
     if (response.status === 401) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized");
     }
-    throw new Error('Failed to update product');
+    throw new Error("Failed to update product");
   }
 
   const result = await response.json();
@@ -349,30 +373,29 @@ export interface UpdateImageRequest {
 
 // Add these new API functions
 export const createProductVariation = async (
-  token: string, 
-  productId: string, 
+  token: string,
+  productId: string,
   variationData: CreateVariationRequest
 ): Promise<ProductVariation> => {
-
   const url = `${API_BASE_URL}/products/${productId}/variations`;
 
   const response = await fetch(url, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(variationData),
   });
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error('Product not found');
+      throw new Error("Product not found");
     }
     if (response.status === 401) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized");
     }
-    throw new Error('Failed to create variation');
+    throw new Error("Failed to create variation");
   }
 
   const result = await response.json();
@@ -380,28 +403,31 @@ export const createProductVariation = async (
 };
 
 export const updateProductVariation = async (
-  token: string, 
-  productId: string, 
-  variationId: string, 
+  token: string,
+  productId: string,
+  variationId: string,
   variationData: UpdateVariationRequest
 ): Promise<ProductVariation> => {
-  const response = await fetch(`${API_BASE_URL}/products/${productId}/variations/${variationId}`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(variationData),
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/products/${productId}/variations/${variationId}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(variationData),
+    }
+  );
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error('Product or variation not found');
+      throw new Error("Product or variation not found");
     }
     if (response.status === 401) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized");
     }
-    throw new Error('Failed to update variation');
+    throw new Error("Failed to update variation");
   }
 
   const result = await response.json();
@@ -409,60 +435,63 @@ export const updateProductVariation = async (
 };
 
 export const deleteProductVariation = async (
-  token: string, 
-  productId: string, 
+  token: string,
+  productId: string,
   variationId: string
 ): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/products/${productId}/variations/${variationId}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/products/${productId}/variations/${variationId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error('Product or variation not found');
+      throw new Error("Product or variation not found");
     }
     if (response.status === 401) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized");
     }
-    throw new Error('Failed to delete variation');
+    throw new Error("Failed to delete variation");
   }
 };
 
 export const addProductImages = async (
-  token: string, 
-  productId: string, 
-  images: File[], 
+  token: string,
+  productId: string,
+  images: File[],
   isPrimary?: boolean
 ): Promise<ProductImage[]> => {
   const formData = new FormData();
-  
+
   images.forEach((image) => {
-    formData.append('image', image);
+    formData.append("image", image);
   });
-  
+
   if (isPrimary !== undefined) {
-    formData.append('isPrimary', String(isPrimary));
+    formData.append("isPrimary", String(isPrimary));
   }
 
   const response = await fetch(`${API_BASE_URL}/products/${productId}/images`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
     body: formData,
   });
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error('Product not found');
+      throw new Error("Product not found");
     }
     if (response.status === 401) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized");
     }
-    throw new Error('Failed to add images');
+    throw new Error("Failed to add images");
   }
 
   const result = await response.json();
@@ -470,28 +499,31 @@ export const addProductImages = async (
 };
 
 export const updateProductImage = async (
-  token: string, 
-  productId: string, 
-  imageId: string, 
+  token: string,
+  productId: string,
+  imageId: string,
   imageData: UpdateImageRequest
 ): Promise<ProductImage> => {
-  const response = await fetch(`${API_BASE_URL}/products/${productId}/images/${imageId}`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(imageData),
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/products/${productId}/images/${imageId}`,
+    {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(imageData),
+    }
+  );
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error('Product or image not found');
+      throw new Error("Product or image not found");
     }
     if (response.status === 401) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized");
     }
-    throw new Error('Failed to update image');
+    throw new Error("Failed to update image");
   }
 
   const result = await response.json();
@@ -499,25 +531,28 @@ export const updateProductImage = async (
 };
 
 export const deleteProductImage = async (
-  token: string, 
-  productId: string, 
+  token: string,
+  productId: string,
   imageId: string
 ): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/products/${productId}/images/${imageId}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/products/${productId}/images/${imageId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error('Product or image not found');
+      throw new Error("Product or image not found");
     }
     if (response.status === 401) {
-      throw new Error('Unauthorized');
+      throw new Error("Unauthorized");
     }
-    throw new Error('Failed to delete image');
+    throw new Error("Failed to delete image");
   }
 };
 
