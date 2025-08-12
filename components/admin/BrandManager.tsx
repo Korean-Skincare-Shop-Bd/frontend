@@ -74,17 +74,27 @@ export function BrandsManager() {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false,
+  });
   const { token } = useAdmin();
 
   useEffect(() => {
     fetchBrands();
-  }, []);
+  }, [currentPage]);
 
   const fetchBrands = async () => {
     try {
       setLoading(true);
-      const response = await getBrands();
+      const response = await getBrands(currentPage, 20);
       setBrands(response.data.brands);
+      setPagination(response.data.pagination);
     } catch (error) {
       console.error("Error fetching brands:", error);
       toast.error("Failed to fetch brands");
@@ -333,7 +343,7 @@ export function BrandsManager() {
         <CardHeader>
           <div className="flex lg:flex-row flex-col lg:justify-between lg:items-center gap-4">
             <CardTitle className="text-lg sm:text-xl">
-              All Brands ({brands.length})
+              All Brands ({pagination.total})
             </CardTitle>
             <div className="relative flex-1 lg:flex-none">
               <Search className="top-1/2 left-3 absolute w-4 h-4 text-muted-foreground -translate-y-1/2" />
@@ -527,6 +537,78 @@ export function BrandsManager() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Pagination Controls */}
+      {pagination.totalPages > 1 && (
+        <div className="flex sm:flex-row flex-col justify-between items-center gap-4 mt-6">
+          <div className="text-muted-foreground text-sm">
+            Showing {((currentPage - 1) * pagination.limit) + 1} to {Math.min(currentPage * pagination.limit, pagination.total)} of {pagination.total} brands
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(1)}
+              disabled={!pagination.hasPrev}
+            >
+              First
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={!pagination.hasPrev}
+            >
+              Previous
+            </Button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                let pageNum = 1;
+                if (pagination.totalPages <= 5) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1;
+                } else if (currentPage >= pagination.totalPages - 2) {
+                  pageNum = pagination.totalPages - 4 + i;
+                } else {
+                  pageNum = currentPage - 2 + i;
+                }
+                
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className="p-0 w-8 h-8"
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={!pagination.hasNext}
+            >
+              Next
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(pagination.totalPages)}
+              disabled={!pagination.hasNext}
+            >
+              Last
+            </Button>
+          </div>
+        </div>
+      )}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="mx-4 w-full max-w-lg">

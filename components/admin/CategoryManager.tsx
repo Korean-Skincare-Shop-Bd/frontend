@@ -40,7 +40,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { getCategories, createCategory, updateCategory, deleteCategory, Category, CreateCategoryRequest } from '@/lib/api/categories';
+import { 
+  getCategories, 
+  createCategory, 
+  updateCategory, 
+  deleteCategory, 
+  Category, 
+  CreateCategoryRequest,
+  CategoriesResponse 
+} from '@/lib/api/categories';
 import { useAdmin } from '@/contexts/AdminContext';
 import { toast } from 'sonner';
 
@@ -57,17 +65,27 @@ export function CategoriesManager() {
     description: '',
   });
   const [formLoading, setFormLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false,
+  });
   const { token } = useAdmin();
 
   useEffect(() => {
     fetchCategories();
-  }, []);
+  }, [currentPage]);
 
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const response = await getCategories();
+      const response = await getCategories(currentPage, 20);
       setCategories(response.categories);
+      setPagination(response.pagination);
     } catch (error) {
       console.error('Error fetching categories:', error);
       toast.error('Failed to fetch categories');
@@ -248,7 +266,7 @@ export function CategoriesManager() {
     <CardHeader className="pb-4">
       <div className="flex sm:flex-row flex-col sm:justify-between sm:items-center gap-4">
         <CardTitle className="text-lg sm:text-xl">
-          All Categories ({categories?.length || 0})
+          All Categories ({pagination.total || 0})
         </CardTitle>
         <div className="relative w-full sm:w-auto">
           <Search className="top-1/2 left-3 absolute w-4 h-4 text-muted-foreground -translate-y-1/2" />
@@ -417,6 +435,78 @@ export function CategoriesManager() {
       )}
     </CardContent>
   </Card>
+
+  {/* Pagination Controls */}
+  {pagination.totalPages > 1 && (
+    <div className="flex sm:flex-row flex-col justify-between items-center gap-4 mt-6">
+      <div className="text-muted-foreground text-sm">
+        Showing {((currentPage - 1) * pagination.limit) + 1} to {Math.min(currentPage * pagination.limit, pagination.total)} of {pagination.total} categories
+      </div>
+      
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCurrentPage(1)}
+          disabled={!pagination.hasPrev}
+        >
+          First
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCurrentPage(currentPage - 1)}
+          disabled={!pagination.hasPrev}
+        >
+          Previous
+        </Button>
+        
+        <div className="flex items-center gap-1">
+          {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+            let pageNum = 1;
+            if (pagination.totalPages <= 5) {
+              pageNum = i + 1;
+            } else if (currentPage <= 3) {
+              pageNum = i + 1;
+            } else if (currentPage >= pagination.totalPages - 2) {
+              pageNum = pagination.totalPages - 4 + i;
+            } else {
+              pageNum = currentPage - 2 + i;
+            }
+            
+            return (
+              <Button
+                key={pageNum}
+                variant={currentPage === pageNum ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentPage(pageNum)}
+                className="p-0 w-8 h-8"
+              >
+                {pageNum}
+              </Button>
+            );
+          })}
+        </div>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCurrentPage(currentPage + 1)}
+          disabled={!pagination.hasNext}
+        >
+          Next
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setCurrentPage(pagination.totalPages)}
+          disabled={!pagination.hasNext}
+        >
+          Last
+        </Button>
+      </div>
+    </div>
+  )}
 
   {/* Delete Confirmation Dialog */}
   <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

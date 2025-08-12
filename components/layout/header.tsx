@@ -122,19 +122,35 @@ export function Header() {
   const fetchCategories = async () => {
     try {
       setIsLoadingCategories(true);
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/categories?limit=50`
-      );
+      let allCategories: Category[] = [];
+      let currentPage = 1;
+      let hasMorePages = true;
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch categories");
+      // Fetch all pages of categories
+      while (hasMorePages) {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/categories?page=${currentPage}&limit=20`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch categories");
+        }
+
+        const result: ApiResponse<Category> = await response.json();
+
+        if (result && result.categories) {
+          allCategories = [...allCategories, ...result.categories];
+        }
+
+        // Check if there are more pages (adjust based on your API response structure)
+        if (result.categories && result.categories.length === 20) {
+          currentPage++;
+        } else {
+          hasMorePages = false;
+        }
       }
 
-      const result: ApiResponse<Category> = await response.json();
-
-      if (result) {
-        setCategories(result.categories || []);
-      }
+      setCategories(allCategories);
     } catch (error) {
       console.error("Error fetching categories:", error);
       // Fallback to empty array or show error message
@@ -229,20 +245,35 @@ export function Header() {
   const fetchBrands = async () => {
     try {
       setIsLoadingBrands(true);
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/brands?limit=50`
-      );
+      let allBrands: Brand[] = [];
+      let currentPage = 1;
+      let hasMorePages = true;
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch brands");
+      // Fetch all pages of brands
+      while (hasMorePages) {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/brands?page=${currentPage}&limit=20`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch brands");
+        }
+
+        const result: ApiResponse<Brand> = await response.json();
+
+        if (result && result.data && result.data.brands) {
+          allBrands = [...allBrands, ...result.data.brands];
+        }
+
+        // Check if there are more pages based on pagination info
+        if (result.data && result.data.pagination && result.data.pagination.hasNext) {
+          currentPage++;
+        } else {
+          hasMorePages = false;
+        }
       }
 
-      const result: ApiResponse<Brand> = await response.json();
-
-      if (result) {
-        console.log(result);
-        setBrands(result.data.brands || []);
-      }
+      setBrands(allBrands);
     } catch (error) {
       console.error("Error fetching brands:", error);
       // Fallback to empty array or show error message
@@ -327,7 +358,7 @@ export function Header() {
               <NavigationMenuItem>
                 <NavigationMenuTrigger>Categories</NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <div className="gap-3 grid md:grid-cols-2 p-4 w-[400px] md:w-[500px] lg:w-[600px]">
+                  <div className="gap-3 grid md:grid-cols-2 p-4 w-[400px] md:w-[500px] lg:w-[600px] max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                     {categories.length > 0 ? (
                       categories.map((category) => (
                         <NavigationMenuLink key={category.id} asChild>
@@ -357,7 +388,7 @@ export function Header() {
               <NavigationMenuItem>
                 <NavigationMenuTrigger>Brands</NavigationMenuTrigger>
                 <NavigationMenuContent>
-                  <div className="gap-3 grid md:grid-cols-2 p-4 w-[400px] md:w-[500px] lg:w-[600px]">
+                  <div className="gap-3 grid md:grid-cols-2 p-4 w-[400px] md:w-[500px] lg:w-[600px] max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                     {brands.length > 0 ? (
                       brands.map((brand) => (
                         <NavigationMenuLink key={brand.id} asChild>

@@ -18,7 +18,19 @@ export interface CreateCategoryRequest {
     image?: File;
 }
 
-export const getCategories = async (page = 1, limit: number = 20): Promise<{ categories: Category[] }> => {
+export interface CategoriesResponse {
+    categories: Category[];
+    pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+        hasNext: boolean;
+        hasPrev: boolean;
+    };
+}
+
+export const getCategories = async (page = 1, limit: number = 20): Promise<CategoriesResponse> => {
     const params = new URLSearchParams({ page: page.toString() });
     if (limit !== undefined) {
         params.append('limit', limit.toString());

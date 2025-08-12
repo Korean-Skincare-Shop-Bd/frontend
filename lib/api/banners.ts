@@ -27,8 +27,13 @@ export interface BannersResponse {
     };
 }
 
-export const getBanners = async (token: string): Promise<BannersResponse> => {
-    const response = await fetch(`${API_BASE_URL}/banners`, {
+export const getBanners = async (token: string, page = 1, limit = 20): Promise<BannersResponse> => {
+    const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+    });
+    
+    const response = await fetch(`${API_BASE_URL}/banners?${params}`, {
         headers: {
             'Authorization': `Bearer ${token}`,
         },
@@ -110,18 +115,37 @@ export const deleteBanner = async (token: string, id: string): Promise<void> => 
   }
 };
 export const getActiveBanners = async (): Promise<Banner[]> => {
-    const response = await fetch(`${API_BASE_URL}/banners/active`, {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    });
+    let allBanners: Banner[] = [];
+    let currentPage = 1;
+    let hasMorePages = true;
 
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || 'Failed to fetch active banners');
+    // Fetch all pages of active banners
+    while (hasMorePages) {
+        const response = await fetch(`${API_BASE_URL}/banners/active?page=${currentPage}&limit=20`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            throw new Error(errorData?.message || 'Failed to fetch active banners');
+        }
+
+        const data = await response.json();
+        
+        if (data.banners && Array.isArray(data.banners)) {
+            allBanners = [...allBanners, ...data.banners];
+        }
+        
+        // Check if there are more pages
+        if (data.pagination && data.pagination.hasNext) {
+            currentPage++;
+        } else {
+            hasMorePages = false;
+        }
     }
 
-    const data = await response.json();
-    return data.banners;
+    return allBanners;
 };

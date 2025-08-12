@@ -261,7 +261,7 @@ export function ProductInfo({
             >
               <Minus className="w-4 h-4" />
             </Button>
-            <div className="px-6 py-3 min-w-[80px] font-semibold text-lg text-center">
+          <div className="px-6 py-3 min-w-[80px] font-semibold text-lg text-center">
               {quantity}
             </div>
             <Button

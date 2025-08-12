@@ -71,6 +71,15 @@ export function BannersManager() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false,
+  });
   const { token } = useAdmin();
 
   const fetchBanners = useCallback(async () => {
@@ -78,16 +87,17 @@ export function BannersManager() {
 
     try {
       setLoading(true);
-      const data = await getBanners(token);
+      const data = await getBanners(token, currentPage, 20);
       console.log("Fetched banners:", data.banners); // Debug log
       setBanners(data.banners);
+      setPagination(data.pagination);
     } catch (error) {
       console.error("Error fetching banners:", error);
       toast.error("Failed to fetch banners");
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, currentPage]);
 
   useEffect(() => {
     fetchBanners();
@@ -346,88 +356,162 @@ export function BannersManager() {
           </CardContent>
         </Card>
       ) : (
-        <div className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {(Array.isArray(banners) ? banners : []).map((banner) => (
-            <Card key={banner.id} className="overflow-hidden">
-              <div className="relative w-full h-48 bg-gray-100">
-                {banner.imageUrl ? (
-                  <Image
-                    src={banner.imageUrl}
-                    alt="Banner"
-                    fill
-                    className="object-cover"
-                    onError={(e) => {
-                      console.error("Image failed to load:", banner.imageUrl);
-                      console.error("Error:", e);
-                    }}
-                  />
-                ) : (
-                  <div className="flex items-center justify-center w-full h-full bg-gray-200">
-                    <span className="text-gray-500 text-sm">No image</span>
+        <>
+          <div className="gap-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {(Array.isArray(banners) ? banners : []).map((banner) => (
+              <Card key={banner.id} className="overflow-hidden">
+                <div className="relative w-full h-48 bg-gray-100">
+                  {banner.imageUrl ? (
+                    <Image
+                      src={banner.imageUrl}
+                      alt="Banner"
+                      fill
+                      className="object-cover"
+                      onError={(e) => {
+                        console.error("Image failed to load:", banner.imageUrl);
+                        console.error("Error:", e);
+                      }}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-full bg-gray-200">
+                      <span className="text-gray-500 text-sm">No image</span>
+                    </div>
+                  )}
+                  <div className="top-2 right-2 absolute flex gap-2">
+                    <Badge variant={banner.isActive ? "default" : "secondary"}>
+                      {banner.isActive ? "Active" : "Inactive"}
+                    </Badge>
                   </div>
-                )}
-                <div className="top-2 right-2 absolute flex gap-2">
-                  <Badge variant={banner.isActive ? "default" : "secondary"}>
-                    {banner.isActive ? "Active" : "Inactive"}
-                  </Badge>
                 </div>
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="text-muted-foreground text-sm">
+                      Created: {new Date(banner.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+
+                  {banner.linkUrl && (
+                    <div className="flex items-center gap-2 mb-3">
+                      <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                      <a
+                        href={banner.linkUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 text-sm hover:underline truncate">
+                        {banner.linkUrl}
+                      </a>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(banner)}
+                      className="flex-1">
+                      <Edit className="mr-2 w-4 h-4" />
+                      Edit
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handlePreview(banner)}>
+                          <Eye className="mr-2 w-4 h-4" />
+                          Preview
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => {
+                            setBannerToDelete(banner);
+                            setDeleteDialogOpen(true);
+                          }}>
+                          <Trash2 className="mr-2 w-4 h-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {pagination.totalPages > 1 && (
+            <div className="flex sm:flex-row flex-col justify-between items-center gap-4 mt-6">
+              <div className="text-muted-foreground text-sm">
+                Showing {((currentPage - 1) * pagination.limit) + 1} to {Math.min(currentPage * pagination.limit, pagination.total)} of {pagination.total} banners
               </div>
-              <CardContent className="p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="text-muted-foreground text-sm">
-                    Created: {new Date(banner.createdAt).toLocaleDateString()}
-                  </div>
-                </div>
-
-                {banner.linkUrl && (
-                  <div className="flex items-center gap-2 mb-3">
-                    <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                    <a
-                      href={banner.linkUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 text-sm hover:underline truncate">
-                      {banner.linkUrl}
-                    </a>
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEdit(banner)}
-                    className="flex-1">
-                    <Edit className="mr-2 w-4 h-4" />
-                    Edit
-                  </Button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <MoreHorizontal className="w-4 h-4" />
+              
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={!pagination.hasPrev}
+                >
+                  First
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={!pagination.hasPrev}
+                >
+                  Previous
+                </Button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                    let pageNum = 1;
+                    if (pagination.totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= pagination.totalPages - 2) {
+                      pageNum = pagination.totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className="p-0 w-8 h-8"
+                      >
+                        {pageNum}
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handlePreview(banner)}>
-                        <Eye className="mr-2 w-4 h-4" />
-                        Preview
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        className="text-red-600"
-                        onClick={() => {
-                          setBannerToDelete(banner);
-                          setDeleteDialogOpen(true);
-                        }}>
-                        <Trash2 className="mr-2 w-4 h-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    );
+                  })}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={!pagination.hasNext}
+                >
+                  Next
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(pagination.totalPages)}
+                  disabled={!pagination.hasNext}
+                >
+                  Last
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Preview Dialog */}
