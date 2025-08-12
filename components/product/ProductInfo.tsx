@@ -274,9 +274,9 @@ export function ProductInfo({
               <Plus className="w-4 h-4" />
             </Button>
           </div>
-          <div className="text-gray-600 text-sm">
+          {/* <div className="text-gray-600 text-sm">
             <span className="font-medium">{currentVariant.stockQuantity}</span> available
-          </div>
+          </div> */}
         </div>
       </div>
 
