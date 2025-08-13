@@ -148,7 +148,7 @@ export function TopProducts() {
         <div className="mx-auto px-4 container">
           <div className="mb-12 text-center">
             <h2 className="mb-4 font-bold text-3xl md:text-4xl golden-text">
-              Trending Products
+              New Products
             </h2>
             <p className="mx-auto max-w-2xl text-muted-foreground text-lg">
               {error || 'No products available at the moment.'}
