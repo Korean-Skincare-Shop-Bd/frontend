@@ -33,10 +33,10 @@ export function BrandsShowcase() {
   return (
     <section className="bg-gradient-to-br from-primary-50 dark:from-gray-900 to-orange-50 dark:to-gray-800 py-16">
       <div className="mx-auto px-4 container">
-        <SectionHeading 
+        {/* <SectionHeading 
           title="Trusted by Premium Brands"
           description="Discover our curated selection of luxury beauty brands, each chosen for their quality and innovation."
-        />
+        /> */}
         <BrandMarquee brands={brands} />
       </div>
     </section>

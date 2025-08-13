@@ -128,7 +128,7 @@ export function TopProducts() {
         <div className="mx-auto px-4 container">
           <div className="mb-12 text-center">
             <h2 className="mb-4 font-bold text-3xl md:text-4xl golden-text">
-              Trending Products
+              New Products
             </h2>
             <p className="mx-auto max-w-2xl text-muted-foreground text-lg">
               Loading our latest beauty essentials...
@@ -165,7 +165,7 @@ export function TopProducts() {
         <div className="mx-auto px-4 container">
           <div className="mb-12 text-center">
             <h2 className="mb-4 font-bold text-3xl md:text-4xl golden-text">
-              Trending Products
+              New Products
             </h2>
             {/* <p className="mx-auto max-w-2xl text-muted-foreground text-lg">
               Discover our most popular and recently added beauty essentials, loved by customers worldwide.
