@@ -168,9 +168,9 @@ export function HOTProducts() {
             <h2 className="mb-4 font-bold text-3xl md:text-4xl golden-text">
               Hot Products
             </h2>
-            <p className="mx-auto max-w-2xl text-muted-foreground text-lg">
+            {/* <p className="mx-auto max-w-2xl text-muted-foreground text-lg">
               Discover our Hot beauty essentials, loved by customers worldwide.
-            </p>
+            </p> */}
           </div>
 
           <ProductsSection

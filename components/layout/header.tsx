@@ -35,6 +35,12 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { cn } from "@/lib/utils";
 import { useAdmin } from "@/contexts/AdminContext";
 import { useToast } from "@/hooks/use-toast";
@@ -91,6 +97,7 @@ export function Header() {
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
   const [isLoadingBrands, setIsLoadingBrands] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const { logout } = useAdmin();
@@ -300,6 +307,36 @@ export function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isOpen) {
+      // Save current scroll position
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Restore scroll position
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -541,92 +578,154 @@ export function Header() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-background border-t">
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+            className="lg:hidden bg-background border-t shadow-lg relative z-50">
             <div className="mx-auto px-4 py-4 container">
-              <nav className="space-y-4">
-                <Link
-                  href="/products"
-                  className="block py-2 font-medium hover:text-primary text-lg">
-                  Products
-                </Link>
-                <div>
-                  <h3 className="py-2 font-medium text-lg">Categories</h3>
-                  <div className="space-y-2 pl-4">
-                    {categories.length > 0 ? (
-                      categories.map((category) => (
-                        <Link
-                          key={category.id}
-                          href={`/products?category=${category.id}`}
-                          className="block py-1 text-muted-foreground hover:text-primary"
-                          onClick={() => setIsOpen(false)}>
-                          {category.name}
-                        </Link>
-                      ))
-                    ) : (
-                      <span className="block py-1 text-muted-foreground text-sm">
-                        No categories available
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="py-2 font-medium text-lg">Brands</h3>
-                  <div className="space-y-2 pl-4">
-                    {brands.length > 0 ? (
-                      brands.map((brand) => (
-                        <Link
-                          key={brand.id}
-                          href={`/products?brand=${brand.id}`}
-                          className="flex items-center py-1 text-muted-foreground hover:text-primary"
-                          onClick={() => setIsOpen(false)}>
-                          {" "}
-                          {brand.logo && (
-                            <Image
-                              src={brand.logo}
-                              alt={brand.name}
-                              width={16}
-                              height={16}
-                              className="mr-2 rounded w-4 h-4 object-cover"
-                              onError={(e) => {
-                                e.currentTarget.style.display = "none";
-                              }}
-                            />
+              <div className="max-h-[70vh] overflow-y-auto overscroll-contain border rounded-lg mobile-scroll" 
+                   style={{
+                     WebkitOverflowScrolling: 'touch',
+                     scrollbarWidth: 'thin',
+                     scrollbarColor: '#cbd5e1 #f1f5f9'
+                   }}
+                   onTouchStart={(e) => {
+                     setTouchStart(e.touches[0].clientY);
+                   }}
+                   onTouchMove={(e) => {
+                     if (touchStart === null) return;
+                     
+                     const element = e.currentTarget;
+                     const currentTouch = e.touches[0].clientY;
+                     const diff = touchStart - currentTouch;
+                     const scrollTop = element.scrollTop;
+                     const scrollHeight = element.scrollHeight;
+                     const clientHeight = element.clientHeight;
+                     
+                     // At top and scrolling up
+                     if (scrollTop === 0 && diff < 0) {
+                       e.preventDefault();
+                       return;
+                     }
+                     
+                     // At bottom and scrolling down
+                     if (scrollTop >= scrollHeight - clientHeight && diff > 0) {
+                       e.preventDefault();
+                       return;
+                     }
+                     
+                     // Allow normal scrolling
+                     e.stopPropagation();
+                   }}
+                   onTouchEnd={() => {
+                     setTouchStart(null);
+                   }}>
+                <nav className="space-y-2 p-2">
+                    <div className="py-3 px-2 font-medium text-lg hover:no-underline hover:bg-accent/50 rounded-md transition-colors touch-target">
+                      <Link
+                        href="/products"
+                        onClick={() => setIsOpen(false)}>
+                        Products
+                      </Link>
+                    </div>
+                    
+                    <Accordion type="single" collapsible className="w-full">
+                      <AccordionItem value="categories" className="border-0">
+                        <AccordionTrigger className="py-3 px-2 font-medium text-lg hover:no-underline hover:bg-accent/50 rounded-md transition-colors [&[data-state=open]]:bg-accent/30 touch-target">
+                          Skincare
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-1 pl-4 pr-2">
+                            {isLoadingCategories ? (
+                              <div className="py-3 px-2 text-muted-foreground text-sm">
+                                Loading categories...
+                              </div>
+                            ) : categories.length > 0 ? (
+                              categories.map((category) => (
+                                <Link
+                                  key={category.id}
+                                  href={`/products?category=${category.id}`}
+                                  className="block py-3 px-2 text-muted-foreground hover:text-primary transition-colors rounded-md hover:bg-accent/30 active:bg-accent/50 touch-manipulation touch-target"
+                                  onClick={() => setIsOpen(false)}>
+                                  {category.name}
+                                </Link>
+                              ))
+                            ) : (
+                              <span className="block py-3 px-2 text-muted-foreground text-sm">
+                                No categories available
+                              </span>
+                            )}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                      
+                      <AccordionItem value="brands" className="border-0">
+                        <AccordionTrigger className="py-3 px-2 font-medium text-lg hover:no-underline hover:bg-accent/50 rounded-md transition-colors [&[data-state=open]]:bg-accent/30 touch-target">
+                          Brands
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-1 pl-4 pr-2">
+                            {isLoadingBrands ? (
+                              <div className="py-3 px-2 text-muted-foreground text-sm">
+                                Loading brands...
+                              </div>
+                            ) : brands.length > 0 ? (
+                              brands.map((brand) => (
+                                <Link
+                                  key={brand.id}
+                                  href={`/products?brand=${brand.id}`}
+                                  className="flex items-center py-3 px-2 text-muted-foreground hover:text-primary transition-colors rounded-md hover:bg-accent/30 active:bg-accent/50 touch-manipulation touch-target"
+                                  onClick={() => setIsOpen(false)}>
+                                  {brand.logo && (
+                                    <Image
+                                      src={brand.logo}
+                                      alt={brand.name}
+                                      width={16}
+                                      height={16}
+                                      className="mr-2 rounded w-4 h-4 object-cover flex-shrink-0"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = "none";
+                                      }}
+                                    />
+                                  )}
+                                  {brand.name}
+                                </Link>
+                              ))
+                            ) : (
+                              <span className="block py-3 px-2 text-muted-foreground text-sm">
+                                No brands available
+                              </span>
+                            )}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
+                    
+                    <div className="pt-2 mt-4 border-t">
+                      {mounted && (
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setTheme(theme === "dark" ? "light" : "dark");
+                            setIsOpen(false);
+                          }}
+                          className="justify-start w-full py-3 px-2 text-left hover:bg-accent/50 touch-manipulation touch-target">
+                          {theme === "dark" ? (
+                            <>
+                              <Sun className="mr-2 w-4 h-4 flex-shrink-0" />
+                              Light Mode
+                            </>
+                          ) : (
+                            <>
+                              <Moon className="mr-2 w-4 h-4 flex-shrink-0" />
+                              Dark Mode
+                            </>
                           )}
-                          {brand.name}
-                        </Link>
-                      ))
-                    ) : (
-                      <span className="block py-1 text-muted-foreground text-sm">
-                        No brands available
-                      </span>
-                    )}
-                  </div>
-                </div>{" "}
-                <div className="pt-4 border-t">
-                  {mounted && (
-                    <Button
-                      variant="ghost"
-                      onClick={() =>
-                        setTheme(theme === "dark" ? "light" : "dark")
-                      }
-                      className="justify-start w-full">
-                      {theme === "dark" ? (
-                        <>
-                          <Sun className="mr-2 w-4 h-4" />
-                          Light Mode
-                        </>
-                      ) : (
-                        <>
-                          <Moon className="mr-2 w-4 h-4" />
-                          Dark Mode
-                        </>
+                        </Button>
                       )}
-                    </Button>
-                  )}
+                    </div>
+                  </nav>
                 </div>
-              </nav>
-            </div>
-          </motion.div>
+              </div>
+            </motion.div>
         )}
       </AnimatePresence>
     </header>
