@@ -19,19 +19,19 @@ export function ProductQuickActions({
 }: ProductQuickActionsProps) {
   return (
     <>
-      <div className={`absolute top-1 sm:top-2 right-1 sm:right-2 transition-all duration-300 ${hovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
+      <div className={`absolute top-2 right-2 transition-all duration-300 ${hovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
         <Button
           size="icon"
           variant="secondary"
-          className="bg-gray-800 hover:bg-black w-7 h-7 sm:w-10 sm:h-10"
+          className="bg-gray-800 hover:bg-black"
           onClick={onQuickView}
         >
-          <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+          <Eye className="w-4 h-4" />
         </Button>
       </div>
-      <div className={`absolute bottom-1 sm:bottom-2 left-1 sm:left-2 right-1 sm:right-2 transition-all duration-300 ${hovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+      <div className={`absolute bottom-2 left-2 right-2 transition-all duration-300 ${hovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         <Button
-          className="w-full golden-button text-xs sm:text-sm px-2 sm:px-4 py-1 sm:py-2 h-7 sm:h-9"
+          className="w-full golden-button"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -41,15 +41,13 @@ export function ProductQuickActions({
         >
           {addingToCart ? (
             <>
-              <Loader2 className="mr-1 sm:mr-2 w-3 h-3 sm:w-4 sm:h-4 animate-spin" />
-              <span className="hidden sm:inline">Adding...</span>
-              <span className="sm:hidden">Add...</span>
+              <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+              Adding...
             </>
           ) : (
             <>
-              <ShoppingBag className="mr-1 sm:mr-2 w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Add to Cart</span>
-              <span className="sm:hidden">Add</span>
+              <ShoppingBag className="mr-2 w-4 h-4" />
+              Add to Cart
             </>
           )}
         </Button>

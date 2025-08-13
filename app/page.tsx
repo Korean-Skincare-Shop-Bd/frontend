@@ -12,10 +12,10 @@ export default function HomePage() {
     <div className="min-h-screen">
       <HeroSection />
       <TopProducts />
+      <BrandsShowcase />
       <SaleProducts/>
       <HOTProducts/>
       <ReviewsSection />
-      <BrandsShowcase />
     </div>
   );
 }

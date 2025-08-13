@@ -356,7 +356,7 @@ export function Header() {
               </NavigationMenuItem>
 
               <NavigationMenuItem>
-                <NavigationMenuTrigger>Categories</NavigationMenuTrigger>
+                <NavigationMenuTrigger>Skincare</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="gap-3 grid md:grid-cols-2 p-4 w-[400px] md:w-[500px] lg:w-[600px] max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                     {categories.length > 0 ? (

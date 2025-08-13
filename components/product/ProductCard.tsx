@@ -61,16 +61,16 @@ export function ProductCard({
           onQuickView={onQuickView}
         />
       </div>
-      <CardContent className="p-2 sm:p-4">
-        <div className="space-y-1 sm:space-y-2">
-          <p className="text-muted-foreground text-xs sm:text-sm truncate">{product.brand?.name}</p>
-          <h3 className="font-semibold text-sm sm:text-base line-clamp-2">
+      <CardContent className="p-4">
+        <div className="space-y-2">
+          <p className="text-muted-foreground text-sm">{product.brand?.name}</p>
+          <h3 className="font-semibold line-clamp-2">
             <Link href={`/products/${product.id}`} className="hover:text-primary transition-colors">
               {product.name}
             </Link>
           </h3>
           {/* Category */}
-          <p className="text-muted-foreground text-xs truncate">
+          <p className="text-muted-foreground text-xs">
             {product.category?.name}
           </p>
           <ProductPrice price={price} originalPrice={originalPrice} />
