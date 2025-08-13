@@ -370,8 +370,8 @@ export function Header() {
               className="flex justify-center items-center bg-white rounded-full w-12 h-12">
               <Image
                 src="/logo.png"
-                width={50}
-                height={50}
+                width={75}
+                height={75}
                 alt="Korean Skincare Shop BD Logo"
                 className="pt-1 w-20 h-19 object-contain"
               />
@@ -673,7 +673,11 @@ export function Header() {
                                   key={brand.id}
                                   href={`/products?brand=${brand.id}`}
                                   className="flex items-center py-3 px-2 text-muted-foreground hover:text-primary transition-colors rounded-md hover:bg-accent/30 active:bg-accent/50 touch-manipulation touch-target"
-                                  onClick={() => setIsOpen(false)}>
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setIsOpen(false);
+                                    window.location.href = `/products?brand=${brand.id}`;
+                                  }}>
                                   {brand.logo && (
                                     <Image
                                       src={brand.logo}

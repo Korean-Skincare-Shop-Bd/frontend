@@ -79,6 +79,14 @@ export default function ProductsPageContent() {
   const [selectedBrand, setSelectedBrand] = useState(
     searchParams.get("brand") || "all"
   );
+
+  // Update filter states when URL parameters change
+  useEffect(() => {
+    setSearchQuery(searchParams.get("search") || "");
+    setSelectedCategory(searchParams.get("category") || "all");
+    setSelectedBrand(searchParams.get("brand") || "all");
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [searchParams]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
   const [sortBy, setSortBy] = useState<"price" | "name" | "createdAt">(
     "createdAt"
