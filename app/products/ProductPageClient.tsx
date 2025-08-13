@@ -445,9 +445,9 @@ export default function ProductsPageContent() {
             <h1 className="mb-2 sm:mb-4 font-bold text-2xl sm:text-3xl lg:text-4xl golden-text">
               Our Products
             </h1>
-            <p className="text-muted-foreground text-base sm:text-lg">
+            {/* <p className="text-muted-foreground text-base sm:text-lg">
               Discover our complete collection of premium beauty products
-            </p>
+            </p> */}
           </div>
 
           {/* Search and Filters */}
