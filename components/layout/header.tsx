@@ -373,7 +373,7 @@ export function Header() {
                 width={50}
                 height={50}
                 alt="Korean Skincare Shop BD Logo"
-                className="pt-1 w-13 h-12 object-contain"
+                className="pt-1 w-20 h-19 object-contain"
               />
             </motion.div>
             <span className="hidden lg:inline-block font-bold text-xl lg:text-2xl golden-text">
