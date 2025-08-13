@@ -619,13 +619,13 @@ export function Header() {
                      setTouchStart(null);
                    }}>
                 <nav className="space-y-2 p-2">
-                    <div className="py-3 px-2 font-medium text-lg hover:no-underline hover:bg-accent/50 rounded-md transition-colors touch-target">
-                      <Link
-                        href="/products"
-                        onClick={() => setIsOpen(false)}>
-                        All Products
-                      </Link>
-                    </div>
+                    <Link
+                      href="/products"
+                      onClick={() => setIsOpen(false)}>
+                      <div className="py-3 px-2 font-medium text-lg hover:no-underline hover:bg-accent/50 rounded-md transition-colors touch-target">
+                          All Products
+                      </div>
+                    </Link>
                     
                     <Accordion type="single" collapsible className="w-full">
                       <AccordionItem value="categories" className="border-0">
