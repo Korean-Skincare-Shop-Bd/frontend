@@ -387,7 +387,7 @@ export function Header() {
               <NavigationMenuItem>
                 <Link href="/products" legacyBehavior passHref>
                   <NavigationMenuLink className="group inline-flex justify-center items-center bg-background data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 hover:bg-accent focus:bg-accent disabled:opacity-50 px-4 py-2 rounded-md focus:outline-none w-max h-10 font-medium text-sm transition-colors hover:text-accent-foreground focus:text-accent-foreground disabled:pointer-events-none">
-                    Products
+                    All Products
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
@@ -623,7 +623,7 @@ export function Header() {
                       <Link
                         href="/products"
                         onClick={() => setIsOpen(false)}>
-                        Products
+                        All Products
                       </Link>
                     </div>
                     
