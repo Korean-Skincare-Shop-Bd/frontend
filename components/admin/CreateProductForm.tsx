@@ -44,13 +44,56 @@ export function CreateProductForm() {
 
     try {
       setLoadingData(true);
-      const [categoriesResponse, brandsResponse] = await Promise.all([
-        getCategories(),
-        getBrands(),
+
+      // Fetch all categories and brands concurrently
+      const [allCategories, allBrands] = await Promise.all([
+        // Fetch all categories
+        (async () => {
+          let categories: Category[] = [];
+          let categoriesPage = 1;
+          let hasMoreCategories = true;
+
+          while (hasMoreCategories) {
+            const categoriesResponse = await getCategories(categoriesPage, 50);
+            if (categoriesResponse.categories && categoriesResponse.categories.length > 0) {
+              categories = [...categories, ...categoriesResponse.categories];
+            }
+            
+            // Check if there are more pages using pagination info
+            if (categoriesResponse.pagination && categoriesResponse.pagination.hasNext) {
+              categoriesPage++;
+            } else {
+              hasMoreCategories = false;
+            }
+          }
+          return categories;
+        })(),
+
+        // Fetch all brands
+        (async () => {
+          let brands: Brand[] = [];
+          let brandsPage = 1;
+          let hasMoreBrands = true;
+
+          while (hasMoreBrands) {
+            const brandsResponse = await getBrands(brandsPage, 50);
+            if (brandsResponse.data && brandsResponse.data.brands && brandsResponse.data.brands.length > 0) {
+              brands = [...brands, ...brandsResponse.data.brands];
+            }
+            
+            // Check if there are more pages using pagination info
+            if (brandsResponse.data && brandsResponse.data.pagination && brandsResponse.data.pagination.hasNext) {
+              brandsPage++;
+            } else {
+              hasMoreBrands = false;
+            }
+          }
+          return brands;
+        })()
       ]);
 
-      setCategories(categoriesResponse.categories);
-      setBrands(brandsResponse.data.brands);
+      setCategories(allCategories);
+      setBrands(allBrands);
     } catch (error) {
       console.error("Error fetching initial data:", error);
       toast.error("Failed to load categories and brands");
