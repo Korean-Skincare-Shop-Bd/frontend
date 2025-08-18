@@ -77,9 +77,15 @@ export function Footer() {
               </span>
             </div>
             <p className="text-gray-400 leading-relaxed">
-              Discover premium beauty products with our curated collection of
-              skincare, makeup, and wellness items. Quality and elegance in
-              every product.
+              Korean Skincare SHOP BD - Your Trusted Source for Real Korean Beauty.
+            </p>
+            <p className="text-gray-400 leading-relaxed">
+              We bring you 100% original & authentic skincare, straight from Korea.
+              Glowing skin starts here - trusted quality, nationwide delivery, and skincare for every budget.
+            </p>
+            <p className="text-gray-400 leading-relaxed">
+              Real Products. Real Results. Always Authentic.
+              "Experience the Luxury of Authentic Korean Skincare - Only at Korean Skincare SHOP BD."
             </p>
             <div>
               <h4 className="mb-3 font-semibold text-white">Follow Us</h4>

@@ -238,7 +238,7 @@ const ShippingInfoPage: React.FC = () => {
           </section>
 
           {/* Tracking */}
-          <section>
+          {/* <section>
             <h2 className="mb-4 font-semibold text-foreground text-2xl">Order Tracking</h2>
             <div className="gap-6 grid md:grid-cols-2">
               <div className="space-y-4">
@@ -264,7 +264,7 @@ const ShippingInfoPage: React.FC = () => {
               </div>
               
             </div>
-          </section>
+          </section> */}
 
           {/* Contact for Shipping */}
           <section className="bg-muted/50 p-8 rounded-lg text-center">
@@ -281,10 +281,10 @@ const ShippingInfoPage: React.FC = () => {
                 Contact Support
               </Link>
               <a
-                href="tel:+8801234567890"
+                href="tel:+8801534554311"
                 className="inline-flex items-center gap-2 hover:bg-muted px-6 py-3 border border-border rounded-lg transition-colors"
               >
-                Call: +880 123 456 7890
+                Call: +8801534554311
               </a>
             </div>
           </section>

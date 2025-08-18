@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Heart, ShoppingBag, Share2, Star, Minus, Plus, Truck, Shield, RotateCcw, Copy, Check, Facebook, Twitter, Linkedin } from 'lucide-react';
+import { Heart, ShoppingBag, Share2, Star, Minus, Plus, Truck, Shield, RotateCcw, Copy, Check, Facebook, Twitter, Linkedin, Award } from 'lucide-react';
 import { Product, ProductVariation } from '@/lib/api/products';
 import { useToast } from '@/hooks/use-toast';
 import { addToEnhancedCart } from '@/lib/api/cart';
@@ -175,7 +175,7 @@ export function ProductInfo({
 
         </div>
 
-        <h1 className="font-bold text-gray-900 dark:text-gray-200 text-4xl leading-tight">{name}</h1>
+        <h1 className="font-bold text-gray-900 dark:text-gray-200 text-3xl leading-tight">{name}</h1>
 
         {/* Rating */}
         <div className="flex items-center gap-4">
@@ -385,27 +385,28 @@ export function ProductInfo({
       </div>
 
       {/* Features Section */}
-      <div className="pt-8 border-gray-200 dark:border-gray-700 border-t">
-        <div className="gap-6 grid grid-cols-1 sm:grid-cols-3">
-          <div className="bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 rounded-lg text-center transition-colors">
-            <div className="inline-flex justify-center items-center bg-emerald-100 dark:bg-emerald-900 mb-3 rounded-full w-12 h-12">
-              <Truck className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+      <div className="pt-6 border-gray-200 dark:border-gray-700 border-t">
+        <div className="gap-3 md:gap-6 grid grid-cols-3">
+          <div className="bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 p-3 md:p-4 rounded-lg text-center transition-colors">
+            <div className="inline-flex justify-center items-center bg-orange-100 dark:bg-orange-900 mb-2 md:mb-3 rounded-full w-8 h-8 md:w-10 md:h-10">
+              <Award className="w-4 h-4 md:w-5 md:h-5 text-orange-600 dark:text-orange-400" />
             </div>
-            <h4 className="mb-1 font-semibold text-gray-900 dark:text-gray-100">Safe Shipping</h4>
+            <h4 className="mb-1 font-semibold text-gray-900 dark:text-gray-100 text-xs md:text-sm leading-tight">Original Products</h4>
+            <p className="text-gray-600 dark:text-gray-300 text-[10px] md:text-xs leading-tight">100% authentic guarantee</p>
           </div>
-          <div className="bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 rounded-lg text-center transition-colors">
-            <div className="inline-flex justify-center items-center bg-blue-100 dark:bg-blue-900 mb-3 rounded-full w-12 h-12">
-              <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          <div className="bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 p-3 md:p-4 rounded-lg text-center transition-colors">
+            <div className="inline-flex justify-center items-center bg-emerald-100 dark:bg-emerald-900 mb-2 md:mb-3 rounded-full w-8 h-8 md:w-10 md:h-10">
+              <Truck className="w-4 h-4 md:w-5 md:h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h4 className="mb-1 font-semibold text-gray-900 dark:text-gray-100">Secure Payment</h4>
-            <p className="text-gray-600 dark:text-gray-300 text-sm">100% protected checkout</p>
+            <h4 className="mb-1 font-semibold text-gray-900 dark:text-gray-100 text-xs md:text-sm leading-tight">Safe Shipping</h4>
+            <p className="text-gray-600 dark:text-gray-300 text-[10px] md:text-xs leading-tight">Fast & secure delivery</p>
           </div>
-          <div className="bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 p-4 rounded-lg text-center transition-colors">
-            <div className="inline-flex justify-center items-center bg-orange-100 dark:bg-orange-900 mb-3 rounded-full w-12 h-12">
-              <RotateCcw className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+          <div className="bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 p-3 md:p-4 rounded-lg text-center transition-colors">
+            <div className="inline-flex justify-center items-center bg-blue-100 dark:bg-blue-900 mb-2 md:mb-3 rounded-full w-8 h-8 md:w-10 md:h-10">
+              <Shield className="w-4 h-4 md:w-5 md:h-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <h4 className="mb-1 font-semibold text-gray-900 dark:text-gray-100">Easy Returns</h4>
-            <p className="text-gray-600 dark:text-gray-300 text-sm">Easy return policy</p>
+            <h4 className="mb-1 font-semibold text-gray-900 dark:text-gray-100 text-xs md:text-sm leading-tight">Secure Payment</h4>
+            <p className="text-gray-600 dark:text-gray-300 text-[10px] md:text-xs leading-tight">100% protected checkout</p>
           </div>
         </div>
       </div>

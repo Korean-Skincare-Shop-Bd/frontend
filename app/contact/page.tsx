@@ -43,58 +43,72 @@ const ContactPage: React.FC = () => {
   };
 
   return (
-    <div className="bg-background min-h-screen">
-      <div className="mx-auto px-4 py-8 max-w-6xl container">
+    <div className="bg-gradient-to-br from-background via-background to-muted/10 min-h-screen">
+      <div className="mx-auto px-4 py-8 md:py-12 max-w-6xl container">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-12 text-center">
           <Link 
             href="/" 
-            className="inline-flex items-center gap-2 mb-4 text-muted-foreground hover:text-primary transition-colors"
+            className="inline-flex items-center gap-2 mb-6 text-muted-foreground hover:text-primary transition-all hover:gap-3"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Home
           </Link>
-          <div className="flex items-center gap-3 mb-4">
-            <MessageCircle className="w-8 h-8 text-primary" />
-            <h1 className="font-bold text-foreground text-3xl">Contact Us</h1>
+          <div className="flex justify-center items-center gap-4 mb-6">
+            <div className="flex justify-center items-center bg-primary/10 rounded-full w-16 h-16">
+              <MessageCircle className="w-8 h-8 text-primary" />
+            </div>
+            <h1 className="font-bold text-foreground text-4xl md:text-5xl">Contact Us</h1>
           </div>
-          <p className="text-muted-foreground">
-            We&apos;re here to help! Reach out to us with any questions or concerns.
+          <p className="mx-auto max-w-2xl text-lg text-muted-foreground leading-relaxed">
+            We&apos;re here to help! Reach out to us with any questions or concerns about our Korean skincare products.
           </p>
         </div>
 
-        <div className="gap-8 grid lg:grid-cols-3">
+        <div className="gap-8 lg:gap-12 grid lg:grid-cols-2">
           {/* Contact Information */}
-          <div className="space-y-6 lg:col-span-1">
-            <div className="space-y-6 bg-muted/50 p-6 rounded-lg">
-              <h2 className="mb-4 font-semibold text-foreground text-xl">Get In Touch</h2>
+          <div className="space-y-8">
+            <div className="space-y-8 bg-card shadow-lg hover:shadow-xl p-8 border border-border rounded-2xl transition-shadow">
+              <div className="text-center">
+                <div className="inline-flex justify-center items-center bg-primary/10 mb-4 rounded-full w-12 h-12">
+                  <Mail className="w-6 h-6 text-primary" />
+                </div>
+                <h2 className="mb-2 font-bold text-foreground text-2xl">Get In Touch</h2>
+                <p className="text-muted-foreground text-sm">We&apos;d love to hear from you</p>
+              </div>
               
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <Mail className="flex-shrink-0 mt-1 w-5 h-5 text-primary" />
-                  <div>
-                    <h3 className="font-medium text-foreground">Email</h3>
-                    <a href="mailto:koreanskincareshopbd1@gmail.com" className="text-muted-foreground hover:text-primary transition-colors">
+              <div className="space-y-6">
+                <div className="flex items-start gap-4 hover:bg-muted/30 p-4 rounded-xl transition-colors group">
+                  <div className="flex justify-center items-center bg-primary/10 group-hover:bg-primary/20 rounded-lg w-10 h-10 transition-colors">
+                    <Mail className="flex-shrink-0 w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="mb-1 font-semibold text-foreground">Email</h3>
+                    <a href="mailto:koreanskincareshopbd1@gmail.com" className="text-muted-foreground hover:text-primary text-sm transition-colors break-all">
                       koreanskincareshopbd1@gmail.com
                     </a>
                   </div>
                 </div>
                 
-                <div className="flex items-start gap-3">
-                  <Phone className="flex-shrink-0 mt-1 w-5 h-5 text-primary" />
-                  <div>
-                    <h3 className="font-medium text-foreground">Phone</h3>
-                    <a href="https://wa.me/8801534554311" className="text-muted-foreground hover:text-primary transition-colors">
+                <div className="flex items-start gap-4 hover:bg-muted/30 p-4 rounded-xl transition-colors group">
+                  <div className="flex justify-center items-center bg-primary/10 group-hover:bg-primary/20 rounded-lg w-10 h-10 transition-colors">
+                    <Phone className="flex-shrink-0 w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="mb-1 font-semibold text-foreground">Phone</h3>
+                    <a href="https://wa.me/8801534554311" className="text-muted-foreground hover:text-primary text-sm transition-colors">
                       +8801534554311
                     </a>
                   </div>
                 </div>
                 
-                <div className="flex items-start gap-3">
-                  <MapPin className="flex-shrink-0 mt-1 w-5 h-5 text-primary" />
-                  <div>
-                    <h3 className="font-medium text-foreground">Address</h3>
-                    <p className="text-muted-foreground">
+                <div className="flex items-start gap-4 hover:bg-muted/30 p-4 rounded-xl transition-colors group">
+                  <div className="flex justify-center items-center bg-primary/10 group-hover:bg-primary/20 rounded-lg w-10 h-10 transition-colors">
+                    <MapPin className="flex-shrink-0 w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="mb-1 font-semibold text-foreground">Address</h3>
+                    <p className="text-muted-foreground text-sm">
                       Dhaka, Bangladesh
                     </p>
                   </div>
@@ -115,31 +129,89 @@ const ContactPage: React.FC = () => {
             </div>
 
             {/* Quick Contact Options */}
-            <div className="space-y-3">
-              <h3 className="font-semibold text-foreground">Quick Actions</h3>
-              <div className="space-y-2">
+            <div className="space-y-4">
+              <h3 className="font-bold text-foreground text-lg">Quick Actions</h3>
+              <div className="space-y-3">
                 <a
                   href="tel:+8801534554311"
-                  className="flex items-center gap-3 hover:bg-muted/50 p-3 border border-border rounded-lg transition-colors"
+                  className="flex items-center gap-4 hover:bg-primary/10 hover:border-primary/20 p-4 border border-border rounded-xl transition-all transform hover:scale-[1.02] group"
                 >
-                  <Phone className="w-4 h-4 text-primary" />
-                  <span className="text-foreground text-sm">Call Now</span>
+                  <div className="flex justify-center items-center bg-green-100 dark:bg-green-900/30 rounded-lg w-10 h-10">
+                    <Phone className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="font-medium text-foreground">Call Now</span>
+                    <p className="text-muted-foreground text-xs">Instant support via phone</p>
+                  </div>
                 </a>
                 <a
                   href="mailto:koreanskincareshopbd1@gmail.com"
-                  className="flex items-center gap-3 hover:bg-muted/50 p-3 border border-border rounded-lg transition-colors"
+                  className="flex items-center gap-4 hover:bg-primary/10 hover:border-primary/20 p-4 border border-border rounded-xl transition-all transform hover:scale-[1.02] group"
                 >
-                  <Mail className="w-4 h-4 text-primary" />
-                  <span className="text-foreground text-sm">Send Email</span>
+                  <div className="flex justify-center items-center bg-blue-100 dark:bg-blue-900/30 rounded-lg w-10 h-10">
+                    <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="flex-1">
+                    <span className="font-medium text-foreground">Send Email</span>
+                    <p className="text-muted-foreground text-xs">Get detailed support via email</p>
+                  </div>
                 </a>
+              </div>
+            </div>
+          </div>
+
+          {/* FAQ Section - Right Side */}
+          <div className="space-y-8">
+            <div className="space-y-6">
+              <div className="text-center lg:text-left">
+                <div className="inline-flex justify-center items-center bg-primary/10 mb-4 rounded-full w-12 h-12">
+                  <MessageCircle className="w-6 h-6 text-primary" />
+                </div>
+                <h2 className="mb-4 font-bold text-foreground text-2xl">Frequently Asked Questions</h2>
+                <p className="text-muted-foreground">Find quick answers to common questions</p>
+              </div>
+              
+              <div className="space-y-4">
+                {[
+                  {
+                    question: "How long does shipping take?",
+                    answer: "Inside Dhaka: 1-2 days, Outside Dhaka: 3-5 days",
+                    icon: "🚚"
+                  },
+                  {
+                    question: "What are your shipping charges?",
+                    answer: "Inside Dhaka: ৳80, Outside Dhaka: ৳150",
+                    icon: "💰"
+                  },
+                  {
+                    question: "Do you offer cash on delivery?",
+                    answer: "Yes, we offer cash on delivery for all orders within Bangladesh.",
+                    icon: "💵"
+                  },
+                  {
+                    question: "Are all products authentic?",
+                    answer: "Yes, we guarantee 100% authentic Korean skincare products directly from Korea.",
+                    icon: "✅"
+                  },
+                ].map((faq, index) => (
+                  <div key={index} className="bg-card hover:shadow-md p-5 border border-border rounded-xl transition-all transform hover:scale-[1.02] group">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 text-xl">{faq.icon}</div>
+                      <div className="flex-1">
+                        <h3 className="mb-2 font-semibold text-foreground text-base leading-tight">{faq.question}</h3>
+                        <p className="text-muted-foreground text-sm leading-relaxed">{faq.answer}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
 
           {/* Contact Form */}
                     {/* Contact Form */}
-          <div className="lg:col-span-2">
-            <div className="bg-muted/50 p-6 rounded-lg">
+          {/* <div className="lg:col-span-2"> */}
+            {/* <div className="bg-muted/50 p-6 rounded-lg">
               <h2 className="mb-6 font-semibold text-foreground text-xl">Send us a Message</h2>
               
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -250,46 +322,8 @@ const ContactPage: React.FC = () => {
                   )}
                 </button>
               </form>
-            </div>
-          </div>
-        </div>
-
-        {/* FAQ Section */}
-        <div className="mt-12">
-          <h2 className="mb-6 font-semibold text-foreground text-2xl text-center">Frequently Asked Questions</h2>
-          <div className="gap-6 grid md:grid-cols-2">
-            {[
-              {
-                question: "How long does shipping take?",
-                answer: "Inside Dhaka: 1-2 days, Outside Dhaka: 3-5 days"
-              },
-              {
-                question: "What are your shipping charges?",
-                answer: "Inside Dhaka: ৳80, Outside Dhaka: ৳150"
-              },
-              {
-                question: "Do you offer cash on delivery?",
-                answer: "Yes, we offer cash on delivery for all orders within Bangladesh."
-              },
-              {
-                question: "How can I track my order?",
-                answer: "You'll receive a tracking number via SMS and email once your order is shipped."
-              },
-              {
-                question: "What is your return policy?",
-                answer: "We offer 7-day returns for unused items in original packaging."
-              },
-              {
-                question: "Do you offer warranties?",
-                answer: "Yes, we provide manufacturer warranties on applicable products."
-              }
-            ].map((faq, index) => (
-              <div key={index} className="bg-muted/30 p-4 rounded-lg">
-                <h3 className="mb-2 font-medium text-foreground">{faq.question}</h3>
-                <p className="text-muted-foreground text-sm">{faq.answer}</p>
-              </div>
-            ))}
-          </div>
+            </div> */}
+          {/* </div> */}
         </div>
       </div>
     </div>
