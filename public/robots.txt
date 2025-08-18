@@ -1,0 +1,12 @@
+# *
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api
+Disallow: /checkout
+
+# Host
+Host: https://www.koreanskincareshopbd.com
+
+# Sitemaps
+Sitemap: https://www.koreanskincareshopbd.com/sitemap.xml

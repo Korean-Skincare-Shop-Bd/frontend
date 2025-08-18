@@ -71,20 +71,20 @@ export default function ProductsPageContent() {
 
   // State for filters
   const [searchQuery, setSearchQuery] = useState(
-    searchParams.get("search") || ""
+    searchParams?.get("search") || ""
   );
   const [selectedCategory, setSelectedCategory] = useState(
-    searchParams.get("category") || "all"
+    searchParams?.get("category") || "all"
   );
   const [selectedBrand, setSelectedBrand] = useState(
-    searchParams.get("brand") || "all"
+    searchParams?.get("brand") || "all"
   );
 
   // Update filter states when URL parameters change
   useEffect(() => {
-    setSearchQuery(searchParams.get("search") || "");
-    setSelectedCategory(searchParams.get("category") || "all");
-    setSelectedBrand(searchParams.get("brand") || "all");
+    setSearchQuery(searchParams?.get("search") || "");
+    setSelectedCategory(searchParams?.get("category") || "all");
+    setSelectedBrand(searchParams?.get("brand") || "all");
     setCurrentPage(1); // Reset to first page when filters change
   }, [searchParams]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
