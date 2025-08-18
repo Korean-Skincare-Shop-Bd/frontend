@@ -22,6 +22,13 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -63,7 +70,6 @@ export default function EditProduct() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<UpdateProductRequest>({});
-  const [newTag, setNewTag] = useState("");
   const [variations, setVariations] = useState<ProductVariation[]>([]);
   const [images, setImages] = useState<ProductImage[]>([]);
 
@@ -139,14 +145,15 @@ export default function EditProduct() {
     }));
   };
 
-  const addTag = () => {
-    if (newTag.trim() && !formData.tags?.includes(newTag.trim())) {
-      setFormData((prev) => ({
-        ...prev,
-        tags: [...(prev.tags || []), newTag.trim()],
-      }));
-      setNewTag("");
-    }
+  const addTag = (selectedTag: string) => {
+    const currentTags = formData.tags || [];
+    const newTags = currentTags.includes(selectedTag)
+      ? currentTags.filter((tag) => tag !== selectedTag)
+      : [...currentTags, selectedTag];
+    setFormData((prev) => ({
+      ...prev,
+      tags: newTags,
+    }));
   };
 
   const removeTag = (tagToRemove: string) => {
@@ -844,45 +851,71 @@ export default function EditProduct() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    placeholder="Add a tag"
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        addTag();
-                      }
-                    }}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addTag}
-                    disabled={!newTag.trim()}>
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tags">Tags</Label>
 
-                {formData.tags && formData.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {formData.tags.map((tag, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="flex items-center gap-1">
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => removeTag(tag)}
-                          className="ml-1 hover:text-red-500">
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                )}
+                  {/* Selected tags display */}
+                  {formData.tags && formData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {formData.tags.map((tag) => (
+                        <div
+                          key={tag}
+                          className="inline-flex items-center bg-primary/10 dark:bg-primary/20 px-3 py-1 border border-input dark:border-gray-700 rounded-full font-medium text-primary dark:text-primary-foreground text-sm">
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                            className="hover:bg-primary/20 dark:hover:bg-primary/30 ml-2 p-1 rounded-full">
+                            <span className="sr-only">Remove tag</span>
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Select component */}
+                  <Select
+                    value=""
+                    onValueChange={(selectedTag) => addTag(selectedTag)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select tags...">
+                        <span className="text-muted-foreground">Add tags</span>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["HOT", "NEW", "SALE", "FEATURED"].map((tag) => (
+                        <SelectItem
+                          key={tag}
+                          value={tag}
+                          className={`${
+                            formData.tags?.includes(tag)
+                              ? "bg-accent/50 dark:bg-accent/30"
+                              : ""
+                          }`}>
+                          <div className="flex items-center">
+                            {tag}
+                            {formData.tags?.includes(tag) && (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="ml-2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                              </svg>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardContent>
           </Card>
