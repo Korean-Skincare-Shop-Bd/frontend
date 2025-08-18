@@ -17,29 +17,9 @@ import {
 const CustomerSupportPage: React.FC = () => {
   const faqs = [
     {
-      question: "How do I track my order?",
-      answer: "You can track your order using the tracking number sent to your email and SMS. Visit our tracking page or use the link provided in your confirmation message."
-    },
-    {
-      question: "What payment methods do you accept?",
-      answer: "We accept all major credit cards, mobile banking (bKash, Nagad, Rocket), and cash on delivery for local orders."
-    },
-    {
       question: "How long does shipping take?",
       answer: "Inside Dhaka: 1-2 days (৳80), Outside Dhaka: 3-5 days (৳150). Same-day delivery available for orders placed before 2 PM in selected Dhaka areas."
     },
-    {
-      question: "Can I cancel my order?",
-      answer: "Yes, you can cancel your order within 2 hours of placing it if it hasn't been processed yet. Contact our support team immediately."
-    },
-    {
-      question: "Do you offer warranties?",
-      answer: "Yes, we provide manufacturer warranties on applicable products. Warranty terms vary by product and are clearly mentioned on product pages."
-    },
-    {
-      question: "How do I return an item?",
-      answer: "We offer a 7-day return policy. Contact us within 7 days of delivery, pack the item in original packaging, and we'll arrange free pickup."
-    }
   ];
 
   const supportChannels = [

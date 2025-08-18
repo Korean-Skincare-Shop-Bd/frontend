@@ -4,6 +4,15 @@ Allow: /
 Disallow: /admin
 Disallow: /api
 Disallow: /checkout
+Disallow: /_next/
+Disallow: /static/
+
+# Googlebot
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /api
+Disallow: /checkout
 
 # Host
 Host: https://www.koreanskincareshopbd.com

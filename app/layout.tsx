@@ -12,21 +12,78 @@ const inter = Inter({ subsets: ['latin'] });
 
 
 export const metadata: Metadata = {
-  title: "KOREAN SKINCARE SHOP",
-  description:
-    "Discover premium beauty products with our curated collection of skincare, makeup, and wellness items.",
+  title: {
+    default: "Korean Skincare Shop BD - Premium K-Beauty Products",
+    template: "%s | Korean Skincare Shop BD"
+  },
+  description: "Bangladesh's premier destination for authentic Korean skincare products. Discover premium K-beauty essentials, serums, moisturizers, and complete skincare routines from top Korean brands.",
   keywords: [
-    "beauty",
-    "skincare",
-    "makeup",
-    "cosmetics",
-    "premium",
-    "KOREAN SKINCARE SHOP BD",
+    "Korean skincare",
+    "K-beauty", 
+    "Korean cosmetics Bangladesh",
+    "skincare Bangladesh",
+    "Korean beauty products",
+    "premium skincare",
+    "Korean skincare shop",
+    "authentic Korean products",
+    "K-beauty Bangladesh",
+    "Korean skincare routine",
+    "skincare essentials",
+    "beauty products Bangladesh"
   ],
+  authors: [{ name: "Korean Skincare Shop BD" }],
+  creator: "Korean Skincare Shop BD",
+  publisher: "Korean Skincare Shop BD",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL('https://www.koreanskincareshopbd.com'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: "Korean Skincare Shop BD - Premium K-Beauty Products",
+    description: "Bangladesh's premier destination for authentic Korean skincare products. Shop premium K-beauty essentials from top Korean brands.",
+    url: 'https://www.koreanskincareshopbd.com',
+    siteName: 'Korean Skincare Shop BD',
+    images: [
+      {
+        url: '/logo1.png',
+        width: 1200,
+        height: 630,
+        alt: 'Korean Skincare Shop BD Logo',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: "Korean Skincare Shop BD - Premium K-Beauty Products",
+    description: "Bangladesh's premier destination for authentic Korean skincare products.",
+    images: ['/logo1.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: "/logo1.png",
     shortcut: "/favicon-16x16.png",
     apple: "/apple-touch-icon.png",
+  },
+  verification: {
+    // Add your Google Search Console verification code here
+    // google: 'your-google-verification-code',
   },
 };
 
@@ -36,8 +93,41 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {  
   const { categories } = await getCategories(1, 5);
+  
+  // Structured data for the website
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Korean Skincare Shop BD",
+    "description": "Bangladesh's premier destination for authentic Korean skincare products",
+    "url": "https://www.koreanskincareshopbd.com",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://www.koreanskincareshopbd.com/products?search={search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Korean Skincare Shop BD",
+      "url": "https://www.koreanskincareshopbd.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.koreanskincareshopbd.com/logo1.png"
+      }
+    }
+  };
+
   return (
     <html lang="en" suppressHydrationWarning={true}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+      </head>
       <body className={inter.className}>
         {" "}
         <ThemeProvider>
