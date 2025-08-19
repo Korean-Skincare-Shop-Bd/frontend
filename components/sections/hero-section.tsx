@@ -133,7 +133,7 @@ export function HeroSection() {
             </p>
           </div>
         </div>
-        <div className="absolute bottom-4 right-4 z-10">
+        {/* <div className="absolute bottom-4 right-4 z-10">
           <Button
             asChild
             size="sm"
@@ -143,7 +143,7 @@ export function HeroSection() {
               Shop Now
             </Link>
           </Button>
-        </div>
+        </div> */}
       </section>
     );
   }
@@ -171,7 +171,7 @@ export function HeroSection() {
               />
             </Link>
 
-            <div className="absolute bottom-4 right-4 z-10">
+            {/* <div className="absolute bottom-4 right-4 z-10">
               <Button
                 asChild
                 size="sm"
@@ -181,7 +181,7 @@ export function HeroSection() {
                   {banners[currentSlide].cta}
                 </Link>
               </Button>
-            </div>
+            </div> */}
           </div>
         </motion.div>
       </AnimatePresence>

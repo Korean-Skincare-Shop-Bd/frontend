@@ -109,7 +109,7 @@ const ContactPage: React.FC = () => {
                   <div className="flex-1">
                     <h3 className="mb-1 font-semibold text-foreground">Address</h3>
                     <p className="text-muted-foreground text-sm">
-                      Dhaka, Bangladesh
+                      Dhanmondi, Dhaka, Bangladesh
                     </p>
                   </div>
                 </div>
