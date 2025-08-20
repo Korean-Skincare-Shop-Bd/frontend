@@ -116,7 +116,7 @@ export function Header() {
 
     const interval = setInterval(() => {
       checkAuth();
-    }, 10000); // 30 seconds
+    }, 10000); // 30 secons
 
     return () => clearInterval(interval);
   }, []);
