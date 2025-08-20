@@ -369,14 +369,14 @@ export function Header() {
               transition={{ duration: 0.6 }}
               className="flex justify-center items-center bg-white rounded-full w-12 h-12">
               <Image
-                src="/logo.png"
+                src="/logo2.png"
                 width={75}
                 height={75}
                 alt="Korean Skincare Shop BD Logo"
                 className="pt-1 w-20 h-19 object-contain"
               />
             </motion.div>
-            <span className="hidden lg:inline-block font-bold text-xl lg:text-2xl golden-text">
+            <span className="inline-block font-bold text-sm lg:text-2xl golden-text">
               KOREAN SKINCARE SHOP BD
             </span>
           </Link>

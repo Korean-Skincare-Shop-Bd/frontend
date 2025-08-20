@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     siteName: 'Korean Skincare Shop BD',
     images: [
       {
-        url: '/logo1.png',
+        url: '/logo2.png',
         width: 1200,
         height: 630,
         alt: 'Korean Skincare Shop BD Logo',
@@ -63,7 +63,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: "Korean Skincare Shop BD - Premium K-Beauty Products",
     description: "Bangladesh's premier destination for authentic Korean skincare products.",
-    images: ['/logo1.png'],
+    images: ['/logo2.png'],
   },
   robots: {
     index: true,
@@ -77,7 +77,7 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/logo1.png",
+    icon: "/logo2.png",
     shortcut: "/favicon-16x16.png",
     apple: "/apple-touch-icon.png",
   },
@@ -115,7 +115,7 @@ export default async function RootLayout({
       "url": "https://www.koreanskincareshopbd.com",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://www.koreanskincareshopbd.com/logo1.png"
+        "url": "https://www.koreanskincareshopbd.com/logo2.png"
       }
     }
   };

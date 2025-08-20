@@ -88,19 +88,27 @@ export function ProductDetailPageClient({ id }: { id: string }) {
 
   return (
     <div className="bg-white dark:bg-gray-900 min-h-screen">
-      <div className="mx-auto px-4 py-8 container">
-        <div className="flex items-center gap-2 mb-8 text-muted-foreground text-sm">
+      <div className="mx-auto px-4 py-3 container">
+        <div className="flex items-center gap-2 mb-5 text-muted-foreground text-sm">
           <Link href="/" className="hover:text-primary">Home</Link>
           <span>/</span>
           <Link href="/products" className="hover:text-primary">Products</Link>
           <span>/</span>
           <Link href={`/products?category=${product.category?.id}`} className="hover:text-primary">
-            {product.category?.name}
+            {product.category?.name
+              ? product.category.name.length > 10
+          ? product.category.name.slice(0, 10) + '...'
+          : product.category.name
+              : ''}
           </Link>
           <span>/</span>
-          <span className="text-foreground">{product.name}</span>
+          <span className="text-foreground">
+            {product.name.length > 15
+              ? product.name.slice(0, 15) + '...'
+              : product.name}
+          </span>
         </div>
-        <Button variant="ghost" className="mb-6" asChild>
+        <Button variant="ghost" className="mb-2" asChild>
           <Link href="/products">
             <ArrowLeft className="mr-2 w-4 h-4" />
             Back to Products
