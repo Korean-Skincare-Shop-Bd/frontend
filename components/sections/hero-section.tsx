@@ -120,7 +120,7 @@ export function HeroSection() {
 
   if (loading) {
     return (
-      <section className="relative bg-gray-200 dark:bg-gray-800 w-full h-[240px] sm:h-[320px] md:h-[400px] lg:h-[480px] xl:h-[540px] max-h-[720px] overflow-hidden" style={{ aspectRatio: '1.5' }}>
+      <section className="relative bg-gray-200 dark:bg-gray-800 w-full" style={{ aspectRatio: '1080/826' }}>
         <div className="absolute inset-0 flex justify-center items-center">
           <div className="text-center">
             <div className="bg-gray-300 dark:bg-gray-700 mx-auto mb-4 rounded w-48 h-8 animate-pulse"></div>
@@ -134,7 +134,7 @@ export function HeroSection() {
 
   if (banners.length === 0) {
     return (
-      <section className="relative bg-gradient-to-br from-primary-100 dark:from-gray-800 to-primary-200 dark:to-gray-900 w-full h-[240px] sm:h-[320px] md:h-[400px] lg:h-[480px] xl:h-[540px] max-h-[720px] overflow-hidden" style={{ aspectRatio: '1.5' }}>
+      <section className="relative bg-gradient-to-br from-primary-100 dark:from-gray-800 to-primary-200 dark:to-gray-900 w-full" style={{ aspectRatio: '1080/826' }}>
         <div className="absolute inset-0 flex justify-center items-center">
           <div className="mx-auto px-4 text-center container">
             <h1 className="mb-4 font-bold text-2xl md:text-3xl lg:text-4xl leading-tight golden-text">
@@ -159,7 +159,7 @@ export function HeroSection() {
   }
 
   return (
-    <section className="relative w-full h-[240px] sm:h-[320px] md:h-[400px] lg:h-[480px] xl:h-[540px] max-h-[720px] overflow-hidden" style={{ aspectRatio: '1.5' }}>
+    <section className="relative w-full overflow-hidden" style={{ aspectRatio: '1080/826' }}>
       <div className="relative h-full">
         {banners.map((banner, index) => (
           <div
@@ -178,11 +178,11 @@ export function HeroSection() {
                   src={banner.imageUrl}
                   alt={banner.cta || "Banner image"}
                   fill
-                  className="object-cover bg-gray-100 dark:bg-gray-800 cursor-pointer"
+                  className="object-cover cursor-pointer"
                   priority={index === 0}
                   loading={index === 0 ? "eager" : "lazy"}
-                  quality={60}
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+                  quality={90}
+                  sizes="100vw"
                   placeholder="blur"
                   blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAASABoDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAQHBv/EAB8QAAMAAQQDAQAAAAAAAAAAAAABAgMFBBIhMQcyQRP/xAAVAQEBAAAAAAAAAAAAAAAAAAABAgP/xAAZEQADAQEBAAAAAAAAAAAAAAAAAQIDITH/2gAMAwEAAhEDEQA/AMkbNi7PSfTZ2/cKu5fhXsXNp8fhFyNEpyqlRJ4W6FZ2JR7HHhcBP2D6FEf/2Q=="
                 />
