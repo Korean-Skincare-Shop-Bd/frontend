@@ -376,7 +376,7 @@ export function Header() {
                 className="pt-1 w-20 h-19 object-contain"
               />
             </motion.div>
-            <span className="inline-block font-bold text-sm lg:text-2xl golden-text">
+            <span className="inline-block font-bold text-sm lg:text-2xl text-blue-900">
               KOREAN SKINCARE SHOP BD
             </span>
           </Link>
