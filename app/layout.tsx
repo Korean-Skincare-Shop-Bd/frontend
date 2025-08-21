@@ -8,7 +8,12 @@ import { Footer } from '@/components/layout/footer';
 import { AdminProvider } from '@/contexts/AdminContext';
 import { getCategories } from "@/lib/api/categories";
 export const dynamic = 'force-dynamic';
-const inter = Inter({ subsets: ['latin'] });
+
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+});
 
 
 export const metadata: Metadata = {
@@ -123,6 +128,9 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <head>
+        <link rel="preconnect" href="https://images.pexels.com" />
+        <link rel="dns-prefetch" href="https://images.pexels.com" />
+        <link rel="preload" href="/logo2.png" as="image" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}

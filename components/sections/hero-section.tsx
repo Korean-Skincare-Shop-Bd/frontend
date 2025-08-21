@@ -3,38 +3,33 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Star, ShoppingBag } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { getActiveBanners, type Banner } from "@/lib/api/banners";
 
-// Fallback banners in case API fails or no active banners
+// Optimized CSS-based fallback banners - no external images for better performance
 const fallbackBanners = [
   {
     id: "fallback-1",
     title: "Discover Your Natural Glow",
     subtitle: "Premium skincare essentials for radiant skin",
-    imageUrl:
-      "https://images.pexels.com/photos/3762879/pexels-photo-3762879.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    gradient: "from-pink-400 to-purple-500",
     cta: "Shop Skincare",
     linkUrl: "/products?category=skincare",
   },
   {
-    id: "fallback-2",
+    id: "fallback-2", 
     title: "Luxury Makeup Collection",
     subtitle: "Professional quality cosmetics for every occasion",
-    imageUrl:
-      "https://images.pexels.com/photos/2113994/pexels-photo-2113994.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    gradient: "from-rose-400 to-pink-500",
     cta: "Explore Makeup",
     linkUrl: "/products?category=makeup",
   },
   {
     id: "fallback-3",
-    title: "Signature Fragrances",
+    title: "Signature Fragrances", 
     subtitle: "Captivating scents that define your presence",
-    imageUrl:
-      "https://images.pexels.com/photos/1961795/pexels-photo-1961795.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    gradient: "from-violet-400 to-purple-500",
     cta: "Discover Scents",
     linkUrl: "/products?category=fragrances",
   },
@@ -42,7 +37,8 @@ const fallbackBanners = [
 
 interface ProcessedBanner {
   id: string;
-  imageUrl: string;
+  imageUrl?: string;
+  gradient?: string;
   cta: string;
   linkUrl: string;
 }
@@ -89,11 +85,27 @@ export function HeroSection() {
     fetchBanners();
   }, []);
 
+  // Preload the first few images for better performance
+  useEffect(() => {
+    if (banners.length > 0) {
+      banners.slice(0, 2).forEach((banner) => {
+        if (banner.imageUrl) {
+          const link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'image';
+          link.href = banner.imageUrl;
+          document.head.appendChild(link);
+        }
+      });
+    }
+  }, [banners]);
+
+  // Reduce auto-slide frequency for better performance
   useEffect(() => {
     if (banners.length > 0) {
       const timer = setInterval(() => {
         setCurrentSlide((prev) => (prev + 1) % banners.length);
-      }, 5000);
+      }, 8000); // Increased from 5000ms to 8000ms
       return () => clearInterval(timer);
     }
   }, [banners.length]);
@@ -108,12 +120,12 @@ export function HeroSection() {
 
   if (loading) {
     return (
-      <section className="relative bg-gray-200 dark:bg-gray-800 w-full aspect-[3/2] overflow-hidden animate-pulse">
+      <section className="relative bg-gray-200 dark:bg-gray-800 w-full aspect-[3/2] overflow-hidden">
         <div className="absolute inset-0 flex justify-center items-center">
           <div className="text-center">
-            <div className="bg-gray-300 dark:bg-gray-700 mx-auto mb-4 rounded w-48 h-8"></div>
-            <div className="bg-gray-300 dark:bg-gray-700 mx-auto mb-8 rounded w-64 h-6"></div>
-            <div className="bg-gray-300 dark:bg-gray-700 mx-auto rounded w-32 h-12"></div>
+            <div className="bg-gray-300 dark:bg-gray-700 mx-auto mb-4 rounded w-48 h-8 animate-pulse"></div>
+            <div className="bg-gray-300 dark:bg-gray-700 mx-auto mb-8 rounded w-64 h-6 animate-pulse"></div>
+            <div className="bg-gray-300 dark:bg-gray-700 mx-auto rounded w-32 h-12 animate-pulse"></div>
           </div>
         </div>
       </section>
@@ -131,60 +143,65 @@ export function HeroSection() {
             <p className="mb-8 text-muted-foreground text-sm md:text-base lg:text-lg">
               Discover premium beauty products for your natural glow
             </p>
+            <Button
+              asChild
+              size="lg"
+              className="px-8 py-3 h-auto text-base golden-button">
+              <Link href="/products">
+                <ShoppingBag className="mr-2 w-5 h-5" />
+                Shop Now
+              </Link>
+            </Button>
           </div>
         </div>
-        {/* <div className="absolute bottom-4 right-4 z-10">
-          <Button
-            asChild
-            size="sm"
-            className="px-4 py-2 h-auto text-sm golden-button">
-            <Link href="/products">
-              <ShoppingBag className="mr-1 w-4 h-4" />
-              Shop Now
-            </Link>
-          </Button>
-        </div> */}
       </section>
     );
   }
 
   return (
     <section className="relative w-full aspect-[3/2] overflow-hidden">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentSlide}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.8 }}
-          className="absolute inset-0">
-          <div className="relative h-full">
-            <Link href={banners[currentSlide].linkUrl} className="block h-full">
-              <Image
-                src={banners[currentSlide].imageUrl}
-                alt={banners[currentSlide].cta || "Banner image"}
-                fill
-                className="object-contain bg-gray-100 dark:bg-gray-800 cursor-pointer"
-                priority
-                quality={95}
-                sizes="100vw"
-              />
+      <div className="relative h-full">
+        {banners.map((banner, index) => (
+          <div
+            key={banner.id}
+            className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
+              index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
+            }`}
+          >
+            <Link 
+              href={banner.linkUrl} 
+              className="block h-full"
+              prefetch={false}
+            >
+              {banner.imageUrl ? (
+                <Image
+                  src={banner.imageUrl}
+                  alt={banner.cta || "Banner image"}
+                  fill
+                  className="object-cover bg-gray-100 dark:bg-gray-800 cursor-pointer"
+                  priority={index === 0}
+                  loading={index === 0 ? "eager" : "lazy"}
+                  quality={60}
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+                  placeholder="blur"
+                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAASABoDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAQHBv/EAB8QAAMAAQQDAQAAAAAAAAAAAAABAgMFBBIhMQcyQRP/xAAVAQEBAAAAAAAAAAAAAAAAAAABAgP/xAAZEQADAQEBAAAAAAAAAAAAAAAAAQIDITH/2gAMAwEAAhEDEQA/AMkbNi7PSfTZ2/cKu5fhXsXNp8fhFyNEpyqlRJ4W6FZ2JR7HHhcBP2D6FEf/2Q=="
+                />
+              ) : (
+                <div className={`w-full h-full bg-gradient-to-br ${banner.gradient} flex items-center justify-center`}>
+                  <div className="text-center text-white p-8">
+                    <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4">
+                      {banner.cta}
+                    </h2>
+                    <p className="text-lg md:text-xl opacity-90">
+                      Premium Beauty Products
+                    </p>
+                  </div>
+                </div>
+              )}
             </Link>
-
-            {/* <div className="absolute bottom-4 right-4 z-10">
-              <Button
-                asChild
-                size="sm"
-                className="px-4 py-2 h-auto text-sm golden-button">
-                <Link href={banners[currentSlide].linkUrl}>
-                  <ShoppingBag className="mr-1 w-4 h-4" />
-                  {banners[currentSlide].cta}
-                </Link>
-              </Button>
-            </div> */}
           </div>
-        </motion.div>
-      </AnimatePresence>
+        ))}
+      </div>
 
       {/* Navigation Arrows - Only show if more than 1 banner */}
       {banners.length > 1 && (

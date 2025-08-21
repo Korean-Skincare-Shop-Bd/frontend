@@ -369,7 +369,7 @@ export function Header() {
               transition={{ duration: 0.6 }}
               className="flex justify-center items-center bg-white rounded-full w-12 h-12">
               <Image
-                src="/logo2.png"
+                src="/logo1.png"
                 width={75}
                 height={75}
                 alt="Korean Skincare Shop BD Logo"
