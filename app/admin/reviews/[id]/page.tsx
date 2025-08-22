@@ -4,17 +4,19 @@ import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ReviewDetailsView } from '@/components/admin/ReviewDetailsView';
 
 interface ReviewDetailPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function AdminReviewDetailPage({ params }: ReviewDetailPageProps) {
+export default async function AdminReviewDetailPage({ params }: ReviewDetailPageProps) {
+  const resolvedParams = await params;
+  
   return (
     <AdminProvider>
       <ProtectedAdminRoute>
         <AdminLayout>
-          <ReviewDetailsView reviewId={params.id} />
+          <ReviewDetailsView reviewId={resolvedParams.id} />
         </AdminLayout>
       </ProtectedAdminRoute>
     </AdminProvider>
