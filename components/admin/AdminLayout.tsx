@@ -16,7 +16,8 @@ import {
   Tag,
   Image,
   FolderOpen,
-  Wrench
+  Wrench,
+  MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -32,6 +33,7 @@ const navigation = [
   { name: 'Categories', href: '/admin/categories', icon: FolderOpen },
   { name: 'Brands', href: '/admin/brands', icon: Tag },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+  { name: 'Reviews', href: '/admin/reviews', icon: MessageCircle },
   // { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Banners', href: '/admin/banners', icon: Image },
   { name: 'Settings', href: '/admin/settings', icon: Settings },

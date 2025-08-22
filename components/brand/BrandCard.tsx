@@ -13,7 +13,7 @@ interface BrandCardProps {
 export function BrandCard({ id, name, logoUrl }: BrandCardProps) {
   return (
     <Link
-      href={`/products?brand=${id}`}
+      href={`/brands`}
       className="group flex-shrink-0"
     >
       <div className="relative bg-white shadow-lg group-hover:shadow-xl rounded-xl w-32 md:w-40 h-32 md:h-40 overflow-hidden group-hover:scale-105 transition-all duration-300">

@@ -426,6 +426,20 @@ export function Header() {
                 <NavigationMenuTrigger>Brands</NavigationMenuTrigger>
                 <NavigationMenuContent>
                   <div className="gap-3 grid md:grid-cols-2 p-4 w-[400px] md:w-[500px] lg:w-[600px] max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                    {/* All Brands Link */}
+                    <NavigationMenuLink asChild className="col-span-2">
+                      <Link
+                        href="/brands"
+                        className="block space-y-1 hover:bg-accent focus:bg-accent p-3 rounded-md outline-none no-underline leading-none transition-colors hover:text-accent-foreground focus:text-accent-foreground select-none border-b border-border mb-2">
+                        <div className="font-semibold text-sm leading-none text-primary">
+                          All Brands
+                        </div>
+                        <p className="text-muted-foreground text-sm line-clamp-1 leading-snug">
+                          Browse all available brands
+                        </p>
+                      </Link>
+                    </NavigationMenuLink>
+                    
                     {brands.length > 0 ? (
                       brands.map((brand) => (
                         <NavigationMenuLink key={brand.id} asChild>
@@ -663,6 +677,14 @@ export function Header() {
                         </AccordionTrigger>
                         <AccordionContent>
                           <div className="space-y-1 pl-4 pr-2">
+                            {/* All Brands Link */}
+                            <Link
+                              href="/brands"
+                              className="block py-3 px-2 font-semibold text-primary hover:bg-accent/30 rounded-md transition-colors border-b border-border mb-2 touch-manipulation touch-target"
+                              onClick={() => setIsOpen(false)}>
+                              All Brands
+                            </Link>
+                            
                             {isLoadingBrands ? (
                               <div className="py-3 px-2 text-muted-foreground text-sm">
                                 Loading brands...
