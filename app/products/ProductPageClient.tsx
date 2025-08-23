@@ -721,7 +721,7 @@ export default function ProductsPageContent() {
                                         </p>
                                       </div>
 
-                                      <div className="sm:hidden flex gap-2">
+                                      {/* <div className="sm:hidden flex gap-2">
                                         <Button
                                           size="sm"
                                           variant="outline"
@@ -730,7 +730,7 @@ export default function ProductsPageContent() {
                                           }>
                                           <Eye className="w-4 h-4" />
                                         </Button>
-                                      </div>
+                                      </div> */}
                                     </div>
 
                                     {product.description && (

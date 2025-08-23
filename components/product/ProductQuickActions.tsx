@@ -19,7 +19,7 @@ export function ProductQuickActions({
 }: ProductQuickActionsProps) {
   return (
     <>
-      <div className={`absolute top-2 right-2 transition-all duration-300 ${hovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
+      {/* <div className={`absolute top-2 right-2 transition-all duration-300 ${hovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
         <Button
           size="icon"
           variant="secondary"
@@ -28,7 +28,7 @@ export function ProductQuickActions({
         >
           <Eye className="w-4 h-4" />
         </Button>
-      </div>
+      </div> */}
       {/* <div className={`absolute bottom-2 left-2 right-2 transition-all duration-300 ${hovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         <Button
           className="w-full golden-button"
