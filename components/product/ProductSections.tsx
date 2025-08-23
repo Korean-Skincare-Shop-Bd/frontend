@@ -54,7 +54,10 @@ export function ProductsSection({
               onAddToCart={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                handleAddToCart(product);
+                // Pass the first variation's ID since we're adding from the card view
+                const firstVariationId = product.variations?.[0]?.id;
+                console.log('ProductSections: Adding to cart for product:', product.id, 'with variation:', firstVariationId);
+                handleAddToCart(product, firstVariationId);
               }}
               addingToCart={addingToCart === product.id}
               onQuickView={() => handleQuickView(product)}

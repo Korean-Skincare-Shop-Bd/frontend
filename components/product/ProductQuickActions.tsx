@@ -29,12 +29,16 @@ export function ProductQuickActions({
           <Eye className="w-4 h-4" />
         </Button>
       </div>
-      <div className={`absolute bottom-2 left-2 right-2 transition-all duration-300 ${hovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+      {/* <div className={`absolute bottom-2 left-2 right-2 transition-all duration-300 ${hovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         <Button
           className="w-full golden-button"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            console.log('ProductQuickActions: Add to cart clicked for product:', product.id);
+            console.log('ProductQuickActions: Full product.variations array:', product.variations);
+            console.log('ProductQuickActions: First variation:', product.variations?.[0]);
+            console.log('ProductQuickActions: First variation ID:', product.variations?.[0]?.id);
             onAddToCart(e);
           }}
           disabled={addingToCart}
@@ -51,7 +55,7 @@ export function ProductQuickActions({
             </>
           )}
         </Button>
-      </div>
+      </div> */}
     </>
   );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import { toast } from "@/hooks/use-toast";
 // import { useToast } from '@/hooks/use-toast';
 import {
   setSessionIdCookie,
@@ -59,7 +58,6 @@ export const addToEnhancedCart = async (
   cartData: Omit<AddToCartRequest, "sessionId">
 ): Promise<EnhancedCartResponse> => {
   const existingSessionId = await getSessionIdCookie();
-  // const toast = useToast()
   const body = existingSessionId
     ? { ...cartData, sessionId: existingSessionId }
     : cartData;
@@ -75,7 +73,6 @@ export const addToEnhancedCart = async (
 
     const data = await response.json();
     console.log(data);
-    // toast.toast({ description: data.message })
 
     if (!response.ok) {
       throw new Error(data?.message || "Failed to add item to cart");
@@ -236,10 +233,7 @@ export async function removeCartItem(productId: string, variantId: string) {
     if (sessionId) {
       requestBody.sessionId = sessionId;
     } else {
-      toast({
-        description:
-          "No session ID found. Please refresh the page or try again.",
-      });
+      console.error("No session ID found. Please refresh the page or try again.");
       return;
     }
 

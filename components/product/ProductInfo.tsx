@@ -112,6 +112,7 @@ export function ProductInfo({
       router.push('/cart');
     } catch (error) {
       console.error('Failed to add to cart:', error);
+      // Error toast is now handled by the cart API, but show specific message for buy now
       toast({
         title: "Error",
         description: "Failed to proceed to checkout",

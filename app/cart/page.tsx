@@ -333,9 +333,9 @@ export default function CartPage() {
 
                             {/* Action Buttons */}
                             <div className="flex self-end sm:self-start gap-1 sm:gap-2">
-                              <Button size="icon" variant="ghost" className="w-8 sm:w-10 h-8 sm:h-10">
+                              {/* <Button size="icon" variant="ghost" className="w-8 sm:w-10 h-8 sm:h-10">
                                 <Heart className="w-3 sm:w-4 h-3 sm:h-4" />
-                              </Button>
+                              </Button> */}
                               <Button
                                 size="icon"
                                 variant="ghost"

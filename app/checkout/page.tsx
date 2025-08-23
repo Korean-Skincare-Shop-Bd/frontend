@@ -92,6 +92,27 @@ interface CartItemWithProduct {
   variation?: ProductVariation;
   loading?: boolean;
 }
+
+interface FieldError {
+  path: string;
+  message: string;
+}
+
+interface ErrorState {
+  [key: string]: string;
+}
+
+// Helper component for displaying field errors
+const FieldError = ({ error }: { error?: string }) => {
+  if (!error) return null;
+  
+  return (
+    <p className="text-sm font-medium text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
+      <AlertCircle className="w-4 h-4" />
+      {error}
+    </p>
+  );
+};
 export default function CheckoutPage() {
   const router = useRouter();
   //   const searchParams = useSearchParams();
@@ -109,6 +130,7 @@ export default function CheckoutPage() {
   const [calculatingShipping, setCalculatingShipping] = useState(false);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+  const [errors, setErrors] = useState<ErrorState>({});
   const [formData, setFormData] = useState<CheckoutRequest>({
     sessionId: "",
     customerName: "",
@@ -281,12 +303,27 @@ export default function CheckoutPage() {
       [field]: value,
     }));
 
+    // Clear field error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: "",
+      }));
+    }
+
     // Auto-fill billing address if same as shipping
     if (field === "shippingAddress" && sameAsBilling) {
       setFormData((prev) => ({
         ...prev,
         billingAddress: value,
       }));
+      // Clear billing address error when auto-filling from shipping
+      if (errors.billingAddress) {
+        setErrors((prev) => ({
+          ...prev,
+          billingAddress: "",
+        }));
+      }
     }
   };
 
@@ -297,36 +334,70 @@ export default function CheckoutPage() {
         ...prev,
         billingAddress: prev.shippingAddress,
       }));
+      // Clear billing address error when auto-filling
+      if (errors.billingAddress) {
+        setErrors((prev) => ({
+          ...prev,
+          billingAddress: "",
+        }));
+      }
     }
   };
 
   const validateForm = () => {
-    const required = [
+    const newErrors: ErrorState = {};
+    
+    // Required field validation
+    const required: Array<keyof CheckoutRequest> = [
       "customerName",
       "email",
       "phone",
       "shippingAddress",
       "billingAddress",
     ];
-    const missing = required.filter(
-      (field) => !formData[field as keyof CheckoutRequest]
-    );
-
-    if (missing.length > 0) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return false;
-    }
+    
+    required.forEach((field) => {
+      if (!formData[field]) {
+        const fieldName = field.replace(/([A-Z])/g, ' $1').toLowerCase();
+        newErrors[field] = `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`;
+      }
+    });
 
     // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    // Phone validation - more comprehensive
+    if (formData.phone) {
+      const phoneDigits = formData.phone.replace(/\D/g, '');
+      if (phoneDigits.length < 10) {
+        newErrors.phone = "Phone number must be at least 10 digits";
+      } else if (phoneDigits.length > 15) {
+        newErrors.phone = "Phone number cannot exceed 15 digits";
+      }
+    }
+
+    // Customer name validation
+    if (formData.customerName && formData.customerName.trim().length < 2) {
+      newErrors.customerName = "Name must be at least 2 characters";
+    }
+
+    // Address validation
+    if (formData.shippingAddress && formData.shippingAddress.trim().length < 10) {
+      newErrors.shippingAddress = "Please provide a complete shipping address";
+    }
+
+    if (formData.billingAddress && formData.billingAddress.trim().length < 10) {
+      newErrors.billingAddress = "Please provide a complete billing address";
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
       toast({
-        title: "Invalid Email",
-        description: "Please enter a valid email address",
+        title: "Validation Error",
+        description: "Please fix the errors below",
         variant: "destructive",
       });
       return false;
@@ -342,6 +413,8 @@ export default function CheckoutPage() {
 
     try {
       setProcessing(true);
+      setErrors({}); // Clear any existing errors
+      
       const result = await processCheckout(formData);
 
       toast({
@@ -359,11 +432,41 @@ export default function CheckoutPage() {
       // Redirect to order confirmation page
       router.push(`/`);
     } catch (error: any) {
-      toast({
-        title: "Checkout Failed",
-        description: error.message || "Failed to process your order",
-        variant: "destructive",
-      });
+      // Clear any existing errors first
+      setErrors({});
+      
+      try {
+        // Try to parse the error response to get field-specific errors
+        const errorResponse = JSON.parse(error.message);
+        
+        if (errorResponse.errors && Array.isArray(errorResponse.errors)) {
+          const newErrors: ErrorState = {};
+          errorResponse.errors.forEach((err: FieldError) => {
+            newErrors[err.path] = err.message;
+          });
+          setErrors(newErrors);
+          
+          toast({
+            title: "Validation Error",
+            description: "Please check the form for errors",
+            variant: "destructive",
+          });
+        } else {
+          // Fallback for non-field-specific errors
+          toast({
+            title: "Checkout Failed",
+            description: errorResponse.message || error.message || "Failed to process your order",
+            variant: "destructive",
+          });
+        }
+      } catch {
+        // If error message is not JSON, handle as a general error
+        toast({
+          title: "Checkout Failed",
+          description: error.message || "Failed to process your order",
+          variant: "destructive",
+        });
+      }
     } finally {
       setProcessing(false);
     }
@@ -457,6 +560,29 @@ export default function CheckoutPage() {
           )} */}
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Error Summary */}
+            {Object.keys(errors).length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6"
+              >
+                <Alert className="border-red-200 bg-red-50 dark:bg-red-950/20">
+                  <AlertCircle className="w-4 h-4 text-red-600" />
+                  <AlertDescription>
+                    <div className="text-red-800 dark:text-red-200">
+                      <p className="font-medium mb-2">Please fix the following errors:</p>
+                      <ul className="list-disc list-inside space-y-1 text-sm">
+                        {Object.entries(errors).map(([field, message]) => (
+                          <li key={field}>{message}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              </motion.div>
+            )}
+
             <div className="gap-6 grid grid-cols-1 lg:grid-cols-3">
               {/* Left Column - Customer Information */}
               <div className="space-y-6 lg:col-span-2">
@@ -482,8 +608,10 @@ export default function CheckoutPage() {
                             handleInputChange("customerName", e.target.value)
                           }
                           placeholder="Enter your full name"
+                          className={errors.customerName ? "border-red-500 focus:border-red-500" : ""}
                           required
                         />
+                        <FieldError error={errors.customerName} />
                       </div>
                       <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
                         <div>
@@ -496,8 +624,10 @@ export default function CheckoutPage() {
                               handleInputChange("email", e.target.value)
                             }
                             placeholder="your@email.com"
+                            className={errors.email ? "border-red-500 focus:border-red-500" : ""}
                             required
                           />
+                          <FieldError error={errors.email} />
                         </div>
                         <div>
                           <Label htmlFor="phone">Phone Number *</Label>
@@ -508,8 +638,10 @@ export default function CheckoutPage() {
                               handleInputChange("phone", e.target.value)
                             }
                             placeholder="+880 1234 567890"
+                            className={errors.phone ? "border-red-500 focus:border-red-500" : ""}
                             required
                           />
+                          <FieldError error={errors.phone} />
                         </div>
                       </div>
                     </CardContent>
@@ -539,8 +671,10 @@ export default function CheckoutPage() {
                           }
                           placeholder="Enter your complete shipping address"
                           rows={3}
+                          className={errors.shippingAddress ? "border-red-500 focus:border-red-500" : ""}
                           required
                         />
+                        <FieldError error={errors.shippingAddress} />
                       </div>
 
                       {/* Region Selection */}
@@ -646,8 +780,10 @@ export default function CheckoutPage() {
                           placeholder="Enter your billing address"
                           rows={3}
                           disabled={sameAsBilling}
+                          className={errors.billingAddress ? "border-red-500 focus:border-red-500" : ""}
                           required
                         />
+                        <FieldError error={errors.billingAddress} />
                       </div>
                     </CardContent>
                   </Card>

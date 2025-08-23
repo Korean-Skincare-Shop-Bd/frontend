@@ -144,7 +144,12 @@ export const processCheckout = async (checkoutData: CheckoutRequest): Promise<Ch
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);
     
+    // For validation errors (400/422), throw the full error response
     if (response.status === 400 || response.status === 422) {
+      if (errorData?.errors) {
+        // Throw the structured error response as a JSON string for parsing
+        throw new Error(JSON.stringify(errorData));
+      }
       throw new Error(errorData?.message || 'Checkout validation failed');
     }
     

@@ -72,9 +72,10 @@ export function RelatedProducts({ products, title = "Related Products" }: Relate
                 variantId: selectedVariation.id
             });
             window.dispatchEvent(new Event('cartUpdated'));
+            
             toast({
-                title: "Success",
-                description: `${product.name} added to cart`,
+                title: "Added to Cart! 🛒",
+                description: `${product.name} added to your cart`,
             });
         } catch (error) {
             console.error('Failed to add to cart:', error);
