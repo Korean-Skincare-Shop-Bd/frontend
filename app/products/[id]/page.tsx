@@ -12,6 +12,7 @@ import { ProductErrorState } from "@/components/product/ProductErrorState";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import PageViewEvent from "@/components/PixelComponent/PageViewEvent";
+import { generateEventId } from "@/lib/utils";
 
 interface ProductPageProps {
   params: Promise<{ id: string }>;
@@ -214,7 +215,7 @@ async function ProductData({ id }: { id: string }) {
           {/* Related Products */}
           <RelatedProducts products={relatedProducts} />
         </div>
-        <PageViewEvent eventName="ViewContent" />
+        {/* <PageViewEvent eventName="ViewContent" /> */}
       </div>
     );
   } catch (error) {

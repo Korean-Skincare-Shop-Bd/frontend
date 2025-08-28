@@ -273,7 +273,10 @@ export default function ProductsPageContent() {
   };
 
   const handleAddToCart = async (product: Product, variationId?: string) => {
-    console.log('ProductPageClient handleAddToCart called with:', { productId: product.id, variationId });
+    console.log("ProductPageClient handleAddToCart called with:", {
+      productId: product.id,
+      variationId,
+    });
     try {
       setAddingToCart(product.id);
 
@@ -281,7 +284,7 @@ export default function ProductsPageContent() {
         ? product.variations.find((v) => v.id === variationId)
         : product.variations[0];
 
-      console.log('ProductPageClient selectedVariation:', selectedVariation);
+      console.log("ProductPageClient selectedVariation:", selectedVariation);
 
       if (!selectedVariation) {
         toast({
@@ -292,7 +295,7 @@ export default function ProductsPageContent() {
         return;
       }
 
-      console.log('ProductPageClient calling addToEnhancedCart with:', {
+      console.log("ProductPageClient calling addToEnhancedCart with:", {
         productId: product.id,
         quantity: 1,
         variantId: selectedVariation.id,
@@ -799,8 +802,12 @@ export default function ProductsPageContent() {
                                               e.preventDefault();
                                               e.stopPropagation();
                                               // Pass the first variation's ID since we're adding from the card view
-                                              const firstVariationId = product.variations?.[0]?.id;
-                                              handleAddToCart(product, firstVariationId);
+                                              const firstVariationId =
+                                                product.variations?.[0]?.id;
+                                              handleAddToCart(
+                                                product,
+                                                firstVariationId
+                                              );
                                             }}
                                             disabled={
                                               addingToCart === product.id

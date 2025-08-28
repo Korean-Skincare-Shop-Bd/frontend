@@ -359,13 +359,13 @@ export function Header() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        eventName: "Purchase",
+        eventName: "Search",
         eventId: eventId,
         eventTime: fbEventTime,
       }),
     });
 
-    (window as any).fbq("track", "Purchase", {
+    (window as any).fbq("track", "Search", {
       eventID: eventId,
       fbc: fbclid,
       fbp: fbp,
