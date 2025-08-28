@@ -41,12 +41,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { cn } from "@/lib/utils";
+import { cn, generateEventId } from "@/lib/utils";
 import { useAdmin } from "@/contexts/AdminContext";
 import { useToast } from "@/hooks/use-toast";
 import { getEnhancedCart } from "@/lib/api/cart";
 import { getSessionIdCookie } from "@/lib/cookies/session";
 import Image from "next/image";
+import useFbIds from "@/hooks/useFbIds";
 
 // Type definitions
 interface Brand {
@@ -106,6 +107,9 @@ export function Header() {
   const [loading, setLoading] = useState(true);
   // const sessionIdcookie = getSessionIdCookie();
   const [authed, setAuthed] = useState<boolean>(false);
+  const { fbclid, fbp } = useFbIds();
+  const eventId = generateEventId();
+  const fbEventTime = Math.floor(Date.now() / 1000);
 
   useEffect(() => {
     const checkAuth = () => {
@@ -273,7 +277,11 @@ export function Header() {
         }
 
         // Check if there are more pages based on pagination info
-        if (result.data && result.data.pagination && result.data.pagination.hasNext) {
+        if (
+          result.data &&
+          result.data.pagination &&
+          result.data.pagination.hasNext
+        ) {
           currentPage++;
         } else {
           hasMorePages = false;
@@ -313,36 +321,55 @@ export function Header() {
     if (isOpen) {
       // Save current scroll position
       const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
+      document.body.style.position = "fixed";
       document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
     } else {
       // Restore scroll position
       const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
       if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+        window.scrollTo(0, parseInt(scrollY || "0") * -1);
       }
     }
-    
+
     // Cleanup on unmount
     return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
     };
   }, [isOpen]);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
     }
+
+    // handle pixel and conversion api
+    await fetch("/api/fb-conversion", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        eventName: "Purchase",
+        eventId: eventId,
+        eventTime: fbEventTime,
+      }),
+    });
+
+    (window as any).fbq("track", "Purchase", {
+      eventID: eventId,
+      fbc: fbclid,
+      fbp: fbp,
+    });
   };
 
   const toggleAdmin = () => {
@@ -359,7 +386,8 @@ export function Header() {
         isScrolled
           ? "glass-effect shadow-lg border-b"
           : "bg-white/95 dark:bg-gray-900/95"
-      )}>
+      )}
+    >
       <div className="mx-auto px-4 container">
         <div className="flex justify-between items-center h-16 lg:h-20">
           {/* Logo */}
@@ -367,7 +395,8 @@ export function Header() {
             <motion.div
               whileHover={{ rotate: 360 }}
               transition={{ duration: 0.6 }}
-              className="flex justify-center items-center bg-white rounded-full w-12 h-12">
+              className="flex justify-center items-center bg-white rounded-full w-12 h-12"
+            >
               <Image
                 src="/logo1.png"
                 width={75}
@@ -401,7 +430,8 @@ export function Header() {
                         <NavigationMenuLink key={category.id} asChild>
                           <Link
                             href={`/products?category=${category.id}`}
-                            className="block space-y-1 hover:bg-accent focus:bg-accent p-3 rounded-md outline-none no-underline leading-none transition-colors hover:text-accent-foreground focus:text-accent-foreground select-none">
+                            className="block space-y-1 hover:bg-accent focus:bg-accent p-3 rounded-md outline-none no-underline leading-none transition-colors hover:text-accent-foreground focus:text-accent-foreground select-none"
+                          >
                             <div className="font-medium text-sm leading-none">
                               {category.name}
                             </div>
@@ -430,7 +460,8 @@ export function Header() {
                     <NavigationMenuLink asChild className="col-span-2">
                       <Link
                         href="/brands"
-                        className="block space-y-1 hover:bg-accent focus:bg-accent p-3 rounded-md outline-none no-underline leading-none transition-colors hover:text-accent-foreground focus:text-accent-foreground select-none border-b border-border mb-2">
+                        className="block space-y-1 hover:bg-accent focus:bg-accent p-3 rounded-md outline-none no-underline leading-none transition-colors hover:text-accent-foreground focus:text-accent-foreground select-none border-b border-border mb-2"
+                      >
                         <div className="font-semibold text-sm leading-none text-primary">
                           All Brands
                         </div>
@@ -439,13 +470,14 @@ export function Header() {
                         </p>
                       </Link>
                     </NavigationMenuLink>
-                    
+
                     {brands.length > 0 ? (
                       brands.map((brand) => (
                         <NavigationMenuLink key={brand.id} asChild>
                           <Link
                             href={`/products?brand=${brand.id}`}
-                            className="block space-y-1 hover:bg-accent focus:bg-accent p-3 rounded-md outline-none no-underline leading-none transition-colors hover:text-accent-foreground focus:text-accent-foreground select-none">
+                            className="block space-y-1 hover:bg-accent focus:bg-accent p-3 rounded-md outline-none no-underline leading-none transition-colors hover:text-accent-foreground focus:text-accent-foreground select-none"
+                          >
                             <div className="flex items-center space-x-2">
                               {" "}
                               {brand.logo && (
@@ -486,7 +518,8 @@ export function Header() {
           {/* Search Bar */}
           <form
             onSubmit={handleSearch}
-            className="hidden md:flex md:flex-1 md:mx-8 md:max-w-sm">
+            className="hidden md:flex md:flex-1 md:mx-8 md:max-w-sm"
+          >
             <div className="relative w-full">
               <Search className="top-1/2 left-3 absolute w-4 h-4 text-muted-foreground -translate-y-1/2" />
               <Input
@@ -508,7 +541,8 @@ export function Header() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="hidden sm:inline-flex">
+                className="hidden sm:inline-flex"
+              >
                 <Sun className="w-5 h-5 rotate-0 dark:-rotate-90 scale-100 dark:scale-0 transition-all" />
                 <Moon className="absolute w-5 h-5 rotate-90 dark:rotate-0 scale-0 dark:scale-100 transition-all" />
                 <span className="sr-only">Toggle theme</span>
@@ -520,14 +554,16 @@ export function Header() {
               size="icon"
               asChild
               className="group relative hover:shadow-lg focus-visible:ring-2 focus-visible:ring-primary/70 transition-shadow"
-              aria-label="View cart">
+              aria-label="View cart"
+            >
               <Link href="/cart" className="flex justify-center items-center">
                 <span className="relative flex items-center">
                   <ShoppingBag className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                   {cartItems > 0 && (
                     <span
                       className="-top-2 -right-2 absolute flex justify-center items-center bg-gradient-to-tr from-primary to-yellow-400 shadow-md border-2 border-background rounded-full w-5 h-5 font-semibold text-white text-xs"
-                      aria-label={`${cartItems} items in cart`}>
+                      aria-label={`${cartItems} items in cart`}
+                    >
                       {cartItems}
                     </span>
                   )}
@@ -564,7 +600,8 @@ export function Header() {
               variant="ghost"
               size="icon"
               className="lg:hidden"
-              onClick={() => setIsOpen(!isOpen)}>
+              onClick={() => setIsOpen(!isOpen)}
+            >
               <Menu className="w-5 h-5" />
             </Button>
           </div>
@@ -593,165 +630,170 @@ export function Header() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="lg:hidden bg-background border-t shadow-lg relative z-50">
+            className="lg:hidden bg-background border-t shadow-lg relative z-50"
+          >
             <div className="mx-auto px-4 py-4 container">
-              <div className="max-h-[70vh] overflow-y-auto overscroll-contain border rounded-lg mobile-scroll" 
-                   style={{
-                     WebkitOverflowScrolling: 'touch',
-                     scrollbarWidth: 'thin',
-                     scrollbarColor: '#cbd5e1 #f1f5f9'
-                   }}
-                   onTouchStart={(e) => {
-                     setTouchStart(e.touches[0].clientY);
-                   }}
-                   onTouchMove={(e) => {
-                     if (touchStart === null) return;
-                     
-                     const element = e.currentTarget;
-                     const currentTouch = e.touches[0].clientY;
-                     const diff = touchStart - currentTouch;
-                     const scrollTop = element.scrollTop;
-                     const scrollHeight = element.scrollHeight;
-                     const clientHeight = element.clientHeight;
-                     
-                     // At top and scrolling up
-                     if (scrollTop === 0 && diff < 0) {
-                       e.preventDefault();
-                       return;
-                     }
-                     
-                     // At bottom and scrolling down
-                     if (scrollTop >= scrollHeight - clientHeight && diff > 0) {
-                       e.preventDefault();
-                       return;
-                     }
-                     
-                     // Allow normal scrolling
-                     e.stopPropagation();
-                   }}
-                   onTouchEnd={() => {
-                     setTouchStart(null);
-                   }}>
+              <div
+                className="max-h-[70vh] overflow-y-auto overscroll-contain border rounded-lg mobile-scroll"
+                style={{
+                  WebkitOverflowScrolling: "touch",
+                  scrollbarWidth: "thin",
+                  scrollbarColor: "#cbd5e1 #f1f5f9",
+                }}
+                onTouchStart={(e) => {
+                  setTouchStart(e.touches[0].clientY);
+                }}
+                onTouchMove={(e) => {
+                  if (touchStart === null) return;
+
+                  const element = e.currentTarget;
+                  const currentTouch = e.touches[0].clientY;
+                  const diff = touchStart - currentTouch;
+                  const scrollTop = element.scrollTop;
+                  const scrollHeight = element.scrollHeight;
+                  const clientHeight = element.clientHeight;
+
+                  // At top and scrolling up
+                  if (scrollTop === 0 && diff < 0) {
+                    e.preventDefault();
+                    return;
+                  }
+
+                  // At bottom and scrolling down
+                  if (scrollTop >= scrollHeight - clientHeight && diff > 0) {
+                    e.preventDefault();
+                    return;
+                  }
+
+                  // Allow normal scrolling
+                  e.stopPropagation();
+                }}
+                onTouchEnd={() => {
+                  setTouchStart(null);
+                }}
+              >
                 <nav className="space-y-2 p-2">
-                    <Link
-                      href="/products"
-                      onClick={() => setIsOpen(false)}>
-                      <div className="py-3 px-2 font-medium text-lg hover:no-underline hover:bg-accent/50 rounded-md transition-colors touch-target">
-                          All Products
-                      </div>
-                    </Link>
-                    
-                    <Accordion type="single" collapsible className="w-full">
-                      <AccordionItem value="categories" className="border-0">
-                        <AccordionTrigger className="py-3 px-2 font-medium text-lg hover:no-underline hover:bg-accent/50 rounded-md transition-colors [&[data-state=open]]:bg-accent/30 touch-target">
-                          Skincare
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="space-y-1 pl-4 pr-2">
-                            {isLoadingCategories ? (
-                              <div className="py-3 px-2 text-muted-foreground text-sm">
-                                Loading categories...
-                              </div>
-                            ) : categories.length > 0 ? (
-                              categories.map((category) => (
-                                <Link
-                                  key={category.id}
-                                  href={`/products?category=${category.id}`}
-                                  className="block py-3 px-2 text-muted-foreground hover:text-primary transition-colors rounded-md hover:bg-accent/30 active:bg-accent/50 touch-manipulation touch-target"
-                                  onClick={() => setIsOpen(false)}>
-                                  {category.name}
-                                </Link>
-                              ))
-                            ) : (
-                              <span className="block py-3 px-2 text-muted-foreground text-sm">
-                                No categories available
-                              </span>
-                            )}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                      
-                      <AccordionItem value="brands" className="border-0">
-                        <AccordionTrigger className="py-3 px-2 font-medium text-lg hover:no-underline hover:bg-accent/50 rounded-md transition-colors [&[data-state=open]]:bg-accent/30 touch-target">
-                          Brands
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="space-y-1 pl-4 pr-2">
-                            {/* All Brands Link */}
-                            <Link
-                              href="/brands"
-                              className="block py-3 px-2 font-semibold text-primary hover:bg-accent/30 rounded-md transition-colors border-b border-border mb-2 touch-manipulation touch-target"
-                              onClick={() => setIsOpen(false)}>
-                              All Brands
-                            </Link>
-                            
-                            {isLoadingBrands ? (
-                              <div className="py-3 px-2 text-muted-foreground text-sm">
-                                Loading brands...
-                              </div>
-                            ) : brands.length > 0 ? (
-                              brands.map((brand) => (
-                                <Link
-                                  key={brand.id}
-                                  href={`/products?brand=${brand.id}`}
-                                  className="flex items-center py-3 px-2 text-muted-foreground hover:text-primary transition-colors rounded-md hover:bg-accent/30 active:bg-accent/50 touch-manipulation touch-target"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    setIsOpen(false);
-                                    window.location.href = `/products?brand=${brand.id}`;
-                                  }}>
-                                  {brand.logo && (
-                                    <Image
-                                      src={brand.logo}
-                                      alt={brand.name}
-                                      width={16}
-                                      height={16}
-                                      className="mr-2 rounded w-4 h-4 object-cover flex-shrink-0"
-                                      onError={(e) => {
-                                        e.currentTarget.style.display = "none";
-                                      }}
-                                    />
-                                  )}
-                                  {brand.name}
-                                </Link>
-                              ))
-                            ) : (
-                              <span className="block py-3 px-2 text-muted-foreground text-sm">
-                                No brands available
-                              </span>
-                            )}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                    
-                    <div className="pt-2 mt-4 border-t">
-                      {mounted && (
-                        <Button
-                          variant="ghost"
-                          onClick={() => {
-                            setTheme(theme === "dark" ? "light" : "dark");
-                            setIsOpen(false);
-                          }}
-                          className="justify-start w-full py-3 px-2 text-left hover:bg-accent/50 touch-manipulation touch-target">
-                          {theme === "dark" ? (
-                            <>
-                              <Sun className="mr-2 w-4 h-4 flex-shrink-0" />
-                              Light Mode
-                            </>
-                          ) : (
-                            <>
-                              <Moon className="mr-2 w-4 h-4 flex-shrink-0" />
-                              Dark Mode
-                            </>
-                          )}
-                        </Button>
-                      )}
+                  <Link href="/products" onClick={() => setIsOpen(false)}>
+                    <div className="py-3 px-2 font-medium text-lg hover:no-underline hover:bg-accent/50 rounded-md transition-colors touch-target">
+                      All Products
                     </div>
-                  </nav>
-                </div>
+                  </Link>
+
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="categories" className="border-0">
+                      <AccordionTrigger className="py-3 px-2 font-medium text-lg hover:no-underline hover:bg-accent/50 rounded-md transition-colors [&[data-state=open]]:bg-accent/30 touch-target">
+                        Skincare
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-1 pl-4 pr-2">
+                          {isLoadingCategories ? (
+                            <div className="py-3 px-2 text-muted-foreground text-sm">
+                              Loading categories...
+                            </div>
+                          ) : categories.length > 0 ? (
+                            categories.map((category) => (
+                              <Link
+                                key={category.id}
+                                href={`/products?category=${category.id}`}
+                                className="block py-3 px-2 text-muted-foreground hover:text-primary transition-colors rounded-md hover:bg-accent/30 active:bg-accent/50 touch-manipulation touch-target"
+                                onClick={() => setIsOpen(false)}
+                              >
+                                {category.name}
+                              </Link>
+                            ))
+                          ) : (
+                            <span className="block py-3 px-2 text-muted-foreground text-sm">
+                              No categories available
+                            </span>
+                          )}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    <AccordionItem value="brands" className="border-0">
+                      <AccordionTrigger className="py-3 px-2 font-medium text-lg hover:no-underline hover:bg-accent/50 rounded-md transition-colors [&[data-state=open]]:bg-accent/30 touch-target">
+                        Brands
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-1 pl-4 pr-2">
+                          {/* All Brands Link */}
+                          <Link
+                            href="/brands"
+                            className="block py-3 px-2 font-semibold text-primary hover:bg-accent/30 rounded-md transition-colors border-b border-border mb-2 touch-manipulation touch-target"
+                            onClick={() => setIsOpen(false)}
+                          >
+                            All Brands
+                          </Link>
+
+                          {isLoadingBrands ? (
+                            <div className="py-3 px-2 text-muted-foreground text-sm">
+                              Loading brands...
+                            </div>
+                          ) : brands.length > 0 ? (
+                            brands.map((brand) => (
+                              <Link
+                                key={brand.id}
+                                href={`/products?brand=${brand.id}`}
+                                className="flex items-center py-3 px-2 text-muted-foreground hover:text-primary transition-colors rounded-md hover:bg-accent/30 active:bg-accent/50 touch-manipulation touch-target"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setIsOpen(false);
+                                  window.location.href = `/products?brand=${brand.id}`;
+                                }}
+                              >
+                                {brand.logo && (
+                                  <Image
+                                    src={brand.logo}
+                                    alt={brand.name}
+                                    width={16}
+                                    height={16}
+                                    className="mr-2 rounded w-4 h-4 object-cover flex-shrink-0"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = "none";
+                                    }}
+                                  />
+                                )}
+                                {brand.name}
+                              </Link>
+                            ))
+                          ) : (
+                            <span className="block py-3 px-2 text-muted-foreground text-sm">
+                              No brands available
+                            </span>
+                          )}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+
+                  <div className="pt-2 mt-4 border-t">
+                    {mounted && (
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setTheme(theme === "dark" ? "light" : "dark");
+                          setIsOpen(false);
+                        }}
+                        className="justify-start w-full py-3 px-2 text-left hover:bg-accent/50 touch-manipulation touch-target"
+                      >
+                        {theme === "dark" ? (
+                          <>
+                            <Sun className="mr-2 w-4 h-4 flex-shrink-0" />
+                            Light Mode
+                          </>
+                        ) : (
+                          <>
+                            <Moon className="mr-2 w-4 h-4 flex-shrink-0" />
+                            Dark Mode
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </nav>
               </div>
-            </motion.div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </header>

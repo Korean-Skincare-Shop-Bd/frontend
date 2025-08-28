@@ -1,40 +1,46 @@
-import { HeroSection } from '@/components/sections/hero-section';
-import { BrandsShowcase } from '@/components/sections/brands-showcase';
-import { TopProducts } from '@/components/sections/TopProductsServer';
-import { ReviewsSection } from '@/components/sections/reviews-section';
-import { SaleProducts } from '@/components/sections/SaleProductsServer';
-import { HOTProducts } from '@/components/sections/HOTProductsServer';
-import { Suspense } from 'react';
-import type { Metadata } from 'next';
+import { HeroSection } from "@/components/sections/hero-section";
+import { BrandsShowcase } from "@/components/sections/brands-showcase";
+import { TopProducts } from "@/components/sections/TopProductsServer";
+import { ReviewsSection } from "@/components/sections/reviews-section";
+import { SaleProducts } from "@/components/sections/SaleProductsServer";
+import { HOTProducts } from "@/components/sections/HOTProductsServer";
+import { Suspense } from "react";
+import type { Metadata } from "next";
+import PageViewEvent from "@/components/PixelComponent/PageViewEvent";
 
 // SEO Metadata for Homepage
 export const metadata: Metadata = {
-  title: 'Korean Skincare Shop BD - Premium Korean Beauty Products in Bangladesh',
-  description: 'Discover authentic Korean skincare and beauty products in Bangladesh. Shop premium K-beauty essentials, skincare routines, and cosmetics with fast delivery across Dhaka and Bangladesh.',
-  keywords: 'Korean skincare, K-beauty, Korean cosmetics Bangladesh, skincare products Dhaka, Korean beauty shop, authentic Korean products, skincare routine, K-beauty Bangladesh',
+  title:
+    "Korean Skincare Shop BD - Premium Korean Beauty Products in Bangladesh",
+  description:
+    "Discover authentic Korean skincare and beauty products in Bangladesh. Shop premium K-beauty essentials, skincare routines, and cosmetics with fast delivery across Dhaka and Bangladesh.",
+  keywords:
+    "Korean skincare, K-beauty, Korean cosmetics Bangladesh, skincare products Dhaka, Korean beauty shop, authentic Korean products, skincare routine, K-beauty Bangladesh",
   openGraph: {
-    title: 'Korean Skincare Shop BD - Premium Korean Beauty Products',
-    description: 'Discover authentic Korean skincare and beauty products in Bangladesh. Shop premium K-beauty essentials with fast delivery.',
+    title: "Korean Skincare Shop BD - Premium Korean Beauty Products",
+    description:
+      "Discover authentic Korean skincare and beauty products in Bangladesh. Shop premium K-beauty essentials with fast delivery.",
     images: [
       {
-        url: '/logo.png',
+        url: "/logo.png",
         width: 1200,
         height: 630,
-        alt: 'Korean Skincare Shop BD',
+        alt: "Korean Skincare Shop BD",
       },
     ],
-    type: 'website',
-    locale: 'en_US',
-    siteName: 'Korean Skincare Shop BD',
+    type: "website",
+    locale: "en_US",
+    siteName: "Korean Skincare Shop BD",
   },
   twitter: {
-    card: 'summary_large_image',
-    title: 'Korean Skincare Shop BD - Premium Korean Beauty Products',
-    description: 'Discover authentic Korean skincare and beauty products in Bangladesh.',
-    images: ['/logo.png'],
+    card: "summary_large_image",
+    title: "Korean Skincare Shop BD - Premium Korean Beauty Products",
+    description:
+      "Discover authentic Korean skincare and beauty products in Bangladesh.",
+    images: ["/logo.png"],
   },
   alternates: {
-    canonical: '/',
+    canonical: "/",
   },
   robots: {
     index: true,
@@ -42,13 +48,13 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
     },
   },
   verification: {
-    google: 'your-google-verification-code', // Add your Google verification code
+    google: "your-google-verification-code", // Add your Google verification code
   },
 };
 
@@ -80,6 +86,7 @@ export default function HomePage() {
         <HOTProducts />
       </Suspense>
       <ReviewsSection />
+      <PageViewEvent />
     </div>
   );
 }
