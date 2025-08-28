@@ -107,7 +107,7 @@ interface ErrorState {
 // Helper component for displaying field errors
 const FieldError = ({ error }: { error?: string }) => {
   if (!error) return null;
-  
+
   return (
     <p className="text-sm font-medium text-red-600 dark:text-red-400 mt-1 flex items-center gap-1">
       <AlertCircle className="w-4 h-4" />
@@ -350,7 +350,7 @@ export default function CheckoutPage() {
 
   const validateForm = () => {
     const newErrors: ErrorState = {};
-    
+
     // Required field validation
     const required: Array<keyof CheckoutRequest> = [
       "customerName",
@@ -359,11 +359,13 @@ export default function CheckoutPage() {
       "shippingAddress",
       "billingAddress",
     ];
-    
+
     required.forEach((field) => {
       if (!formData[field]) {
-        const fieldName = field.replace(/([A-Z])/g, ' $1').toLowerCase();
-        newErrors[field] = `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`;
+        const fieldName = field.replace(/([A-Z])/g, " $1").toLowerCase();
+        newErrors[field] = `${
+          fieldName.charAt(0).toUpperCase() + fieldName.slice(1)
+        } is required`;
       }
     });
 
@@ -374,7 +376,7 @@ export default function CheckoutPage() {
 
     // Phone validation - more comprehensive
     if (formData.phone) {
-      const phoneDigits = formData.phone.replace(/\D/g, '');
+      const phoneDigits = formData.phone.replace(/\D/g, "");
       if (phoneDigits.length < 10) {
         newErrors.phone = "Phone number must be at least 10 digits";
       } else if (phoneDigits.length > 15) {
@@ -388,7 +390,10 @@ export default function CheckoutPage() {
     }
 
     // Address validation
-    if (formData.shippingAddress && formData.shippingAddress.trim().length < 10) {
+    if (
+      formData.shippingAddress &&
+      formData.shippingAddress.trim().length < 10
+    ) {
       newErrors.shippingAddress = "Please provide a complete shipping address";
     }
 
@@ -418,7 +423,7 @@ export default function CheckoutPage() {
     try {
       setProcessing(true);
       setErrors({}); // Clear any existing errors
-      
+
       const result = await processCheckout(formData);
 
       // send data to facebook conversion API
@@ -476,18 +481,18 @@ export default function CheckoutPage() {
     } catch (error: any) {
       // Clear any existing errors first
       setErrors({});
-      
+
       try {
         // Try to parse the error response to get field-specific errors
         const errorResponse = JSON.parse(error.message);
-        
+
         if (errorResponse.errors && Array.isArray(errorResponse.errors)) {
           const newErrors: ErrorState = {};
           errorResponse.errors.forEach((err: FieldError) => {
             newErrors[err.path] = err.message;
           });
           setErrors(newErrors);
-          
+
           toast({
             title: "Validation Error",
             description: "Please check the form for errors",
@@ -497,7 +502,10 @@ export default function CheckoutPage() {
           // Fallback for non-field-specific errors
           toast({
             title: "Checkout Failed",
-            description: errorResponse.message || error.message || "Failed to process your order",
+            description:
+              errorResponse.message ||
+              error.message ||
+              "Failed to process your order",
             variant: "destructive",
           });
         }
@@ -614,7 +622,9 @@ export default function CheckoutPage() {
                   <AlertCircle className="w-4 h-4 text-red-600" />
                   <AlertDescription>
                     <div className="text-red-800 dark:text-red-200">
-                      <p className="font-medium mb-2">Please fix the following errors:</p>
+                      <p className="font-medium mb-2">
+                        Please fix the following errors:
+                      </p>
                       <ul className="list-disc list-inside space-y-1 text-sm">
                         {Object.entries(errors).map(([field, message]) => (
                           <li key={field}>{message}</li>
@@ -652,7 +662,11 @@ export default function CheckoutPage() {
                             handleInputChange("customerName", e.target.value)
                           }
                           placeholder="Enter your full name"
-                          className={errors.customerName ? "border-red-500 focus:border-red-500" : ""}
+                          className={
+                            errors.customerName
+                              ? "border-red-500 focus:border-red-500"
+                              : ""
+                          }
                           required
                         />
                         <FieldError error={errors.customerName} />
@@ -668,7 +682,11 @@ export default function CheckoutPage() {
                               handleInputChange("email", e.target.value)
                             }
                             placeholder="your@email.com"
-                            className={errors.email ? "border-red-500 focus:border-red-500" : ""}
+                            className={
+                              errors.email
+                                ? "border-red-500 focus:border-red-500"
+                                : ""
+                            }
                             required
                           />
                           <FieldError error={errors.email} />
@@ -682,7 +700,11 @@ export default function CheckoutPage() {
                               handleInputChange("phone", e.target.value)
                             }
                             placeholder="+880 1234 567890"
-                            className={errors.phone ? "border-red-500 focus:border-red-500" : ""}
+                            className={
+                              errors.phone
+                                ? "border-red-500 focus:border-red-500"
+                                : ""
+                            }
                             required
                           />
                           <FieldError error={errors.phone} />
@@ -716,7 +738,11 @@ export default function CheckoutPage() {
                           }
                           placeholder="Enter your complete shipping address"
                           rows={3}
-                          className={errors.shippingAddress ? "border-red-500 focus:border-red-500" : ""}
+                          className={
+                            errors.shippingAddress
+                              ? "border-red-500 focus:border-red-500"
+                              : ""
+                          }
                           required
                         />
                         <FieldError error={errors.shippingAddress} />
@@ -829,7 +855,11 @@ export default function CheckoutPage() {
                           placeholder="Enter your billing address"
                           rows={3}
                           disabled={sameAsBilling}
-                          className={errors.billingAddress ? "border-red-500 focus:border-red-500" : ""}
+                          className={
+                            errors.billingAddress
+                              ? "border-red-500 focus:border-red-500"
+                              : ""
+                          }
                           required
                         />
                         <FieldError error={errors.billingAddress} />

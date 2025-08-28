@@ -42,6 +42,8 @@ export async function POST(request: NextRequest) {
             fbc,
             fbp,
             country: [hashSHA256("BD")],
+            client_ip_address: request.headers.get("x-forwarded-for"),
+            client_user_agent: request.headers.get("user-agent"),
           },
           custom_data: customData,
           original_event_data: {

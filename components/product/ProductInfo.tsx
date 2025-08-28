@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -89,6 +89,21 @@ export function ProductInfo({
 
   const currentUrl = typeof window !== "undefined" ? window.location.href : "";
 
+  useEffect(() => {
+    // handle fb conversion api
+    fetch("/api/fb-conversion", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        eventName: "ViewContent",
+        eventId: eventId,
+        eventTime: fbEventTime,
+      }),
+    });
+  }, []);
+
   const handleAddToCart = async () => {
     if (!product || !currentVariant) {
       toast({
@@ -101,7 +116,6 @@ export function ProductInfo({
 
     try {
       setAddingToCart(true);
-      console.log(product);
 
       const res = await addToEnhancedCart({
         productId: product?.id || "",
