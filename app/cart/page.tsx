@@ -1,18 +1,34 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, Heart, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
-import { getEnhancedCart, updateCartItemQuantity, removeCartItem, prepareCheckout, CartItem } from '@/lib/api/cart';
-import { getProduct, Product, ProductVariation } from '@/lib/api/products';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import {
+  Minus,
+  Plus,
+  Trash2,
+  ShoppingBag,
+  ArrowLeft,
+  Heart,
+  Loader2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import {
+  getEnhancedCart,
+  updateCartItemQuantity,
+  removeCartItem,
+  prepareCheckout,
+  CartItem,
+} from "@/lib/api/cart";
+import { getProduct, Product, ProductVariation } from "@/lib/api/products";
+import { useRouter } from "next/navigation";
+import useFbIds from "@/hooks/useFbIds";
+import { generateEventId } from "@/lib/utils";
 interface CartItemWithProduct extends CartItem {
   product?: Product;
   variation?: ProductVariation;
@@ -22,10 +38,13 @@ interface CartItemWithProduct extends CartItem {
 export default function CartPage() {
   const [items, setItems] = useState<CartItemWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [promoCode, setPromoCode] = useState('');
+  const [promoCode, setPromoCode] = useState("");
   const { toast } = useToast();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const router = useRouter();
+  const { fbclid, fbp } = useFbIds();
+  const fbEventTime = Math.floor(Date.now() / 1000);
+  const eventId = generateEventId();
 
   // Fetch cart data and product details
   useEffect(() => {
@@ -35,9 +54,12 @@ export default function CartPage() {
 
         // Get cart items
         const cartResponse = await getEnhancedCart();
-        
+
         // Handle empty cart case
-        if (!cartResponse.data.cart.items || cartResponse.data.cart.items.length === 0) {
+        if (
+          !cartResponse.data.cart.items ||
+          cartResponse.data.cart.items.length === 0
+        ) {
           setItems([]);
           setLoading(false);
           return;
@@ -46,10 +68,12 @@ export default function CartPage() {
         const cartItems = cartResponse.data.cart.items;
 
         // Convert cart items to our interface with loading state
-        const cartItemsWithProduct: CartItemWithProduct[] = cartItems.map(item => ({
-          ...item, // This includes productId, variantId, quantity, totalPrice, productData, etc.
-          loading: true
-        }));
+        const cartItemsWithProduct: CartItemWithProduct[] = cartItems.map(
+          (item) => ({
+            ...item, // This includes productId, variantId, quantity, totalPrice, productData, etc.
+            loading: true,
+          })
+        );
 
         setItems(cartItemsWithProduct);
 
@@ -60,19 +84,24 @@ export default function CartPage() {
               const product = await getProduct(item.productId);
 
               // Find the specific variation using variantId from cart
-              const variation = product.variations.find(v => v.id === item.variantId);
+              const variation = product.variations.find(
+                (v) => v.id === item.variantId
+              );
 
               return {
                 ...item,
                 product,
                 variation,
-                loading: false
+                loading: false,
               };
             } catch (error) {
-              console.error(`Failed to fetch product ${item.productId}:`, error);
+              console.error(
+                `Failed to fetch product ${item.productId}:`,
+                error
+              );
               return {
                 ...item,
-                loading: false
+                loading: false,
               };
             }
           })
@@ -80,7 +109,7 @@ export default function CartPage() {
 
         setItems(updatedItems);
       } catch (error) {
-        console.error('Failed to fetch cart:', error);
+        console.error("Failed to fetch cart:", error);
         toast({
           title: "Error",
           description: "Failed to load cart items",
@@ -94,7 +123,10 @@ export default function CartPage() {
     fetchCartData();
   }, [toast]);
 
-  const updateQuantity = async (item: CartItemWithProduct, newQuantity: number) => {
+  const updateQuantity = async (
+    item: CartItemWithProduct,
+    newQuantity: number
+  ) => {
     if (newQuantity === 0) {
       await removeItem(item);
       return;
@@ -102,9 +134,10 @@ export default function CartPage() {
 
     try {
       // Optimistically update the UI
-      setItems(prevItems =>
-        prevItems.map(prevItem =>
-          prevItem.productId === item.productId && prevItem.variantId === item.variantId
+      setItems((prevItems) =>
+        prevItems.map((prevItem) =>
+          prevItem.productId === item.productId &&
+          prevItem.variantId === item.variantId
             ? { ...prevItem, quantity: newQuantity }
             : prevItem
         )
@@ -112,7 +145,7 @@ export default function CartPage() {
 
       // Update stock on server using variation ID
       const variationId = item.variation?.id || item.variantId;
-      console.log(item)
+      console.log(item);
       await updateCartItemQuantity(variationId, newQuantity);
 
       toast({
@@ -120,12 +153,13 @@ export default function CartPage() {
         description: "Cart updated successfully",
       });
     } catch (error) {
-      console.error('Failed to update cart item:', error);
+      console.error("Failed to update cart item:", error);
 
       // Revert optimistic update
-      setItems(prevItems =>
-        prevItems.map(prevItem =>
-          prevItem.productId === item.productId && prevItem.variantId === item.variantId
+      setItems((prevItems) =>
+        prevItems.map((prevItem) =>
+          prevItem.productId === item.productId &&
+          prevItem.variantId === item.variantId
             ? { ...prevItem, quantity: item.quantity }
             : prevItem
         )
@@ -142,9 +176,13 @@ export default function CartPage() {
   const removeItem = async (item: CartItemWithProduct) => {
     try {
       // Optimistically remove item from UI
-      setItems(prevItems => 
-        prevItems.filter(prevItem => 
-          !(prevItem.productId === item.productId && prevItem.variantId === item.variantId)
+      setItems((prevItems) =>
+        prevItems.filter(
+          (prevItem) =>
+            !(
+              prevItem.productId === item.productId &&
+              prevItem.variantId === item.variantId
+            )
         )
       );
 
@@ -156,10 +194,10 @@ export default function CartPage() {
         description: "Item removed from cart",
       });
     } catch (error) {
-      console.error('Failed to remove cart item:', error);
+      console.error("Failed to remove cart item:", error);
 
       // Revert optimistic update - add the item back
-      setItems(prevItems => [...prevItems, item]);
+      setItems((prevItems) => [...prevItems, item]);
 
       toast({
         title: "Error",
@@ -172,12 +210,14 @@ export default function CartPage() {
   // Calculate totals using actual prices from variation or fallback to cart data
   const subtotal = items.reduce((sum, item) => {
     const currentPrice = item.variation?.price || item.productData?.price;
-    return sum + (currentPrice * item.quantity);
+    return sum + currentPrice * item.quantity;
   }, 0);
 
   const savings = items.reduce((sum, item) => {
     if (item.variation?.price && item.variation?.salePrice) {
-      return sum + ((item.variation.price - item.variation.salePrice) * item.quantity);
+      return (
+        sum + (item.variation.price - item.variation.salePrice) * item.quantity
+      );
     }
     return sum;
   }, 0);
@@ -185,31 +225,59 @@ export default function CartPage() {
   const handleProceedToCheckout = async () => {
     try {
       setCheckoutLoading(true);
-      
+
       // Prepare cart for checkout
-      await prepareCheckout();
-      
+      const res = await prepareCheckout();
+
+      if (res?.data?.enhanced) {
+        // handle pixel and conversion api
+        await fetch("/api/fb-conversion", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            eventName: "InitiateCheckout",
+            eventId: eventId,
+            eventTime: fbEventTime,
+          }),
+        });
+
+        (window as any).fbq(
+          "track",
+          "InitiateCheckout",
+          {
+            currency: "BDT",
+          },
+          {
+            eventID: eventId,
+            fbc: fbclid,
+            fbp,
+          }
+        );
+      }
       toast({
         title: "Success",
         description: "Cart prepared for checkout",
       });
-      
+
       // Navigate to checkout page
-      router.push('/checkout');
+      router.push("/checkout");
     } catch (error) {
-      console.error('Failed to prepare checkout:', error);
-      
+      console.error("Failed to prepare checkout:", error);
+
       let errorMessage = "Failed to prepare checkout";
-      
+
       // Handle specific error cases
       if (error instanceof Error) {
-        if (error.message.includes('404')) {
+        if (error.message.includes("404")) {
           errorMessage = "Cart not found. Please refresh and try again.";
-        } else if (error.message.includes('400')) {
-          errorMessage = "Cart validation failed. Please check your items and try again.";
+        } else if (error.message.includes("400")) {
+          errorMessage =
+            "Cart validation failed. Please check your items and try again.";
         }
       }
-      
+
       toast({
         title: "Error",
         description: errorMessage,
@@ -239,14 +307,14 @@ export default function CartPage() {
         <div className="mx-auto px-4 py-8 sm:py-16 max-w-4xl container">
           <div className="text-center">
             <ShoppingBag className="mx-auto mb-4 sm:mb-6 w-16 sm:w-24 h-16 sm:h-24 text-muted-foreground" />
-            <h1 className="mb-2 sm:mb-4 font-bold text-2xl sm:text-3xl">Your cart is empty</h1>
+            <h1 className="mb-2 sm:mb-4 font-bold text-2xl sm:text-3xl">
+              Your cart is empty
+            </h1>
             <p className="mb-6 sm:mb-8 px-4 text-muted-foreground text-sm sm:text-base">
               Looks like you haven&apos;t added any items to your cart yet.
             </p>
             <Button asChild className="w-full sm:w-auto golden-button">
-              <Link href="/products">
-                Continue Shopping
-              </Link>
+              <Link href="/products">Continue Shopping</Link>
             </Button>
           </div>
         </div>
@@ -269,7 +337,8 @@ export default function CartPage() {
           <div className="flex-1">
             <h1 className="font-bold text-2xl sm:text-3xl">Shopping Cart</h1>
             <p className="text-muted-foreground text-sm sm:text-base">
-              {items.length} {items.length === 1 ? 'item' : 'items'} in your cart
+              {items.length} {items.length === 1 ? "item" : "items"} in your
+              cart
             </p>
           </div>
         </div>
@@ -300,9 +369,13 @@ export default function CartPage() {
                               item.productData?.imageUrl ||
                               item.product?.baseImageUrl ||
                               item.product?.images?.[0]?.imageUrl ||
-                              '/placeholder.jpg'
+                              "/placeholder.jpg"
                             }
-                            alt={item.productData?.name || item.product?.name || 'Product'}
+                            alt={
+                              item.productData?.name ||
+                              item.product?.name ||
+                              "Product"
+                            }
                             fill
                             className="rounded-lg object-cover"
                           />
@@ -317,7 +390,9 @@ export default function CartPage() {
                                 {item.product?.brand?.name}
                               </p>
                               <h3 className="font-semibold text-sm sm:text-base line-clamp-2">
-                                {item.productData?.name || item.product?.name || 'Unknown Product'}
+                                {item.productData?.name ||
+                                  item.product?.name ||
+                                  "Unknown Product"}
                               </h3>
                               {item.productData?.variantName && (
                                 <p className="text-muted-foreground text-xs sm:text-sm">
@@ -333,7 +408,11 @@ export default function CartPage() {
 
                             {/* Action Buttons */}
                             <div className="flex self-end sm:self-start gap-1 sm:gap-2">
-                              <Button size="icon" variant="ghost" className="w-8 sm:w-10 h-8 sm:h-10">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="w-8 sm:w-10 h-8 sm:h-10"
+                              >
                                 <Heart className="w-3 sm:w-4 h-3 sm:h-4" />
                               </Button>
                               <Button
@@ -354,17 +433,19 @@ export default function CartPage() {
                               <span className="font-bold text-sm sm:text-base golden-text">
                                 {Number(
                                   item.variation?.salePrice ??
-                                  item.variation?.price ??
-                                  item.productData?.price ??
-                                  0
+                                    item.variation?.price ??
+                                    item.productData?.price ??
+                                    0
                                 ).toFixed(2)}
                               </span>
-                              {item.variation?.price && item.variation?.salePrice && 
-                               Number(item.variation.price) > Number(item.variation.salePrice) && (
-                                <span className="text-muted-foreground text-xs sm:text-sm line-through">
-                                  ৳{Number(item.variation.price).toFixed(2)}
-                                </span>
-                              )}
+                              {item.variation?.price &&
+                                item.variation?.salePrice &&
+                                Number(item.variation.price) >
+                                  Number(item.variation.salePrice) && (
+                                  <span className="text-muted-foreground text-xs sm:text-sm line-through">
+                                    ৳{Number(item.variation.price).toFixed(2)}
+                                  </span>
+                                )}
                             </div>
 
                             {/* Quantity Controls */}
@@ -372,7 +453,9 @@ export default function CartPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => updateQuantity(item, item.quantity - 1)}
+                                onClick={() =>
+                                  updateQuantity(item, item.quantity - 1)
+                                }
                                 className="w-7 sm:w-8 h-7 sm:h-8"
                               >
                                 <Minus className="w-3 h-3" />
@@ -383,9 +466,16 @@ export default function CartPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => updateQuantity(item, item.quantity + 1)}
+                                onClick={() =>
+                                  updateQuantity(item, item.quantity + 1)
+                                }
                                 className="w-7 sm:w-8 h-7 sm:h-8"
-                                disabled={item.variation?.stockQuantity ? item.quantity >= item.variation.stockQuantity : false}
+                                disabled={
+                                  item.variation?.stockQuantity
+                                    ? item.quantity >=
+                                      item.variation.stockQuantity
+                                    : false
+                                }
                               >
                                 <Plus className="w-3 h-3" />
                               </Button>
@@ -395,26 +485,37 @@ export default function CartPage() {
                           {/* Total Price for this item */}
                           <div className="flex items-center gap-2 mt-1">
                             <span className="font-semibold text-xs sm:text-sm golden-text">
-                              Total:&nbsp;
-                              ৳
+                              Total:&nbsp; ৳
                               {(
-                                Number(item.variation?.salePrice ?? item.variation?.price ?? item.productData?.price ?? 0) *
-                                item.quantity
+                                Number(
+                                  item.variation?.salePrice ??
+                                    item.variation?.price ??
+                                    item.productData?.price ??
+                                    0
+                                ) * item.quantity
                               ).toFixed(2)}
                             </span>
-                            {item.variation?.price && item.variation?.salePrice && Number(item.variation.price) > Number(item.variation.salePrice) && (
-                              <span className="text-muted-foreground text-xs sm:text-sm line-through">
-                                ৳{(Number(item.variation.price) * item.quantity).toFixed(2)}
-                              </span>
-                            )}
+                            {item.variation?.price &&
+                              item.variation?.salePrice &&
+                              Number(item.variation.price) >
+                                Number(item.variation.salePrice) && (
+                                <span className="text-muted-foreground text-xs sm:text-sm line-through">
+                                  ৳
+                                  {(
+                                    Number(item.variation.price) * item.quantity
+                                  ).toFixed(2)}
+                                </span>
+                              )}
                           </div>
 
                           {/* Stock Warning */}
-                          {item.variation?.stockQuantity && item.variation.stockQuantity <= 5 && (
-                            <p className="text-orange-600 text-xs sm:text-sm">
-                              Only {item.variation.stockQuantity} left in stock
-                            </p>
-                          )}
+                          {item.variation?.stockQuantity &&
+                            item.variation.stockQuantity <= 5 && (
+                              <p className="text-orange-600 text-xs sm:text-sm">
+                                Only {item.variation.stockQuantity} left in
+                                stock
+                              </p>
+                            )}
                         </div>
                       </div>
                     )}
@@ -428,7 +529,9 @@ export default function CartPage() {
           <div className="lg:col-span-1">
             <Card className="lg:top-8 lg:sticky">
               <CardContent className="p-4 sm:p-6">
-                <h2 className="mb-4 sm:mb-6 font-semibold text-lg sm:text-xl">Order Summary</h2>
+                <h2 className="mb-4 sm:mb-6 font-semibold text-lg sm:text-xl">
+                  Order Summary
+                </h2>
 
                 <div className="space-y-3 sm:space-y-4">
                   <div className="flex justify-between text-sm sm:text-base">
@@ -479,7 +582,7 @@ export default function CartPage() {
                       Preparing Checkout...
                     </>
                   ) : (
-                    'Proceed to Checkout'
+                    "Proceed to Checkout"
                   )}
                 </Button>
 

@@ -264,6 +264,7 @@ export const createProduct = async (
   const result = await response.json();
   return result.data;
 };
+
 export const getProduct = async (
   id: string,
   params: {

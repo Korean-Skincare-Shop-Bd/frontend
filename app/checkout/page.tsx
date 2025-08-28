@@ -54,6 +54,8 @@ import {
 } from "@/lib/api/shipping";
 import { getSessionIdCookie } from "@/lib/cookies/session";
 import { getProduct, Product, ProductVariation } from "@/lib/api/products";
+import { generateEventId, hashSHA256 } from "@/lib/utils";
+import useFbIds from "@/hooks/useFbIds";
 
 const paymentMethods = [
   {
@@ -121,6 +123,8 @@ export default function CheckoutPage() {
   });
   const [sameAsBilling, setSameAsBilling] = useState(true);
   const [items, setItems] = useState<CartItemWithProduct[]>([]);
+  const { fbclid, fbp } = useFbIds();
+  const fbEventTime = Math.floor(Date.now() / 1000);
 
   useEffect(() => {
     const fetchSessionId = async () => {
@@ -344,6 +348,44 @@ export default function CheckoutPage() {
       setProcessing(true);
       const result = await processCheckout(formData);
 
+      // send data to facebook conversion API
+      if (result.success) {
+        // call Facebook conversion API from next api folder
+        await fetch("/api/fb-conversion", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            eventName: "Purchase",
+            eventId: result.data.orderId,
+            eventTime: fbEventTime,
+            customData: {
+              value: total,
+              currency: "BDT",
+            },
+            customerData: {
+              em: [hashSHA256(formData.email)],
+              fn: [hashSHA256(formData.phone)],
+            },
+          }),
+        });
+
+        (window as any).fbq(
+          "track",
+          "Purchase",
+          {
+            value: total,
+            currency: "BDT",
+          },
+          {
+            eventID: result.data.orderId,
+            fbc: fbclid,
+            fbp: fbp,
+          }
+        );
+      }
+
       toast({
         title: "Order Placed Successfully!",
         description: `Your order ${result.data.orderId} has been created.`,
@@ -403,7 +445,8 @@ export default function CheckoutPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 text-center">
+            className="mb-8 text-center"
+          >
             <h1 className="mb-2 font-bold text-3xl md:text-4xl golden-text">
               Secure Checkout
             </h1>
@@ -464,7 +507,8 @@ export default function CheckoutPage() {
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.2 }}>
+                  transition={{ delay: 0.2 }}
+                >
                   <Card className="glass-effect">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -520,7 +564,8 @@ export default function CheckoutPage() {
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 }}>
+                  transition={{ delay: 0.3 }}
+                >
                   <Card className="glass-effect">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -549,7 +594,8 @@ export default function CheckoutPage() {
                           <Label htmlFor="region">Region *</Label>
                           <Select
                             value={selectedRegion}
-                            onValueChange={handleRegionChange}>
+                            onValueChange={handleRegionChange}
+                          >
                             <SelectTrigger>
                               <SelectValue placeholder="Select region" />
                             </SelectTrigger>
@@ -557,7 +603,8 @@ export default function CheckoutPage() {
                               {regions.map((region) => (
                                 <SelectItem
                                   key={region.value}
-                                  value={region.value}>
+                                  value={region.value}
+                                >
                                   {region.label}
                                 </SelectItem>
                               ))}
@@ -573,7 +620,8 @@ export default function CheckoutPage() {
                               calculatingShipping ||
                               !formData.shippingAddress.trim()
                             }
-                            className="w-full">
+                            className="w-full"
+                          >
                             {calculatingShipping ? (
                               <div className="flex items-center gap-2">
                                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -612,7 +660,8 @@ export default function CheckoutPage() {
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 }}>
+                  transition={{ delay: 0.4 }}
+                >
                   <Card className="glass-effect">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -657,7 +706,8 @@ export default function CheckoutPage() {
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 }}>
+                  transition={{ delay: 0.5 }}
+                >
                   <Card className="glass-effect">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -670,7 +720,8 @@ export default function CheckoutPage() {
                         value={formData.paymentMethod}
                         onValueChange={(value) =>
                           handleInputChange("paymentMethod", value)
-                        }>
+                        }
+                      >
                         {paymentMethods.map((method) => {
                           const IconComponent = method.icon;
                           return (
@@ -684,7 +735,8 @@ export default function CheckoutPage() {
                                 !method.available
                                   ? "opacity-50 cursor-not-allowed"
                                   : "cursor-pointer"
-                              }`}>
+                              }`}
+                            >
                               <RadioGroupItem
                                 value={method.id}
                                 id={method.id}
@@ -694,7 +746,8 @@ export default function CheckoutPage() {
                               <div className="flex-1">
                                 <Label
                                   htmlFor={method.id}
-                                  className="font-medium cursor-pointer">
+                                  className="font-medium cursor-pointer"
+                                >
                                   {method.name}
                                 </Label>
                                 <p className="text-muted-foreground text-sm">
@@ -713,7 +766,8 @@ export default function CheckoutPage() {
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.6 }}>
+                  transition={{ delay: 0.6 }}
+                >
                   <Card className="glass-effect">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -741,7 +795,8 @@ export default function CheckoutPage() {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.7 }}
-                  className="top-8 sticky">
+                  className="top-8 sticky"
+                >
                   <Card className="glass-effect">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
@@ -758,7 +813,8 @@ export default function CheckoutPage() {
                             {items.map((item) => (
                               <div
                                 key={item.productId}
-                                className="flex justify-between items-start text-sm">
+                                className="flex justify-between items-start text-sm"
+                              >
                                 <div className="flex-1 pr-2">
                                   <p className="font-medium line-clamp-1">
                                     {item.product?.name ||
@@ -839,7 +895,8 @@ export default function CheckoutPage() {
                               <span
                                 className={
                                   shippingCost === 0 ? "text-green-600" : ""
-                                }>
+                                }
+                              >
                                 {shippingCost === 0
                                   ? "Free"
                                   : `৳${Number(shippingCost).toFixed(2)}`}
@@ -884,7 +941,8 @@ export default function CheckoutPage() {
                       <Button
                         type="submit"
                         className="w-full h-12 text-lg golden-button"
-                        disabled={processing}>
+                        disabled={processing}
+                      >
                         {processing ? (
                           <div className="flex items-center gap-2">
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -902,13 +960,15 @@ export default function CheckoutPage() {
                         By placing your order, you agree to our{" "}
                         <a
                           href="/terms"
-                          className="text-primary hover:underline">
+                          className="text-primary hover:underline"
+                        >
                           Terms of Service
                         </a>{" "}
                         and{" "}
                         <a
                           href="/privacy"
-                          className="text-primary hover:underline">
+                          className="text-primary hover:underline"
+                        >
                           Privacy Policy
                         </a>
                       </p>
@@ -924,7 +984,8 @@ export default function CheckoutPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="mt-8">
+            className="mt-8"
+          >
             <Card className="glass-effect">
               <CardContent className="p-6">
                 <h3 className="mb-4 font-semibold text-center">
@@ -969,7 +1030,8 @@ export default function CheckoutPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.9 }}
-              className="mt-6">
+              className="mt-6"
+            >
               <Card className="glass-effect">
                 <CardHeader>
                   <CardTitle className="flex justify-center items-center gap-2 text-center">
@@ -1035,8 +1097,8 @@ export default function CheckoutPage() {
                             amount
                           </li>
                           <li>
-                            • Use "Auto-detect Region" for accurate shipping
-                            calculation
+                            • Use &quot;Auto-detect Region&quot; for accurate
+                            shipping calculation
                           </li>
                         </ul>
                       </div>
