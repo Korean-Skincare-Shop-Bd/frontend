@@ -68,8 +68,8 @@ export function SaleProducts() {
       window.dispatchEvent(new Event('cartUpdated'));
 
       toast({
-        title: "Success",
-        description: `${product.name} added to cart`,
+        title: "Added to Cart! 🛒",
+        description: `${product.name} added to your cart`,
       });
     } catch (error) {
       console.error('Failed to add to cart:', error);
