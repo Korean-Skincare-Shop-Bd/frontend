@@ -273,7 +273,10 @@ export default function ProductsPageContent() {
   };
 
   const handleAddToCart = async (product: Product, variationId?: string) => {
-    console.log('ProductPageClient handleAddToCart called with:', { productId: product.id, variationId });
+    console.log("ProductPageClient handleAddToCart called with:", {
+      productId: product.id,
+      variationId,
+    });
     try {
       setAddingToCart(product.id);
 
@@ -281,7 +284,7 @@ export default function ProductsPageContent() {
         ? product.variations.find((v) => v.id === variationId)
         : product.variations[0];
 
-      console.log('ProductPageClient selectedVariation:', selectedVariation);
+      console.log("ProductPageClient selectedVariation:", selectedVariation);
 
       if (!selectedVariation) {
         toast({
@@ -292,7 +295,7 @@ export default function ProductsPageContent() {
         return;
       }
 
-      console.log('ProductPageClient calling addToEnhancedCart with:', {
+      console.log("ProductPageClient calling addToEnhancedCart with:", {
         productId: product.id,
         quantity: 1,
         variantId: selectedVariation.id,
@@ -342,7 +345,8 @@ export default function ProductsPageContent() {
             setSelectedCategory(value);
             setCurrentPage(1);
             if (isMobile) setIsMobileFiltersOpen(false);
-          }}>
+          }}
+        >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select Category" />
           </SelectTrigger>
@@ -361,11 +365,13 @@ export default function ProductsPageContent() {
       <div className="space-y-3">
         <Collapsible
           open={isMobile ? expandedSections.brands : true}
-          onOpenChange={() => isMobile && toggleSection("brands")}>
+          onOpenChange={() => isMobile && toggleSection("brands")}
+        >
           <CollapsibleTrigger
             className={`flex items-center justify-between w-full ${
               isMobile ? "py-2" : ""
-            }`}>
+            }`}
+          >
             <h3 className="font-semibold text-sm uppercase tracking-wider">
               Brands
             </h3>
@@ -381,7 +387,8 @@ export default function ProductsPageContent() {
             <div
               className={`space-y-2 ${
                 isMobile ? "mt-2" : ""
-              } max-h-48 overflow-y-auto`}>
+              } max-h-48 overflow-y-auto`}
+            >
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="all-brands"
@@ -490,7 +497,8 @@ export default function ProductsPageContent() {
                 {/* Mobile Filters */}
                 <Sheet
                   open={isMobileFiltersOpen}
-                  onOpenChange={setIsMobileFiltersOpen}>
+                  onOpenChange={setIsMobileFiltersOpen}
+                >
                   <SheetTrigger asChild>
                     <Button variant="outline" className="lg:hidden">
                       <Filter className="mr-2 w-4 h-4" />
@@ -517,7 +525,8 @@ export default function ProductsPageContent() {
                     onValueChange={(value) => {
                       setSelectedCategory(value);
                       setCurrentPage(1);
-                    }}>
+                    }}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Category" />
                     </SelectTrigger>
@@ -536,7 +545,8 @@ export default function ProductsPageContent() {
                 <div className="flex-1 sm:flex-none sm:w-40">
                   <Select
                     value={`${sortBy}-${sortOrder}`}
-                    onValueChange={handleSortChange}>
+                    onValueChange={handleSortChange}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Sort by" />
                     </SelectTrigger>
@@ -560,7 +570,8 @@ export default function ProductsPageContent() {
                   variant={viewMode === "grid" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setViewMode("grid")}
-                  className="flex-1 sm:flex-none">
+                  className="flex-1 sm:flex-none"
+                >
                   <Grid className="sm:mr-2 w-4 h-4" />
                   <span className="hidden sm:inline">Grid</span>
                 </Button>
@@ -568,7 +579,8 @@ export default function ProductsPageContent() {
                   variant={viewMode === "list" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setViewMode("list")}
-                  className="flex-1 sm:flex-none">
+                  className="flex-1 sm:flex-none"
+                >
                   <List className="sm:mr-2 w-4 h-4" />
                   <span className="hidden sm:inline">List</span>
                 </Button>
@@ -602,7 +614,8 @@ export default function ProductsPageContent() {
                     variant="outline"
                     size="sm"
                     onClick={clearFilters}
-                    className="self-start sm:self-auto order-1 sm:order-2">
+                    className="self-start sm:self-auto order-1 sm:order-2"
+                  >
                     Clear Filters
                   </Button>
                 )}
@@ -661,7 +674,8 @@ export default function ProductsPageContent() {
                             transition={{
                               duration: 0.6,
                               delay: (index % 12) * 0.1,
-                            }}>
+                            }}
+                          >
                             <Card className="overflow-hidden">
                               <CardContent className="p-4 sm:p-6">
                                 <div className="flex gap-4 sm:gap-6">
@@ -692,7 +706,8 @@ export default function ProductsPageContent() {
                                       {onSale && originalPrice && (
                                         <Badge
                                           variant="destructive"
-                                          className="text-xs">
+                                          className="text-xs"
+                                        >
                                           -
                                           {Math.round(
                                             (1 - price / originalPrice) * 100
@@ -712,7 +727,8 @@ export default function ProductsPageContent() {
                                         <h3 className="font-semibold text-sm sm:text-lg line-clamp-2">
                                           <Link
                                             href={`/products/${product.id}`}
-                                            className="hover:text-primary transition-colors">
+                                            className="hover:text-primary transition-colors"
+                                          >
                                             {product.name}
                                           </Link>
                                         </h3>
@@ -727,7 +743,8 @@ export default function ProductsPageContent() {
                                           variant="outline"
                                           onClick={() =>
                                             handleQuickView(product)
-                                          }>
+                                          }
+                                        >
                                           <Eye className="w-4 h-4" />
                                         </Button>
                                       </div> */}
@@ -760,7 +777,8 @@ export default function ProductsPageContent() {
                                                 .stockQuantity > 0
                                                 ? "bg-green-100 text-green-600"
                                                 : "bg-red-100 text-red-600"
-                                            }`}>
+                                            }`}
+                                          >
                                             {product.variations[0]
                                               .stockQuantity > 0
                                               ? "In Stock"
@@ -774,7 +792,8 @@ export default function ProductsPageContent() {
                                             onClick={() =>
                                               handleQuickView(product)
                                             }
-                                            className="hidden sm:flex">
+                                            className="hidden sm:flex"
+                                          >
                                             <Eye className="w-4 h-4" />
                                           </Button>
                                           <Button
@@ -783,12 +802,17 @@ export default function ProductsPageContent() {
                                               e.preventDefault();
                                               e.stopPropagation();
                                               // Pass the first variation's ID since we're adding from the card view
-                                              const firstVariationId = product.variations?.[0]?.id;
-                                              handleAddToCart(product, firstVariationId);
+                                              const firstVariationId =
+                                                product.variations?.[0]?.id;
+                                              handleAddToCart(
+                                                product,
+                                                firstVariationId
+                                              );
                                             }}
                                             disabled={
                                               addingToCart === product.id
-                                            }>
+                                            }
+                                          >
                                             {addingToCart === product.id ? (
                                               <>
                                                 <Loader2 className="mr-2 w-4 h-4 animate-spin" />
@@ -830,7 +854,8 @@ export default function ProductsPageContent() {
                           variant="outline"
                           size="sm"
                           onClick={() => setCurrentPage(currentPage - 1)}
-                          disabled={!pagination.hasPrev || loading}>
+                          disabled={!pagination.hasPrev || loading}
+                        >
                           Previous
                         </Button>
 
@@ -842,7 +867,8 @@ export default function ProductsPageContent() {
                           variant="outline"
                           size="sm"
                           onClick={() => setCurrentPage(currentPage + 1)}
-                          disabled={!pagination.hasNext || loading}>
+                          disabled={!pagination.hasNext || loading}
+                        >
                           Next
                         </Button>
                       </div>
@@ -852,7 +878,8 @@ export default function ProductsPageContent() {
                         <Button
                           variant="outline"
                           onClick={() => setCurrentPage(currentPage - 1)}
-                          disabled={!pagination.hasPrev || loading}>
+                          disabled={!pagination.hasPrev || loading}
+                        >
                           Previous
                         </Button>
 
@@ -873,7 +900,8 @@ export default function ProductsPageContent() {
                                   size="sm"
                                   onClick={() => setCurrentPage(pageNum)}
                                   disabled={loading}
-                                  className="w-10">
+                                  className="w-10"
+                                >
                                   {pageNum}
                                 </Button>
                               );
@@ -897,7 +925,8 @@ export default function ProductsPageContent() {
                                   setCurrentPage(pagination.totalPages)
                                 }
                                 disabled={loading}
-                                className="w-10">
+                                className="w-10"
+                              >
                                 {pagination.totalPages}
                               </Button>
                             </>
@@ -924,7 +953,8 @@ export default function ProductsPageContent() {
                                       size="sm"
                                       onClick={() => setCurrentPage(pageNum)}
                                       disabled={loading}
-                                      className="w-10">
+                                      className="w-10"
+                                    >
                                       {pageNum}
                                     </Button>
                                   );
@@ -943,7 +973,8 @@ export default function ProductsPageContent() {
                                     setCurrentPage(pagination.totalPages)
                                   }
                                   disabled={loading}
-                                  className="w-10">
+                                  className="w-10"
+                                >
                                   {pagination.totalPages}
                                 </Button>
                               </>
@@ -975,7 +1006,8 @@ export default function ProductsPageContent() {
                                         size="sm"
                                         onClick={() => setCurrentPage(pageNum)}
                                         disabled={loading}
-                                        className="w-10">
+                                        className="w-10"
+                                      >
                                         {pageNum}
                                       </Button>
                                     );
@@ -988,7 +1020,8 @@ export default function ProductsPageContent() {
                         <Button
                           variant="outline"
                           onClick={() => setCurrentPage(currentPage + 1)}
-                          disabled={!pagination.hasNext || loading}>
+                          disabled={!pagination.hasNext || loading}
+                        >
                           Next
                         </Button>
                       </div>

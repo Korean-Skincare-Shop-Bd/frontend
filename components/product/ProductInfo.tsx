@@ -1,16 +1,40 @@
 "use client";
 
-import { useState } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Heart, ShoppingBag, Share2, Star, Minus, Plus, Truck, Shield, RotateCcw, Copy, Check, Facebook, Twitter, Linkedin, Award } from 'lucide-react';
-import { Product, ProductVariation } from '@/lib/api/products';
-import { useToast } from '@/hooks/use-toast';
-import { addToEnhancedCart } from '@/lib/api/cart';
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Heart,
+  ShoppingBag,
+  Share2,
+  Star,
+  Minus,
+  Plus,
+  Truck,
+  Shield,
+  RotateCcw,
+  Copy,
+  Check,
+  Facebook,
+  Twitter,
+  Linkedin,
+  Award,
+} from "lucide-react";
+import { Product, ProductVariation } from "@/lib/api/products";
+import { useToast } from "@/hooks/use-toast";
+import { addToEnhancedCart } from "@/lib/api/cart";
+import { generateEventId } from "@/lib/utils";
+import useFbIds from "@/hooks/useFbIds";
 
 interface ProductInfoProps {
   product?: Product; // Add full product object
@@ -33,7 +57,7 @@ export function ProductInfo({
   averageRating,
   reviewCount,
   tags,
-  variations
+  variations,
 }: ProductInfoProps) {
   const [selectedVariant, setSelectedVariant] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -43,14 +67,42 @@ export function ProductInfo({
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const { fbclid, fbp } = useFbIds();
+  const eventId = generateEventId();
+  const fbEventTime = Math.floor(Date.now() / 1000);
 
   const currentVariant = variations[selectedVariant];
-  const isOnSale = currentVariant.salePrice && Number(currentVariant.salePrice) < Number(currentVariant.price);
-  const displayPrice = isOnSale ? currentVariant.salePrice : currentVariant.price;
+  const isOnSale =
+    currentVariant.salePrice &&
+    Number(currentVariant.salePrice) < Number(currentVariant.price);
+  const displayPrice = isOnSale
+    ? currentVariant.salePrice
+    : currentVariant.price;
   const originalPrice = isOnSale ? currentVariant.price : null;
-  const discountPercentage = isOnSale ? Math.round(((Number(originalPrice) - Number(displayPrice)) / Number(originalPrice)) * 100) : 0;
+  const discountPercentage = isOnSale
+    ? Math.round(
+        ((Number(originalPrice) - Number(displayPrice)) /
+          Number(originalPrice)) *
+          100
+      )
+    : 0;
 
-  const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const currentUrl = typeof window !== "undefined" ? window.location.href : "";
+
+  useEffect(() => {
+    // handle fb conversion api
+    fetch("/api/fb-conversion", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        eventName: "ViewContent",
+        eventId: eventId,
+        eventTime: fbEventTime,
+      }),
+    });
+  }, []);
 
   const handleAddToCart = async () => {
     if (!product || !currentVariant) {
@@ -64,22 +116,49 @@ export function ProductInfo({
 
     try {
       setAddingToCart(true);
-      console.log(product)
 
-      await addToEnhancedCart({
-        productId: product?.id||"",
+      const res = await addToEnhancedCart({
+        productId: product?.id || "",
         quantity: quantity,
-        variantId: currentVariant.id
+        variantId: currentVariant.id,
       });
 
-      window.dispatchEvent(new Event('cartUpdated'));
+      if (res?.data?.cart?.items) {
+        // handle pixel and conversion api
+        await fetch("/api/fb-conversion", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            eventName: "AddToCart",
+            eventId: eventId,
+            eventTime: fbEventTime,
+          }),
+        });
+
+        (window as any).fbq(
+          "track",
+          "AddToCart",
+          {
+            currency: "BDT",
+          },
+          {
+            eventID: eventId,
+            fbc: fbclid,
+            fbp,
+          }
+        );
+      }
+
+      window.dispatchEvent(new Event("cartUpdated"));
 
       toast({
         title: "Added to Cart! 🛒",
         description: `${quantity} × ${name} added to your cart`,
       });
     } catch (error) {
-      console.error('Failed to add to cart:', error);
+      console.error("Failed to add to cart:", error);
       toast({
         title: "Error",
         description: "Failed to add item to cart",
@@ -103,15 +182,15 @@ export function ProductInfo({
       setAddingToCart(true);
 
       await addToEnhancedCart({
-        productId: product?.id ||'',
+        productId: product?.id || "",
         quantity: quantity,
-        variantId: currentVariant.id
+        variantId: currentVariant.id,
       });
 
-      window.dispatchEvent(new Event('cartUpdated'));
-      router.push('/cart');
+      window.dispatchEvent(new Event("cartUpdated"));
+      router.push("/cart");
     } catch (error) {
-      console.error('Failed to add to cart:', error);
+      console.error("Failed to add to cart:", error);
       // Error toast is now handled by the cart API, but show specific message for buy now
       toast({
         title: "Error",
@@ -149,10 +228,14 @@ export function ProductInfo({
     const shareUrls = {
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
       twitter: `https://twitter.com/intent/tweet?text=${encodedText}&url=${url}`,
-      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`
+      linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
     };
 
-    window.open(shareUrls[platform as keyof typeof shareUrls], '_blank', 'width=600,height=400');
+    window.open(
+      shareUrls[platform as keyof typeof shareUrls],
+      "_blank",
+      "width=600,height=400"
+    );
   };
 
   return (
@@ -175,10 +258,11 @@ export function ProductInfo({
               {brandName}
             </span>
           </div>
-
         </div>
 
-        <h1 className="font-bold text-gray-900 dark:text-gray-200 text-3xl leading-tight">{name}</h1>
+        <h1 className="font-bold text-gray-900 dark:text-gray-200 text-3xl leading-tight">
+          {name}
+        </h1>
 
         {/* Rating */}
         <div className="flex items-center gap-4">
@@ -186,15 +270,16 @@ export function ProductInfo({
             {[1, 2, 3, 4, 5].map((star) => (
               <Star
                 key={star}
-                className={`h-4 w-4 ${star <= Math.floor(averageRating || 0)
-                  ? 'fill-yellow-400 text-yellow-400'
-                  : 'text-gray-200'
-                  }`}
+                className={`h-4 w-4 ${
+                  star <= Math.floor(averageRating || 0)
+                    ? "fill-yellow-400 text-yellow-400"
+                    : "text-gray-200"
+                }`}
               />
             ))}
           </div>
           <span className="text-gray-600 text-sm">
-            {averageRating?.toFixed(1) || '0.0'} • {reviewCount || 0} reviews
+            {averageRating?.toFixed(1) || "0.0"} • {reviewCount || 0} reviews
           </span>
         </div>
 
@@ -228,17 +313,20 @@ export function ProductInfo({
       {/* Variants Section */}
       {variations.length > 1 && (
         <div className="space-y-4">
-          <h3 className="font-semibold text-gray-900 text-lg">Choose Variation</h3>
+          <h3 className="font-semibold text-gray-900 text-lg">
+            Choose Variation
+          </h3>
           <div className="gap-3 grid grid-cols-2 sm:grid-cols-3">
             {variations.map((variant, index) => (
               <Button
                 key={variant.id}
-                variant={selectedVariant === index ? 'default' : 'outline'}
+                variant={selectedVariant === index ? "default" : "outline"}
                 onClick={() => setSelectedVariant(index)}
-                className={`p-4 h-auto flex-col justify-center text-center transition-all ${selectedVariant === index
-                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg'
-                  : 'hover:border-emerald-300 hover:bg-emerald-50'
-                  }`}
+                className={`p-4 h-auto flex-col justify-center text-center transition-all ${
+                  selectedVariant === index
+                    ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg"
+                    : "hover:border-emerald-300 hover:bg-emerald-50"
+                }`}
               >
                 <span className="font-medium">{variant.name}</span>
                 {variant.volume && (
@@ -264,13 +352,17 @@ export function ProductInfo({
             >
               <Minus className="w-4 h-4" />
             </Button>
-          <div className="px-6 py-3 min-w-[80px] font-semibold text-lg text-center">
+            <div className="px-6 py-3 min-w-[80px] font-semibold text-lg text-center">
               {quantity}
             </div>
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setQuantity(Math.min(currentVariant.stockQuantity, quantity + 1))}
+              onClick={() =>
+                setQuantity(
+                  Math.min(currentVariant.stockQuantity, quantity + 1)
+                )
+              }
               disabled={quantity >= currentVariant.stockQuantity}
               className="hover:bg-gray-100 rounded-none w-12 h-12"
             >
@@ -310,7 +402,7 @@ export function ProductInfo({
             disabled={addingToCart || currentVariant.stockQuantity === 0}
           >
             <ShoppingBag className="mr-2 w-5 h-5" />
-            {addingToCart ? 'Adding...' : 'Add to Cart'}
+            {addingToCart ? "Adding..." : "Add to Cart"}
           </Button>
 
           <Button
@@ -319,14 +411,18 @@ export function ProductInfo({
             onClick={handleBuyNow}
             disabled={addingToCart || currentVariant.stockQuantity === 0}
           >
-            {addingToCart ? 'Processing...' : 'Buy Now'}
+            {addingToCart ? "Processing..." : "Buy Now"}
           </Button>
         </div>
 
         {/* Share Button */}
         <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="w-full h-12 text-base" size="lg">
+            <Button
+              variant="outline"
+              className="w-full h-12 text-base"
+              size="lg"
+            >
               <Share2 className="mr-2 w-5 h-5" />
               Share Product
             </Button>
@@ -337,11 +433,7 @@ export function ProductInfo({
             </DialogHeader>
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <Input
-                  value={currentUrl}
-                  readOnly
-                  className="flex-1"
-                />
+                <Input value={currentUrl} readOnly className="flex-1" />
                 <Button
                   onClick={copyToClipboard}
                   size="icon"
@@ -358,7 +450,7 @@ export function ProductInfo({
 
               <div className="flex justify-center space-x-4">
                 <Button
-                  onClick={() => shareToSocial('facebook')}
+                  onClick={() => shareToSocial("facebook")}
                   variant="outline"
                   size="icon"
                   className="w-12 h-12"
@@ -366,7 +458,7 @@ export function ProductInfo({
                   <Facebook className="w-5 h-5 text-blue-600" />
                 </Button>
                 <Button
-                  onClick={() => shareToSocial('twitter')}
+                  onClick={() => shareToSocial("twitter")}
                   variant="outline"
                   size="icon"
                   className="w-12 h-12"
@@ -374,7 +466,7 @@ export function ProductInfo({
                   <Twitter className="w-5 h-5 text-blue-400" />
                 </Button>
                 <Button
-                  onClick={() => shareToSocial('linkedin')}
+                  onClick={() => shareToSocial("linkedin")}
                   variant="outline"
                   size="icon"
                   className="w-12 h-12"
@@ -394,22 +486,34 @@ export function ProductInfo({
             <div className="inline-flex justify-center items-center bg-orange-100 dark:bg-orange-900 mb-2 md:mb-3 rounded-full w-8 h-8 md:w-10 md:h-10">
               <Award className="w-4 h-4 md:w-5 md:h-5 text-orange-600 dark:text-orange-400" />
             </div>
-            <h4 className="mb-1 font-semibold text-gray-900 dark:text-gray-100 text-xs md:text-sm leading-tight">Original Products</h4>
-            <p className="text-gray-600 dark:text-gray-300 text-[10px] md:text-xs leading-tight">100% authentic guarantee</p>
+            <h4 className="mb-1 font-semibold text-gray-900 dark:text-gray-100 text-xs md:text-sm leading-tight">
+              Original Products
+            </h4>
+            <p className="text-gray-600 dark:text-gray-300 text-[10px] md:text-xs leading-tight">
+              100% authentic guarantee
+            </p>
           </div>
           <div className="bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 p-3 md:p-4 rounded-lg text-center transition-colors">
             <div className="inline-flex justify-center items-center bg-emerald-100 dark:bg-emerald-900 mb-2 md:mb-3 rounded-full w-8 h-8 md:w-10 md:h-10">
               <Truck className="w-4 h-4 md:w-5 md:h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h4 className="mb-1 font-semibold text-gray-900 dark:text-gray-100 text-xs md:text-sm leading-tight">Safe Shipping</h4>
-            <p className="text-gray-600 dark:text-gray-300 text-[10px] md:text-xs leading-tight">Fast & secure delivery</p>
+            <h4 className="mb-1 font-semibold text-gray-900 dark:text-gray-100 text-xs md:text-sm leading-tight">
+              Safe Shipping
+            </h4>
+            <p className="text-gray-600 dark:text-gray-300 text-[10px] md:text-xs leading-tight">
+              Fast & secure delivery
+            </p>
           </div>
           <div className="bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 p-3 md:p-4 rounded-lg text-center transition-colors">
             <div className="inline-flex justify-center items-center bg-blue-100 dark:bg-blue-900 mb-2 md:mb-3 rounded-full w-8 h-8 md:w-10 md:h-10">
               <Shield className="w-4 h-4 md:w-5 md:h-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <h4 className="mb-1 font-semibold text-gray-900 dark:text-gray-100 text-xs md:text-sm leading-tight">Secure Payment</h4>
-            <p className="text-gray-600 dark:text-gray-300 text-[10px] md:text-xs leading-tight">100% protected checkout</p>
+            <h4 className="mb-1 font-semibold text-gray-900 dark:text-gray-100 text-xs md:text-sm leading-tight">
+              Secure Payment
+            </h4>
+            <p className="text-gray-600 dark:text-gray-300 text-[10px] md:text-xs leading-tight">
+              100% protected checkout
+            </p>
           </div>
         </div>
       </div>
