@@ -121,6 +121,7 @@ export default function CheckoutPage() {
   const { toast } = useToast();
 
   const [sessionId, setSessionId] = useState<string>("");
+  const [sessionIdLoading, setSessionIdLoading] = useState(true);
   //   const [readiness, setReadiness] = useState<CheckoutReadinessResponse | null>(null);
   const [cartData, setCartData] = useState<EnhancedCartResponse | null>(null);
   const [shippingCharges, setShippingCharges] =
@@ -150,17 +151,24 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     const fetchSessionId = async () => {
-      const id = await getSessionIdCookie();
-      setSessionId(id || "");
-      setFormData((prev) => ({
-        ...prev,
-        sessionId: id || "",
-      }));
+      try {
+        const id = await getSessionIdCookie();
+        setSessionId(id || "");
+        setFormData((prev) => ({
+          ...prev,
+          sessionId: id || "",
+        }));
+      } finally {
+        setSessionIdLoading(false);
+      }
     };
     fetchSessionId();
   }, []);
 
   useEffect(() => {
+    // Don't proceed until we've finished fetching the session ID
+    if (sessionIdLoading) return;
+
     if (!sessionId) {
       toast({
         title: "Error",
@@ -176,7 +184,7 @@ export default function CheckoutPage() {
       fetchCartData(),
       fetchShippingCharges(),
     ]);
-  }, [sessionId]);
+  }, [sessionId, sessionIdLoading]);
 
   const fetchCartData = async () => {
     try {
