@@ -176,7 +176,10 @@ export function ManualOrderForm() {
     }, [searchQuery, debouncedSearch]);
 
     const addProductToOrder = (product: any) => {
-        console.log(product)
+        console.log('Adding product to order:', product);
+        console.log('Product ID:', product.id);
+        console.log('Product name:', product.productName);
+        
         const existingIndex = formData.items.findIndex(item => item.id === product.id);
 
         if (existingIndex !== -1) {
@@ -333,7 +336,7 @@ export function ManualOrderForm() {
                 description: "Please wait while we process your order.",
             });
 
-            const order = await createOrder({
+            const orderPayload = {
                 ...formData,
                 items: formData.items.map(item => ({
                     productVariationId: item.id,
@@ -347,7 +350,12 @@ export function ManualOrderForm() {
                         : undefined,
                     notes: item.notes || undefined,
                 })),
-            } as CreateManualOrderRequest);
+            } as CreateManualOrderRequest;
+
+            console.log('Order payload being sent:', JSON.stringify(orderPayload, null, 2));
+            console.log('Items with productVariationId:', orderPayload.items);
+
+            const order = await createOrder(orderPayload);
 
             if (order) {
                 toast({
