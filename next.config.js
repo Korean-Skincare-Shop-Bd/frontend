@@ -10,6 +10,7 @@ const nextConfig = {
   },
   images: {
     unoptimized: false, // Enable image optimization for better performance
+    domains: ['res.cloudinary.com'],
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: true,
