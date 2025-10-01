@@ -779,7 +779,7 @@ export default function CheckoutPage() {
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="flex items-end">
+                        {/* <div className="flex items-end">
                           <Button
                             type="button"
                             variant="outline"
@@ -802,7 +802,7 @@ export default function CheckoutPage() {
                               </div>
                             )}
                           </Button>
-                        </div>
+                        </div> */}
                       </div>
 
                       {/* Shipping Cost Display */}
