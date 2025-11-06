@@ -171,16 +171,6 @@ export function Header() {
     }
   };
 
-  // Fetch categories from API
-  useEffect(() => {
-    // Poll every 10 seconds for new categories
-    const interval = setInterval(() => {
-      fetchCategories(); // Refetch every 30 seconds
-    }, 10000); // 30 seconds
-
-    return () => clearInterval(interval); // Cleanup on unmount
-  }, []);
-
   useEffect(() => {
     const fetchCartData = async () => {
       try {
@@ -300,12 +290,7 @@ export function Header() {
 
   // Fetch brands from API
   useEffect(() => {
-    // Poll every 10 seconds for new categories
-    const interval = setInterval(() => {
-      fetchBrands();
-    }, 10000); // 30 seconds
-
-    return () => clearInterval(interval); // Cleanup on unmount
+     Promise.all([fetchCategories(), fetchBrands()]);
   }, []);
 
   useEffect(() => {

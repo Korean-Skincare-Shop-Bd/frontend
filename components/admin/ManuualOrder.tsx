@@ -354,6 +354,8 @@ export function ManualOrderForm() {
 
             console.log('Order payload being sent:', JSON.stringify(orderPayload, null, 2));
             console.log('Items with productVariationId:', orderPayload.items);
+            console.log('Custom shipping fee being sent:', orderPayload.customShippingFee);
+            console.log('Custom discount amount being sent:', orderPayload.customDiscountAmount);
 
             const order = await createOrder(orderPayload);
 
@@ -845,7 +847,7 @@ export function ManualOrderForm() {
 
                         <div className="gap-4 grid grid-cols-1 md:grid-cols-2">
                             <div className="space-y-2">
-                                                                <Label htmlFor="orderSource" className="font-medium text-sm">
+                                <Label htmlFor="orderSource" className="font-medium text-sm">
                                     Order Source
                                 </Label>
                                 <Input

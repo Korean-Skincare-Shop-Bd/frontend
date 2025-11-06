@@ -143,6 +143,7 @@ export default function CheckoutPage() {
     billingAddress: "",
     paymentMethod: "CASH_ON_DELIVERY",
     notes: "",
+    customShippingFee: undefined,
   });
   const [sameAsBilling, setSameAsBilling] = useState(true);
   const [items, setItems] = useState<CartItemWithProduct[]>([]);
@@ -249,6 +250,11 @@ export default function CheckoutPage() {
       const data = await getAllShippingCharges();
       setShippingCharges(data);
       setShippingCost(data.data.dhaka); // Default to Dhaka
+      // Set initial shipping fee in formData
+      setFormData((prev) => ({
+        ...prev,
+        customShippingFee: data.data.dhaka,
+      }));
       setLoading(false);
     } catch (error: any) {
       toast({
@@ -268,6 +274,11 @@ export default function CheckoutPage() {
           ? shippingCharges.data.dhaka
           : shippingCharges.data.outsideDhaka;
       setShippingCost(cost);
+      // Update formData with the selected shipping fee for backend
+      setFormData((prev) => ({
+        ...prev,
+        customShippingFee: cost,
+      }));
     }
   };
 
@@ -290,6 +301,11 @@ export default function CheckoutPage() {
       const detectedRegion = result.data.region;
       setSelectedRegion(detectedRegion);
       setShippingCost(result.data.charge);
+      // Update formData with the calculated shipping fee
+      setFormData((prev) => ({
+        ...prev,
+        customShippingFee: result.data.charge,
+      }));
 
       toast({
         title: "Shipping Calculated",
