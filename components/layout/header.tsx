@@ -338,7 +338,7 @@ export function Header() {
     }
 
     // handle pixel and conversion api
-    await fetch("/api/fb-conversion", {
+    fetch("/api/fb-conversion", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -348,7 +348,7 @@ export function Header() {
         eventId: eventId,
         eventTime: fbEventTime,
       }),
-    });
+    }).catch(() => {});
 
     (window as any).fbq("track", "Search", {
       eventID: eventId,

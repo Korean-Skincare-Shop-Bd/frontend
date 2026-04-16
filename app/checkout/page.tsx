@@ -453,7 +453,7 @@ export default function CheckoutPage() {
       // send data to facebook conversion API
       if (result.success) {
         // call Facebook conversion API from next api folder
-        await fetch("/api/fb-conversion", {
+        fetch("/api/fb-conversion", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -471,7 +471,7 @@ export default function CheckoutPage() {
               fn: [hashSHA256(formData.phone)],
             },
           }),
-        });
+        }).catch(() => {});
 
         (window as any).fbq(
           "track",

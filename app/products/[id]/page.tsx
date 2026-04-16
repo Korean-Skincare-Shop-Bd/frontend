@@ -16,7 +16,7 @@ import { generateEventId } from "@/lib/utils";
 
 // Pre-render all existing product pages at build time.
 // New products added after build are rendered on first visit and then cached.
-export const revalidate = 120;
+export const revalidate = 600;
 
 export async function generateStaticParams() {
   try {
