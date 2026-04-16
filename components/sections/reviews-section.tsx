@@ -46,7 +46,7 @@ export function ReviewsSection() {
     if (reviews.length > 0) {
       const timer = setInterval(() => {
         setCurrentReview((prev) => (prev + 1) % reviews.length);
-      }, 4000);
+      }, 10000);
       return () => clearInterval(timer);
     }
   }, [reviews.length]);
