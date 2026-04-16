@@ -79,12 +79,16 @@ export default function ProductsPageContent() {
   const [selectedBrand, setSelectedBrand] = useState(
     searchParams?.get("brand") || "all"
   );
+  const [variationTags, setVariationTags] = useState(
+    searchParams?.get("variationTags") || ""
+  );
 
   // Update filter states when URL parameters change
   useEffect(() => {
     setSearchQuery(searchParams?.get("search") || "");
     setSelectedCategory(searchParams?.get("category") || "all");
     setSelectedBrand(searchParams?.get("brand") || "all");
+    setVariationTags(searchParams?.get("variationTags") || "");
     setCurrentPage(1); // Reset to first page when filters change
   }, [searchParams]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
@@ -161,6 +165,9 @@ export default function ProductsPageContent() {
         if (searchQuery) {
           params.search = searchQuery;
         }
+        if (variationTags) {
+          params.variationTags = variationTags;
+        }
 
         // Fetch products using getProducts API
         const response = await getProducts(params);
@@ -192,6 +199,7 @@ export default function ProductsPageContent() {
     sortBy,
     sortOrder,
     currentPage,
+    variationTags,
   ]);
 
   // Helper functions

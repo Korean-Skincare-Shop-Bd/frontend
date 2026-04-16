@@ -143,7 +143,7 @@ export function SaleProductsClient({ products, error }: SaleProductsClientProps)
 
           <div className="mt-12 text-center">
             <Button variant="outline" size="lg" asChild>
-              <Link href="/products">
+              <Link href="/products?variationTags=SALE">
                 View All Products
               </Link>
             </Button>

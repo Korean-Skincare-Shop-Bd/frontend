@@ -143,7 +143,7 @@ export function TopProductsClient({ products, error }: TopProductsClientProps) {
 
           <div className="mt-12 text-center">
             <Button variant="outline" size="lg" asChild>
-              <Link href="/products">
+              <Link href="/products?variationTags=NEW">
                 View All Products
               </Link>
             </Button>
