@@ -13,6 +13,20 @@ import {
   ChevronRight,
   Star
 } from 'lucide-react';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Customer Support & Help | Korean Skincare Shop BD',
+  description: 'Contact Korean Skincare Shop BD customer support. Get help with FAQs, live chat, email, and phone support for all your K-beauty skincare questions.',
+  keywords: ['customer support', 'help center', 'FAQs', 'contact support', 'Korean skincare help'],
+  openGraph: {
+    title: 'Customer Support Center',
+    description: 'Get help and support for your Korean skincare purchases.',
+    url: 'https://www.koreanskincareshopbd.com/support',
+    type: 'website',
+    images: [{ url: '/logo2.png', width: 1200, height: 630, alt: 'Customer Support' }],
+  },
+};
 
 const CustomerSupportPage: React.FC = () => {
   const faqs = [

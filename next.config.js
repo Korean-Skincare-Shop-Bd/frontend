@@ -9,7 +9,6 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    unoptimized: true, // Disable image optimization temporarily
     domains: ['res.cloudinary.com', 'di52x3c4ntpb8.cloudfront.net'],
     formats: ['image/webp', 'image/avif'],
     minimumCacheTTL: 60,

@@ -2,6 +2,20 @@
 import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Heart, Users, Award, Target, Mail, Phone, MapPin } from 'lucide-react';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'About Us | Korean Skincare Shop BD',
+  description: 'Learn about Korean Skincare Shop BD - Bangladesh\'s premier destination for authentic Korean beauty products since 2024. Discover our mission to bring premium K-beauty to Bangladesh.',
+  keywords: ['about us', 'Korean skincare shop', 'K-beauty Bangladesh', 'our story', 'mission'],
+  openGraph: {
+    title: 'About Korean Skincare Shop BD',
+    description: 'Learn about our mission to bring premium Korean skincare to Bangladesh.',
+    url: 'https://www.koreanskincareshopbd.com/about',
+    type: 'website',
+    images: [{ url: '/logo2.png', width: 1200, height: 630, alt: 'About Korean Skincare Shop BD' }],
+  },
+};
 
 const AboutUsPage: React.FC = () => {
   return (

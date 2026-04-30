@@ -3,6 +3,20 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Mail, Phone, MapPin, Clock, Send, MessageCircle } from 'lucide-react';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Contact Us | Korean Skincare Shop BD',
+  description: 'Get in touch with Korean Skincare Shop BD. Contact our customer support team for inquiries, feedback, or help with your orders. Available via email, phone, and contact form.',
+  keywords: ['contact us', 'customer support', 'help', 'inquiries', 'Korean skincare shop'],
+  openGraph: {
+    title: 'Contact Korean Skincare Shop BD',
+    description: 'Get in touch with our customer support team.',
+    url: 'https://www.koreanskincareshopbd.com/contact',
+    type: 'website',
+    images: [{ url: '/logo2.png', width: 1200, height: 630, alt: 'Contact Us' }],
+  },
+};
 
 const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState({

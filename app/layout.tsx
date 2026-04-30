@@ -7,7 +7,6 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { getCategories } from "@/lib/api/categories";
-export const dynamic = "force-dynamic";
 
 const inter = Inter({
   subsets: ["latin"],
