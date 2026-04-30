@@ -34,7 +34,7 @@ export function ProductCard({
   return (
     <Card className="shadow-lg hover:shadow-xl border-0 overflow-hidden group-hover:scale-105 transition-all duration-300">
       <div className="relative aspect-square overflow-hidden">
-        <Link href={`/products/${product.id}`}>
+        <Link href={`/products/${product.slug || product.id}`}>
           <Image
             src={mainImage}
             alt={product.name}
@@ -65,7 +65,7 @@ export function ProductCard({
         <div className="space-y-2">
           <p className="text-muted-foreground text-sm">{product.brand?.name}</p>
           <h3 className="font-semibold line-clamp-2">
-            <Link href={`/products/${product.id}`} className="hover:text-primary transition-colors">
+            <Link href={`/products/${product.slug || product.id}`} className="hover:text-primary transition-colors">
               {product.name}
             </Link>
           </h3>

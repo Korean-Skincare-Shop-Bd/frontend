@@ -183,7 +183,7 @@ export function Footer() {
                 categories.map((category) => (
                   <Link
                     key={category.id}
-                    href={`/products?category=${category.id}`}
+                    href={`/products?category=${category.slug || category.id}`}
                     className="block text-gray-400 hover:text-primary capitalize transition-colors">
                     {category.name}
                   </Link>

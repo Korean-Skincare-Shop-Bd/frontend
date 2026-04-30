@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import FloatingActions from "@/components/layout/FloatingActions";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { getCategories } from "@/lib/api/categories";
 
@@ -131,8 +132,6 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <head>
-        <link rel="preconnect" href="https://images.pexels.com" />
-        <link rel="dns-prefetch" href="https://images.pexels.com" />
         <link rel="preload" href="/logo2.png" as="image" />
         <script
           type="application/ld+json"
@@ -188,6 +187,7 @@ export default async function RootLayout({
               <main className="flex-1">{children}</main>
               <Footer />
             </div>
+            <FloatingActions />
             <Toaster />
           </AdminProvider>
         </ThemeProvider>

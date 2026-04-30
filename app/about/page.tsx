@@ -3,6 +3,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Heart, Users, Award, Target, Mail, Phone, MapPin } from 'lucide-react';
 import type { Metadata } from 'next';
+import { BASE_URL } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'About Us | Korean Skincare Shop BD',
@@ -17,8 +18,39 @@ export const metadata: Metadata = {
   },
 };
 
+const localBusinessSchema = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  name: "Korean Skincare Shop BD",
+  description:
+    "Bangladesh's premier destination for authentic Korean skincare products. Founded in 2024 to bring premium K-beauty to Bangladesh.",
+  url: BASE_URL,
+  logo: `${BASE_URL}/logo2.png`,
+  image: `${BASE_URL}/logo2.png`,
+  email: "koreanskincareshopbd1@gmail.com",
+  telephone: "+8801534554311",
+  foundingDate: "2024",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Dhanmondi",
+    addressLocality: "Dhaka",
+    addressCountry: "BD",
+  },
+  contactPoint: {
+    "@type": "ContactPoint",
+    telephone: "+8801534554311",
+    contactType: "customer service",
+    availableLanguage: ["English", "Bengali"],
+  },
+};
+
 const AboutUsPage: React.FC = () => {
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+      />
     <div className="bg-background min-h-screen">
       <div className="mx-auto px-4 py-8 max-w-4xl container">
         {/* Header */}
@@ -175,6 +207,7 @@ const AboutUsPage: React.FC = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

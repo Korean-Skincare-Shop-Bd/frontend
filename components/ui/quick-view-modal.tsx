@@ -188,7 +188,7 @@ export function QuickViewModal({
                   Add to Cart
                 </Button>
                 <Button variant="outline" className="w-full" size="lg" asChild>
-                  <Link href={`/products/${product.id}`}>
+                  <Link href={`/products/${product.slug || product.id}`}>
                     View Full Details
                   </Link>
                 </Button>
