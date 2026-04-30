@@ -51,14 +51,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Proceed with static pages only if API is unavailable
   }
 
-  const brandFilterPages: MetadataRoute.Sitemap = [...brandSlugs].map((slug) => ({
+  const brandFilterPages: MetadataRoute.Sitemap = Array.from(brandSlugs).map((slug) => ({
     url: `${BASE_URL}/products?brand=${slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.7,
   }));
 
-  const categoryFilterPages: MetadataRoute.Sitemap = [...categorySlugs].map((slug) => ({
+  const categoryFilterPages: MetadataRoute.Sitemap = Array.from(categorySlugs).map((slug) => ({
     url: `${BASE_URL}/products?category=${slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
