@@ -47,6 +47,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getEnhancedCart } from "@/lib/api/cart";
 import { getSessionIdCookie } from "@/lib/cookies/session";
 import Image from "next/image";
+import { cloudfrontLoader } from "@/lib/cloudfront-loader";
 import useFbIds from "@/hooks/useFbIds";
 import { PAGINATION_LIMIT } from "@/constants/constants";
 
@@ -389,6 +390,7 @@ export function Header() {
                 src="/logo1.png"
                 width={75}
                 height={75}
+                loader={cloudfrontLoader}
                 alt="Korean Skincare Shop BD Logo"
                 className="pt-1 w-20 h-19 object-contain"
               />
@@ -474,6 +476,7 @@ export function Header() {
                                   alt={brand.name}
                                   width={24}
                                   height={24}
+                                  loader={cloudfrontLoader}
                                   className="rounded w-6 h-6 object-cover"
                                   onError={(e) => {
                                     e.currentTarget.style.display = "none";
@@ -735,6 +738,7 @@ export function Header() {
                                     alt={brand.name}
                                     width={16}
                                     height={16}
+                                    loader={cloudfrontLoader}
                                     className="mr-2 rounded w-4 h-4 object-cover flex-shrink-0"
                                     onError={(e) => {
                                       e.currentTarget.style.display = "none";
