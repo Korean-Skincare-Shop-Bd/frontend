@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { cloudfrontLoader } from "@/lib/cloudfront-loader";
 import Link from "next/link";
 import { Search, Grid, List, ShoppingBag, Eye, Package, Info, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -166,6 +167,8 @@ export default function BrandsPageContent({
                   src={brand.logoUrl}
                   alt={brand.name}
                   fill
+                  loader={cloudfrontLoader}
+                  sizes="64px"
                   className="object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
@@ -349,6 +352,8 @@ export default function BrandsPageContent({
                                   src={brand.logoUrl}
                                   alt={brand.name}
                                   fill
+                                  loader={cloudfrontLoader}
+                                  sizes="80px"
                                   className="object-cover"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
@@ -449,6 +454,8 @@ export default function BrandsPageContent({
                                 src={brand.logoUrl}
                                 alt={brand.name}
                                 fill
+                                loader={cloudfrontLoader}
+                                sizes="(max-width: 640px) 64px, 80px"
                                 className="object-cover"
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;

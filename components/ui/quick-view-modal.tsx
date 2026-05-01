@@ -4,6 +4,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { cloudfrontLoader } from "@/lib/cloudfront-loader";
 import { X, ShoppingBag, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -63,6 +64,8 @@ export function QuickViewModal({
                 src={getMainImage(product)}
                 alt={product.name}
                 fill
+                loader={cloudfrontLoader}
+                sizes="(max-width: 768px) 90vw, 45vw"
                 className="object-cover"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
@@ -81,6 +84,8 @@ export function QuickViewModal({
                         src={image.imageUrl}
                         alt={`${product.name} ${index + 1}`}
                         fill
+                        loader={cloudfrontLoader}
+                        sizes="64px"
                         className="object-cover"
                       />
                     </div>

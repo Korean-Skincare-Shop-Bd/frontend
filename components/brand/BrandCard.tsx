@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
+import { cloudfrontLoader } from '@/lib/cloudfront-loader';
 
 interface BrandCardProps {
   id: string;
@@ -25,9 +26,10 @@ export function BrandCard({ id, slug, name, logoUrl }: BrandCardProps) {
               src={logoUrl || '/placeholder-brand-logo.png'}
               alt={name}
               fill
+              loader={cloudfrontLoader}
+              sizes="(max-width: 768px) 64px, 80px"
               className="rounded-lg object-cover"
               onError={(e) => {
-                // Fallback to placeholder if image fails to load
                 const target = e.target as HTMLImageElement;
                 target.src = '/placeholder-brand-logo.png';
               }}

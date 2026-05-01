@@ -5,6 +5,7 @@ import { Product } from '@/lib/api/products';
 import { ProductBadges } from './ProductBadges';
 import { ProductPrice } from './ProductPrice';
 import { ProductQuickActions } from './ProductQuickActions';
+import { cloudfrontLoader } from '@/lib/cloudfront-loader';
 
 interface ProductCardProps {
   product: Product;
@@ -39,6 +40,8 @@ export function ProductCard({
             src={mainImage}
             alt={product.name}
             fill
+            loader={cloudfrontLoader}
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
             className="object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
