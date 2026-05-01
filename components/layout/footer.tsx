@@ -65,7 +65,7 @@ export function Footer() {
             <div className="flex items-center space-x-2">
               <div className="flex justify-center items-center bg-white rounded-full w-12 h-12">
                 <Image
-                  src="/logo2.png"
+                  src="/logo1.png"
                   width={50}
                   height={50}
                   alt="Korean Skincare Shop BD Logo"

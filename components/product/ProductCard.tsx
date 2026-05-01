@@ -1,11 +1,11 @@
 import Image from 'next/image';
+import { cloudfrontLoader } from '@/lib/cloudfront-loader';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Product } from '@/lib/api/products';
 import { ProductBadges } from './ProductBadges';
 import { ProductPrice } from './ProductPrice';
 import { ProductQuickActions } from './ProductQuickActions';
-import { cloudfrontLoader } from '@/lib/cloudfront-loader';
 
 interface ProductCardProps {
   product: Product;
