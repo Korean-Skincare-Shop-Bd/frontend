@@ -149,7 +149,7 @@ export interface SearchReviewsResponse {
 
 // Admin functions requiring authentication
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('adminToken');
+  const token = localStorage.getItem('admin_token');
   return {
     'Content-Type': 'application/json',
     'Authorization': token ? `Bearer ${token}` : '',
