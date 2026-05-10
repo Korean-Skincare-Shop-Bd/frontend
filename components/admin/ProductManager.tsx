@@ -59,11 +59,11 @@ export function ProductsManager() {
   const [publishingProductId, setPublishingProductId] = useState<string | null>(
     null
   );
-  const { token } = useAdmin();
+  const { isAuthenticated } = useAdmin();
   const router = useRouter();
 
   const fetchProducts = useCallback(async () => {
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     try {
       setLoading(true);
@@ -82,17 +82,17 @@ export function ProductsManager() {
     } finally {
       setLoading(false);
     }
-  }, [token, currentPage, searchQuery]);
+  }, [isAuthenticated, currentPage, searchQuery]);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
   const handleDeleteProduct = async () => {
-    if (!productToDelete || !token) return;
+    if (!productToDelete || !isAuthenticated) return;
 
     try {
-      await deleteProduct(token, productToDelete.id);
+      await deleteProduct(productToDelete.id);
       toast.success("Product deleted successfully");
       fetchProducts();
     } catch (error) {

@@ -10,15 +10,15 @@ import { useAdmin } from '@/contexts/AdminContext';
 export function StatsCards() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const { token } = useAdmin();
+  const { isAuthenticated } = useAdmin();
 
   useEffect(() => {
     const fetchStats = async () => {
-      if (!token) return;
+      if (!isAuthenticated) return;
       
       try {
         setLoading(true);
-        const data = await getAdminStats(token);
+        const data = await getAdminStats();
         setStats(data);
       } catch (error) {
         console.error('Error fetching stats:', error);
@@ -28,7 +28,7 @@ export function StatsCards() {
     };
 
     fetchStats();
-  }, [token]);
+  }, [isAuthenticated]);
 
   const statsConfig = [
     {

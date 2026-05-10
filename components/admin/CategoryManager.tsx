@@ -77,7 +77,7 @@ export function CategoriesManager() {
     hasNext: false,
     hasPrev: false,
   });
-  const { token } = useAdmin();
+  const { isAuthenticated } = useAdmin();
 
   useEffect(() => {
     fetchCategories();
@@ -99,7 +99,7 @@ export function CategoriesManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     if (!formData.name.trim()) {
       toast.error('Category name is required');
@@ -109,10 +109,10 @@ export function CategoriesManager() {
     try {
       setFormLoading(true);
       if (editingCategory) {
-        await updateCategory(token, editingCategory.id, formData);
+        await updateCategory(editingCategory.id, formData);
         toast.success('Category updated successfully');
       } else {
-        await createCategory(token, formData);
+        await createCategory(formData);
         toast.success('Category created successfully');
       }
       
@@ -140,10 +140,10 @@ export function CategoriesManager() {
   };
 
   const handleDelete = async () => {
-    if (!categoryToDelete || !token) return;
+    if (!categoryToDelete || !isAuthenticated) return;
 
     try {
-      await deleteCategory(token, categoryToDelete.id);
+      await deleteCategory(categoryToDelete.id);
       toast.success('Category deleted successfully');
       fetchCategories();
     } catch (error) {

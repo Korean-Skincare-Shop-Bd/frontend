@@ -1,3 +1,5 @@
+import { adminFetch } from "./adminFetch";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface Brand {
@@ -50,7 +52,7 @@ export const getBrands = async (
     return response.json();
 };
 
-export const createBrand = async (token: string, brandData: CreateBrandRequest): Promise<Brand> => {
+export const createBrand = async (brandData: CreateBrandRequest): Promise<Brand> => {
   const formData = new FormData();
   
   Object.entries(brandData).forEach(([key, value]) => {
@@ -63,11 +65,8 @@ export const createBrand = async (token: string, brandData: CreateBrandRequest):
     }
   });
 
-  const response = await fetch(`${API_BASE_URL}/brands`, {
+  const response = await adminFetch(`/brands`, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
     body: formData,
   });
 
@@ -79,7 +78,7 @@ export const createBrand = async (token: string, brandData: CreateBrandRequest):
   return result.data;
 };
 
-export const updateBrand = async (token: string, id: string, brandData: Partial<CreateBrandRequest>): Promise<Brand> => {
+export const updateBrand = async (id: string, brandData: Partial<CreateBrandRequest>): Promise<Brand> => {
   const formData = new FormData();
   
   Object.entries(brandData).forEach(([key, value]) => {
@@ -92,11 +91,8 @@ export const updateBrand = async (token: string, id: string, brandData: Partial<
     }
   });
 
-  const response = await fetch(`${API_BASE_URL}/brands/${id}`, {
+  const response = await adminFetch(`/brands/${id}`, {
     method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
     body: formData,
   });
 
@@ -108,12 +104,9 @@ export const updateBrand = async (token: string, id: string, brandData: Partial<
   return result.data;
 };
 
-export const deleteBrand = async (token: string, id: string): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/brands/${id}`, {
+export const deleteBrand = async (id: string): Promise<void> => {
+  const response = await adminFetch(`/brands/${id}`, {
     method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
   });
 
   if (!response.ok) {

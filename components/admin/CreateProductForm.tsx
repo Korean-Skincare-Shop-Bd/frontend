@@ -50,11 +50,11 @@ export function CreateProductForm() {
   const [additionalImages, setAdditionalImages] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
-  const { token } = useAdmin();
+  const { isAuthenticated } = useAdmin();
   const router = useRouter();
 
   const fetchInitialData = useCallback(async () => {
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     try {
       setLoadingData(true);
@@ -114,7 +114,7 @@ export function CreateProductForm() {
     } finally {
       setLoadingData(false);
     }
-  }, [token]);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     fetchInitialData();
@@ -155,7 +155,7 @@ export function CreateProductForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     if (!formData.name || formData.price <= 0) {
       toast.error("Please fill in all required fields");
@@ -171,7 +171,7 @@ export function CreateProductForm() {
           additionalImages.length > 0 ? additionalImages : undefined,
       };
 
-      await createProduct(token, productData);
+      await createProduct(productData);
       toast.success("Product created successfully!");
       router.push("/admin/products");
     } catch (error) {

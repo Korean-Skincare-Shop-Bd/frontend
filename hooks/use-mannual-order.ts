@@ -13,17 +13,17 @@ export const useManualOrder = () => {
 //   const [productVariations, setProductVariations] = useState<ProductVariation[]>([]);
    const [products, setProducts] = useState<CutstomProducvariation[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
-  const { token } = useAdmin();
+  const { isAuthenticated } = useAdmin();
 
   const createOrder = async (orderData: CreateManualOrderRequest) => {
-    if (!token) {
+    if (!isAuthenticated) {
       toast({ variant: "destructive", title: "Authentication required" });
       return null;
     }
 
     try {
       setLoading(true);
-      const response = await createManualOrder(token, orderData);
+      const response = await createManualOrder(orderData);
       toast({ 
         variant: "default", 
         title: "Order created successfully",

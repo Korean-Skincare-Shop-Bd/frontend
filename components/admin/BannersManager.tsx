@@ -80,14 +80,14 @@ export function BannersManager() {
     hasNext: false,
     hasPrev: false,
   });
-  const { token } = useAdmin();
+  const { isAuthenticated } = useAdmin();
 
   const fetchBanners = useCallback(async () => {
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     try {
       setLoading(true);
-      const data = await getBanners(token, currentPage, 20);
+      const data = await getBanners(currentPage, 20);
       console.log("Fetched banners:", data.banners); // Debug log
       setBanners(data.banners);
       setPagination(data.pagination);
@@ -97,7 +97,7 @@ export function BannersManager() {
     } finally {
       setLoading(false);
     }
-  }, [token, currentPage]);
+  }, [isAuthenticated, currentPage]);
 
   useEffect(() => {
     fetchBanners();
@@ -117,7 +117,7 @@ export function BannersManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     if (!imageFile && !editingBanner) {
       toast.error("Banner image is required");
@@ -133,14 +133,14 @@ export function BannersManager() {
       };
 
       if (editingBanner) {
-        await updateBanner(token, editingBanner.id, {
+        await updateBanner(editingBanner.id, {
           linkUrl: formData.linkUrl || undefined,
           isActive: formData.isActive,
           ...(imageFile && { image: imageFile }),
         });
         toast.success("Banner updated successfully");
       } else {
-        await createBanner(token, submitData);
+        await createBanner(submitData);
         toast.success("Banner created successfully");
       }
 
@@ -167,10 +167,10 @@ export function BannersManager() {
   };
 
   const handleDelete = async () => {
-    if (!bannerToDelete || !token) return;
+    if (!bannerToDelete || !isAuthenticated) return;
 
     try {
-      await deleteBanner(token, bannerToDelete.id);
+      await deleteBanner(bannerToDelete.id);
       toast.success("Banner deleted successfully");
       fetchBanners();
     } catch (error) {

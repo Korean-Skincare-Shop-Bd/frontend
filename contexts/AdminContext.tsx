@@ -7,22 +7,23 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { adminLogin, AdminLoginRequest } from "@/lib/api/admin";
+import {
+  adminLogin,
+  adminLogout,
+  AdminLoginRequest,
+  getCurrentAdmin,
+} from "@/lib/api/admin";
+import { clearLegacyAdminStorage } from "@/lib/api/adminFetch";
 
 interface AdminContextType {
   isAuthenticated: boolean;
   adminData: any;
-  token: string | null;
   login: (credentials: AdminLoginRequest) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   loading: boolean;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
-
-// 7 days in milliseconds
-const TOKEN_EXPIRATION_DAYS = 7;
-const TOKEN_EXPIRATION_MS = TOKEN_EXPIRATION_DAYS * 24 * 60 * 60 * 1000;
 
 export function AdminProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -31,7 +32,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     email: string;
     username: string;
   } | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
 
@@ -42,68 +42,67 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!mounted) return;
 
-    const savedToken = localStorage.getItem("admin_token");
-    const savedAdminData = localStorage.getItem("admin_data");
-    const savedTimestamp = localStorage.getItem("admin_token_timestamp");
+    let active = true;
 
-    if (savedToken && savedAdminData && savedTimestamp) {
-      const timestamp = parseInt(savedTimestamp, 10);
-      const currentTime = new Date().getTime();
+    clearLegacyAdminStorage();
 
-      // Check if token is expired
-      if (currentTime - timestamp < TOKEN_EXPIRATION_MS) {
-        setToken(savedToken);
-        setAdminData(JSON.parse(savedAdminData));
+    getCurrentAdmin()
+      .then((admin) => {
+        if (!active) return;
+        setAdminData({
+          id: admin.id,
+          email: admin.email,
+          username: admin.username,
+        });
         setIsAuthenticated(true);
-      } else {
-        // Token expired, clear storage
-        localStorage.removeItem("admin_token");
-        localStorage.removeItem("admin_data");
-        localStorage.removeItem("admin_token_timestamp");
-      }
-    }
+      })
+      .catch(() => {
+        if (!active) return;
+        setAdminData(null);
+        setIsAuthenticated(false);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
 
-    setLoading(false);
+    const handleUnauthorized = () => {
+      setAdminData(null);
+      setIsAuthenticated(false);
+    };
+
+    window.addEventListener("admin:unauthorized", handleUnauthorized);
+
+    return () => {
+      active = false;
+      window.removeEventListener("admin:unauthorized", handleUnauthorized);
+    };
   }, [mounted]);
 
   const login = async (credentials: AdminLoginRequest) => {
     try {
       const response = await adminLogin(credentials);
-      console.log("Login response:", response);
 
       if (response) {
-        const { token: authToken, id, email, username } = response;
-        console.log("Login successful:", response);
+        const { id, email, username } = response;
 
-        setToken(authToken);
         setAdminData({
           id,
           email,
           username,
         });
         setIsAuthenticated(true);
-
-        const currentTime = new Date().getTime();
-        
-        localStorage.setItem('admin_token', authToken);
-        localStorage.setItem('admin_data', JSON.stringify({ id, email, username }));
-        localStorage.setItem('admin_token_timestamp', currentTime.toString());
-        localStorage.setItem('authed', 'true');
+        clearLegacyAdminStorage();
       }
     } catch (error) {
       throw error;
     }
   };
 
-  const logout = () => {
-    setToken(null);
+  const logout = async () => {
+    await adminLogout().catch(() => undefined);
     setAdminData(null);
     setIsAuthenticated(false);
-    
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_data');
-    localStorage.removeItem('admin_token_timestamp');
-    localStorage.removeItem('authed');
+    clearLegacyAdminStorage();
   };
 
   return (
@@ -111,7 +110,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       value={{
         isAuthenticated,
         adminData,
-        token,
         login,
         logout,
         loading,

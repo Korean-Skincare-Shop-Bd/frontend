@@ -2,7 +2,7 @@ import { Order, getAllOrders, UpdateOrderStatusRequest, updateEnhancedOrderStatu
 import { useState } from "react";
 import { toast } from "./use-toast";
 
-export const useOrders = (token: string | null) => {
+export const useOrders = (isAuthenticated: boolean) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -30,12 +30,11 @@ export const useOrders = (token: string | null) => {
     dateFrom?: string,
     dateTo?: string
   ) => {
-    if (!token) return;
+    if (!isAuthenticated) return;
     
     try {
       setLoading(true);
       const response = await getAllOrders(
-        token, 
         page, 
         20, 
         orderStatus === 'all' ? undefined : orderStatus,
@@ -57,7 +56,7 @@ export const useOrders = (token: string | null) => {
   };
 
   const updateOrderStatus = async (orderId: string, status: string, notes?: string) => {
-    if (!token) return false;
+    if (!isAuthenticated) return false;
 
     try {
       const statusData: UpdateOrderStatusRequest = {
@@ -65,7 +64,7 @@ export const useOrders = (token: string | null) => {
         notes
       };
       
-      await updateEnhancedOrderStatus(token, orderId, statusData);
+      await updateEnhancedOrderStatus(orderId, statusData);
       toast({ variant: "default", title: "Order status updated successfully" });
       await fetchOrders(
         currentPage, 
@@ -85,7 +84,7 @@ export const useOrders = (token: string | null) => {
   };
 
   const updatePaymentStatus = async (orderId: string, paymentStatus: string, notes?: string) => {
-    if (!token) return false;
+    if (!isAuthenticated) return false;
 
     try {
       const paymentData: UpdatePaymentStatusRequest = {
@@ -93,7 +92,7 @@ export const useOrders = (token: string | null) => {
         notes
       };
       
-      await updateEnhancedOrderPaymentStatus(token, orderId, paymentData);
+      await updateEnhancedOrderPaymentStatus(orderId, paymentData);
       toast({ variant: "default", title: "Payment status updated successfully" });
       await fetchOrders(
         currentPage, 

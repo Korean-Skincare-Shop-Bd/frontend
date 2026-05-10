@@ -96,7 +96,6 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [cartItems, setCartItems] = useState<number>(0); // Mock cart count
-  const [isAdmin, setIsAdmin] = useState(false); // Mock admin state
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
@@ -105,29 +104,14 @@ export function Header() {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const { theme, setTheme } = useTheme();
   const router = useRouter();
-  const { logout } = useAdmin();
+  const { isAuthenticated, logout } = useAdmin();
   const { toast } = useToast();
   const [items, setItems] = useState<CartItemWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
   // const sessionIdcookie = getSessionIdCookie();
-  const [authed, setAuthed] = useState<boolean>(false);
   const { fbclid, fbp } = useFbIds();
   const eventId = generateEventId();
   const fbEventTime = Math.floor(Date.now() / 1000);
-
-  useEffect(() => {
-    const checkAuth = () => {
-      const authedValue = localStorage.getItem("authed") === "true";
-      setAuthed(authedValue);
-      console.log("Auth checked:", authedValue);
-    };
-
-    const interval = setInterval(() => {
-      checkAuth();
-    }, 10000); // 30 secons
-
-    return () => clearInterval(interval);
-  }, []);
 
   // Prevent hydration mismatch for theme
   useEffect(() => {
@@ -361,10 +345,8 @@ export function Header() {
     });
   };
 
-  const toggleAdmin = () => {
-    setAuthed(false);
-    logout();
-
+  const toggleAdmin = async () => {
+    await logout();
     router.push("/");
   };
 
@@ -577,7 +559,7 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  {authed && (
+                  {isAuthenticated && (
                     <DropdownMenuItem onClick={toggleAdmin}>
                       <LogOut className="mr-2 w-4 h-4" />
                       Logout

@@ -56,7 +56,7 @@ interface ReviewDetailsViewProps {
 }
 
 export function ReviewDetailsView({ reviewId }: ReviewDetailsViewProps) {
-  const { token } = useAdmin();
+  const { isAuthenticated } = useAdmin();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -76,7 +76,7 @@ export function ReviewDetailsView({ reviewId }: ReviewDetailsViewProps) {
 
   // Fetch review details
   const fetchReview = async () => {
-    if (!token || !reviewId) return;
+    if (!isAuthenticated || !reviewId) return;
 
     try {
       setLoading(true);
@@ -103,7 +103,7 @@ export function ReviewDetailsView({ reviewId }: ReviewDetailsViewProps) {
   // Initial fetch
   useEffect(() => {
     fetchReview();
-  }, [token, reviewId]);
+  }, [isAuthenticated, reviewId]);
 
   // Handle save
   const handleSave = async () => {

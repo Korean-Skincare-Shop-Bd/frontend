@@ -6,6 +6,7 @@ import {
   getSessionIdCookie,
   removeSessionIdCookie,
 } from "../cookies/session";
+import { adminFetch } from "./adminFetch";
 // import { Description } from '@radix-ui/react-toast';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -186,20 +187,17 @@ export async function updateCartItemQuantity(
 
 // Option 2: Bulk update stock for multiple variations
 export async function updateCartItemsStockBulk(
-  token: string,
   stockUpdates: Array<{ variationId: string; stockQuantity: number }>
 ) {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/enhanced-cart/stock/bulk-update`,
+    const response = await adminFetch(
+      `/enhanced-cart/stock/bulk-update`,
       {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ stockUpdates }),
-        credentials: "include",
         next: { tags: ["cart"] },
       }
     );

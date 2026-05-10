@@ -1,4 +1,6 @@
 // /lib/api/shipping.ts
+import { adminFetch } from "./adminFetch";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 
@@ -120,7 +122,7 @@ export const updateShippingCharge = async (
   request: UpdateShippingChargeRequest
 ): Promise<ShippingChargeResponse> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/admin/shipping-charges/${region}`, {
+    const response = await adminFetch(`/shipping-charges/admin/${region}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),

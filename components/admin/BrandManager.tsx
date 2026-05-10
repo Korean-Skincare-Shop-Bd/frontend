@@ -86,7 +86,7 @@ export function BrandsManager() {
     hasNext: false,
     hasPrev: false,
   });
-  const { token } = useAdmin();
+  const { isAuthenticated } = useAdmin();
 
   useEffect(() => {
     fetchBrands();
@@ -120,7 +120,7 @@ export function BrandsManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     if (!formData.name.trim()) {
       toast.error("Brand name is required");
@@ -132,10 +132,10 @@ export function BrandsManager() {
       const submitData = { ...formData, logo: logoFile || undefined };
 
       if (editingBrand) {
-        await updateBrand(token, editingBrand.id, submitData);
+        await updateBrand(editingBrand.id, submitData);
         toast.success("Brand updated successfully");
       } else {
-        await createBrand(token, submitData);
+        await createBrand(submitData);
         toast.success("Brand created successfully");
       }
 
@@ -165,10 +165,10 @@ export function BrandsManager() {
   };
 
   const handleDelete = async () => {
-    if (!brandToDelete || !token) return;
+    if (!brandToDelete || !isAuthenticated) return;
 
     try {
-      await deleteBrand(token, brandToDelete.id);
+      await deleteBrand(brandToDelete.id);
       toast.success("Brand deleted successfully");
       fetchBrands();
     } catch (error) {

@@ -25,7 +25,7 @@ interface ReviewFilters {
   sortOrder: 'asc' | 'desc';
 }
 
-export const useReviews = (token: string | null) => {
+export const useReviews = (isAuthenticated: boolean) => {
   const { toast } = useToast();
   
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -56,7 +56,7 @@ export const useReviews = (token: string | null) => {
     page?: number,
     customFilters?: Partial<ReviewFilters>
   ) => {
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     try {
       setLoading(true);
@@ -95,7 +95,7 @@ export const useReviews = (token: string | null) => {
 
   // Fetch statistics
   const fetchStatistics = async () => {
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     try {
       const stats = await getReviewStatistics();
@@ -112,7 +112,7 @@ export const useReviews = (token: string | null) => {
 
   // Update review
   const updateReviewById = async (id: string, updateData: UpdateReviewParams) => {
-    if (!token) return false;
+    if (!isAuthenticated) return false;
 
     try {
       await updateReview(id, updateData);
@@ -135,7 +135,7 @@ export const useReviews = (token: string | null) => {
 
   // Delete single review
   const deleteReviewById = async (id: string) => {
-    if (!token) return false;
+    if (!isAuthenticated) return false;
 
     try {
       await deleteReview(id);
@@ -158,7 +158,7 @@ export const useReviews = (token: string | null) => {
 
   // Bulk delete reviews
   const bulkDeleteReviewsByIds = async (reviewIds: string[]) => {
-    if (!token) return false;
+    if (!isAuthenticated) return false;
 
     try {
       await bulkDeleteReviews(reviewIds);
@@ -181,7 +181,7 @@ export const useReviews = (token: string | null) => {
 
   // Search reviews
   const searchReviewsWithTerm = async (searchTerm: string, limit: number = 20) => {
-    if (!token) return [];
+    if (!isAuthenticated) return [];
 
     try {
       const response = await searchReviews({ searchTerm, limit });
@@ -199,7 +199,7 @@ export const useReviews = (token: string | null) => {
 
   // Get latest reviews
   const fetchLatestReviews = async (limit: number = 10) => {
-    if (!token) return [];
+    if (!isAuthenticated) return [];
 
     try {
       const latestReviews = await getLatestReviews(limit);

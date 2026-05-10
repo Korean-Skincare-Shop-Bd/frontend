@@ -95,7 +95,7 @@ export default function EditProduct() {
 
   const router = useRouter();
   const params = useParams();
-  const { token } = useAdmin();
+  const { isAuthenticated } = useAdmin();
   const id = params?.id as string;
 
   const fetchProduct = useCallback(async () => {
@@ -136,10 +136,10 @@ export default function EditProduct() {
   }, [id]);
 
   useEffect(() => {
-    if (id && token) {
+    if (id && isAuthenticated) {
       fetchProduct();
     }
-  }, [id, token, fetchProduct]);
+  }, [id, isAuthenticated, fetchProduct]);
 
   const handleInputChange = (field: keyof UpdateProductRequest, value: any) => {
     setFormData((prev) => ({
@@ -192,7 +192,7 @@ export default function EditProduct() {
           finalImagesToRemove.length > 0 ? finalImagesToRemove : undefined,
       };
 
-      await updateProduct(token!, id, updateData);
+      await updateProduct(id, updateData);
       toast.success("Product updated successfully");
 
       // Reset image management state
@@ -270,7 +270,6 @@ export default function EditProduct() {
       if (editingVariation) {
         // Update existing variation
         const updated = await updateProductVariation(
-          token!,
           id,
           editingVariation.id,
           cleanedData as UpdateVariationRequest
@@ -282,7 +281,6 @@ export default function EditProduct() {
       } else {
         // Create new variation
         const created = await createProductVariation(
-          token!,
           id,
           cleanedData as CreateVariationRequest
         );
@@ -300,7 +298,7 @@ export default function EditProduct() {
     if (!confirm("Are you sure you want to delete this variation?")) return;
 
     try {
-      await deleteProductVariation(token!, id, variationId);
+      await deleteProductVariation(id, variationId);
       setVariations((prev) => prev.filter((v) => v.id !== variationId));
       toast.success("Variation deleted successfully");
     } catch (error) {

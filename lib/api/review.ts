@@ -1,3 +1,5 @@
+import { adminFetch } from "./adminFetch";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface CreateReviewParams {
@@ -147,15 +149,6 @@ export interface SearchReviewsResponse {
   searchTerm: string;
 }
 
-// Admin functions requiring authentication
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('admin_token');
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': token ? `Bearer ${token}` : '',
-  };
-};
-
 export const getReviewsAdmin = async (params: GetReviewsParams = {}): Promise<ReviewsResponse> => {
   const queryParams = new URLSearchParams();
   
@@ -173,9 +166,9 @@ export const getReviewsAdmin = async (params: GetReviewsParams = {}): Promise<Re
 
   const url = `${API_BASE_URL}/reviews${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
   
-  const response = await fetch(url, {
+  const response = await adminFetch(url, {
     method: 'GET',
-    headers: getAuthHeaders(),
+    headers: { 'Content-Type': 'application/json' },
   });
 
   if (!response.ok) {
@@ -192,9 +185,9 @@ export const getReviewById = async (id: string, includeProduct: boolean = true):
 
   const url = `${API_BASE_URL}/reviews/${id}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
   
-  const response = await fetch(url, {
+  const response = await adminFetch(url, {
     method: 'GET',
-    headers: getAuthHeaders(),
+    headers: { 'Content-Type': 'application/json' },
   });
 
   if (!response.ok) {
@@ -206,9 +199,9 @@ export const getReviewById = async (id: string, includeProduct: boolean = true):
 };
 
 export const updateReview = async (id: string, updateData: UpdateReviewParams): Promise<Review> => {
-  const response = await fetch(`${API_BASE_URL}/reviews/${id}`, {
+  const response = await adminFetch(`/reviews/${id}`, {
     method: 'PUT',
-    headers: getAuthHeaders(),
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(updateData),
   });
 
@@ -221,9 +214,9 @@ export const updateReview = async (id: string, updateData: UpdateReviewParams): 
 };
 
 export const deleteReview = async (id: string): Promise<{ message: string }> => {
-  const response = await fetch(`${API_BASE_URL}/reviews/${id}`, {
+  const response = await adminFetch(`/reviews/${id}`, {
     method: 'DELETE',
-    headers: getAuthHeaders(),
+    headers: { 'Content-Type': 'application/json' },
   });
 
   if (!response.ok) {
@@ -235,9 +228,9 @@ export const deleteReview = async (id: string): Promise<{ message: string }> => 
 };
 
 export const bulkDeleteReviews = async (reviewIds: string[]): Promise<{ message: string; deletedCount: number }> => {
-  const response = await fetch(`${API_BASE_URL}/reviews/bulk-delete`, {
+  const response = await adminFetch(`/reviews/bulk-delete`, {
     method: 'DELETE',
-    headers: getAuthHeaders(),
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ reviewIds }),
   });
 
@@ -256,9 +249,9 @@ export const searchReviews = async (params: SearchReviewsParams): Promise<Search
 
   const url = `${API_BASE_URL}/reviews/search?${queryParams.toString()}`;
   
-  const response = await fetch(url, {
+  const response = await adminFetch(url, {
     method: 'GET',
-    headers: getAuthHeaders(),
+    headers: { 'Content-Type': 'application/json' },
   });
 
   if (!response.ok) {
@@ -275,9 +268,9 @@ export const getLatestReviews = async (limit: number = 10): Promise<Review[]> =>
 
   const url = `${API_BASE_URL}/reviews/latest?${queryParams.toString()}`;
   
-  const response = await fetch(url, {
+  const response = await adminFetch(url, {
     method: 'GET',
-    headers: getAuthHeaders(),
+    headers: { 'Content-Type': 'application/json' },
   });
 
   if (!response.ok) {
@@ -296,9 +289,9 @@ export const getReviewsByRating = async (minRating: number = 1, maxRating: numbe
 
   const url = `${API_BASE_URL}/reviews/by-rating?${queryParams.toString()}`;
   
-  const response = await fetch(url, {
+  const response = await adminFetch(url, {
     method: 'GET',
-    headers: getAuthHeaders(),
+    headers: { 'Content-Type': 'application/json' },
   });
 
   if (!response.ok) {
@@ -315,9 +308,9 @@ export const getReviewsByCustomer = async (email: string, limit: number = 50) =>
 
   const url = `${API_BASE_URL}/reviews/by-customer/${encodeURIComponent(email)}?${queryParams.toString()}`;
   
-  const response = await fetch(url, {
+  const response = await adminFetch(url, {
     method: 'GET',
-    headers: getAuthHeaders(),
+    headers: { 'Content-Type': 'application/json' },
   });
 
   if (!response.ok) {

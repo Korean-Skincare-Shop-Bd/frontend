@@ -119,7 +119,7 @@ const getPaymentStatusIcon = (paymentStatus: string) => {
 export function RecentOrders() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderDetailOpen, setOrderDetailOpen] = useState(false);
-  const { token } = useAdmin();
+  const { isAuthenticated } = useAdmin();
 
   const {
     orders,
@@ -131,12 +131,12 @@ export function RecentOrders() {
     updateOrderStatus,
     updatePaymentStatus,
     applyFilters,
-  } = useOrders(token);
+  } = useOrders(isAuthenticated);
 
   useEffect(() => {
     // Fetch recent orders (first page, no filters, show recent orders)
     fetchOrders(1);
-  }, [token]);
+  }, [isAuthenticated]);
 
   // Handle search with debouncing
   useEffect(() => {

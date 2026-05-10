@@ -52,7 +52,7 @@ export interface Admin {
 }
 
 export function SettingsManager() {
-  const { adminData, token } = useAdmin();
+  const { adminData, isAuthenticated } = useAdmin();
   const [profileFormData, setProfileFormData] = useState({
     username: adminData?.username || '',
     email: adminData?.email || '',
@@ -92,15 +92,13 @@ export function SettingsManager() {
   // const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
   // Fetch all admins (you'll need to implement this endpoint)
   const fetchAdmins = async () => {
-    if (!token) return;
+    if (!isAuthenticated) return;
     
     try {
       setAdminsLoading(true);
       // Since there's no GET /admins endpoint, you might need to implement one
       // For now, this is a placeholder - you'll need to adjust based on your API
-      console.log(token)
-      const response = await getAdmins(token)
-      console.log(response)
+      const response = await getAdmins()
       
       if (response) {
         setAdmins(response || []);
@@ -118,11 +116,11 @@ export function SettingsManager() {
   // Create new admin
    const handleCreateAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     try {
       setCreateAdminLoading(true);
-      await createAdmin(token, createAdminData);
+      await createAdmin(createAdminData);
       toast.success('Admin created successfully');
       setCreateDialogOpen(false);
       setCreateAdminData({ username: '', email: '', password: '' });
@@ -138,11 +136,11 @@ export function SettingsManager() {
   // Update admin
    const handleEditAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token || !selectedAdmin) return;
+    if (!isAuthenticated || !selectedAdmin) return;
 
     try {
       setEditAdminLoading(true);
-      await updateAdmin(token, selectedAdmin.id, editAdminData);
+      await updateAdmin(selectedAdmin.id, editAdminData);
       toast.success('Admin updated successfully');
       setEditDialogOpen(false);
       setSelectedAdmin(null);
@@ -156,10 +154,10 @@ export function SettingsManager() {
   };
   // Delete admin
   const handleDeleteAdmin = async (adminId: string) => {
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     try {
-      await deleteAdmin(token, adminId);
+      await deleteAdmin(adminId);
       toast.success('Admin deleted successfully');
       fetchAdmins(); // Refresh the list
     } catch (error) {
@@ -181,11 +179,11 @@ export function SettingsManager() {
 
   useEffect(() => {
     fetchAdmins();
-  }, [token]);
+  }, [isAuthenticated]);
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
+    if (!isAuthenticated) return;
 
     try {
       setProfileLoading(true);
@@ -202,7 +200,7 @@ export function SettingsManager() {
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token || !adminData?.id) return;
+    if (!isAuthenticated || !adminData?.id) return;
 
     if (passwordFormData.newPassword !== passwordFormData.confirmPassword) {
       toast.error('New password and confirmation do not match');
@@ -211,7 +209,7 @@ export function SettingsManager() {
 
     try {
       setPasswordLoading(true);
-      await changeAdminPassword(token, adminData.id, passwordFormData);
+      await changeAdminPassword(adminData.id, passwordFormData);
       toast.success('Password changed successfully');
       setPasswordFormData({
         currentPassword: '',

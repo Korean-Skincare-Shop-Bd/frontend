@@ -1,3 +1,4 @@
+import { adminFetch } from "./adminFetch";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface Category {
@@ -52,11 +53,10 @@ export const getCategories = async (page = 1, limit: number = 20): Promise<Categ
     return response.json();
 };
 
-export const createCategory = async (token: string, categoryData: CreateCategoryRequest): Promise<Category> => {
-    const response = await fetch(`${API_BASE_URL}/categories`, {
+export const createCategory = async (categoryData: CreateCategoryRequest): Promise<Category> => {
+    const response = await adminFetch(`/categories`, {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(categoryData),
@@ -70,7 +70,7 @@ export const createCategory = async (token: string, categoryData: CreateCategory
     return result.data;
 };
 
-export const updateCategory = async (token: string, id: string, categoryData: Partial<CreateCategoryRequest>): Promise<Category> => {
+export const updateCategory = async (id: string, categoryData: Partial<CreateCategoryRequest>): Promise<Category> => {
     const formData = new FormData();
 
     Object.entries(categoryData).forEach(([key, value]) => {
@@ -83,11 +83,8 @@ export const updateCategory = async (token: string, id: string, categoryData: Pa
         }
     });
 
-    const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
+    const response = await adminFetch(`/categories/${id}`, {
         method: 'PUT',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-        },
         body: formData,
     });
 
@@ -99,12 +96,9 @@ export const updateCategory = async (token: string, id: string, categoryData: Pa
     return result.data;
 };
 
-export const deleteCategory = async (token: string, id: string): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/categories/${id}`, {
+export const deleteCategory = async (id: string): Promise<void> => {
+    const response = await adminFetch(`/categories/${id}`, {
         method: 'DELETE',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-        },
     });
 
     if (!response.ok) {

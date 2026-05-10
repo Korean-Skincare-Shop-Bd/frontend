@@ -34,14 +34,14 @@ export default function ProductDetails() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const params = useParams();
-  const { token } = useAdmin();
+  const { isAuthenticated } = useAdmin();
   const id = params?.id as string;
 
   useEffect(() => {
-    if (id && token) {
+    if (id && isAuthenticated) {
       fetchProduct();
     }
-  }, [id, token]);
+  }, [id, isAuthenticated]);
 
   const fetchProduct = async () => {
     try {

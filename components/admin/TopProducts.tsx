@@ -9,11 +9,11 @@ import Image from "next/image"; // Ensure you have next/image for optimized imag
 export function TopProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const { token } = useAdmin();
+  const { isAuthenticated } = useAdmin();
 
   useEffect(() => {
     const fetchProducts = async () => {
-      if (!token) return;
+      if (!isAuthenticated) return;
 
       try {
         setLoading(true);
@@ -28,7 +28,7 @@ export function TopProducts() {
     };
 
     fetchProducts();
-  }, [token]);
+  }, [isAuthenticated]);
 
   if (loading) {
     return (

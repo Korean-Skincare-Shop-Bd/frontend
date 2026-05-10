@@ -1,3 +1,5 @@
+import { adminFetch } from "./adminFetch";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface Banner {
@@ -27,17 +29,13 @@ export interface BannersResponse {
     };
 }
 
-export const getBanners = async (token: string, page = 1, limit = 20): Promise<BannersResponse> => {
+export const getBanners = async (page = 1, limit = 20): Promise<BannersResponse> => {
     const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
     });
     
-    const response = await fetch(`${API_BASE_URL}/banners?${params}`, {
-        headers: {
-            'Authorization': `Bearer ${token}`,
-        },
-    });
+    const response = await adminFetch(`/banners?${params}`);
 
     if (!response.ok) {
         throw new Error('Failed to fetch banners');
@@ -46,7 +44,7 @@ export const getBanners = async (token: string, page = 1, limit = 20): Promise<B
     return response.json();
 };
 
-export const createBanner = async (token: string, bannerData: CreateBannerRequest): Promise<Banner> => {
+export const createBanner = async (bannerData: CreateBannerRequest): Promise<Banner> => {
   const formData = new FormData();
   
   Object.entries(bannerData).forEach(([key, value]) => {
@@ -59,11 +57,8 @@ export const createBanner = async (token: string, bannerData: CreateBannerReques
     }
   });
 
-  const response = await fetch(`${API_BASE_URL}/banners`, {
+  const response = await adminFetch(`/banners`, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
     body: formData,
   });
 
@@ -74,7 +69,7 @@ export const createBanner = async (token: string, bannerData: CreateBannerReques
   return response.json();
 };
 
-export const updateBanner = async (token: string, id: string, bannerData: Partial<CreateBannerRequest>): Promise<Banner> => {
+export const updateBanner = async (id: string, bannerData: Partial<CreateBannerRequest>): Promise<Banner> => {
   const formData = new FormData();
   
   Object.entries(bannerData).forEach(([key, value]) => {
@@ -87,11 +82,8 @@ export const updateBanner = async (token: string, id: string, bannerData: Partia
     }
   });
 
-  const response = await fetch(`${API_BASE_URL}/banners/${id}`, {
+  const response = await adminFetch(`/banners/${id}`, {
     method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
     body: formData,
   });
 
@@ -102,12 +94,9 @@ export const updateBanner = async (token: string, id: string, bannerData: Partia
   return response.json();
 };
 
-export const deleteBanner = async (token: string, id: string): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/banners/${id}`, {
+export const deleteBanner = async (id: string): Promise<void> => {
+  const response = await adminFetch(`/banners/${id}`, {
     method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
   });
 
   if (!response.ok) {

@@ -74,7 +74,7 @@ import {
 } from '@/lib/api/review';
 
 export function ReviewsManager() {
-  const { token } = useAdmin();
+  const { isAuthenticated } = useAdmin();
   const { toast } = useToast();
 
   // Use the reviews hook
@@ -93,7 +93,7 @@ export function ReviewsManager() {
     updateFilters,
     clearFilters,
     setCurrentPage,
-  } = useReviews(token);
+  } = useReviews(isAuthenticated);
 
   // Local state for UI
   const [selectedReviews, setSelectedReviews] = useState<Set<string>>(new Set());
@@ -107,15 +107,15 @@ export function ReviewsManager() {
 
   // Initial data fetch
   useEffect(() => {
-    if (token) {
+    if (isAuthenticated) {
       fetchReviews();
       fetchStatistics();
     }
-  }, [token]);
+  }, [isAuthenticated]);
 
   // Refetch when filters or page changes
   useEffect(() => {
-    if (token) {
+    if (isAuthenticated) {
       fetchReviews();
     }
   }, [currentPage, filters]);

@@ -48,12 +48,12 @@ export function CustomersManager() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerDetailOpen, setCustomerDetailOpen] = useState(false);
-  const { token } = useAdmin();
+  const { isAuthenticated } = useAdmin();
 
   // Mock data - replace with actual API calls
   useEffect(() => {
     fetchCustomers();
-  }, [token]);
+  }, [isAuthenticated]);
 
   const fetchCustomers = async () => {
     // Mock implementation - replace with actual API call

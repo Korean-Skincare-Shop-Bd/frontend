@@ -1,3 +1,5 @@
+import { adminFetch } from "./adminFetch";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export interface Product {
@@ -210,15 +212,9 @@ export const getProducts = async (
 
   return response.json();
 };
-export const deleteProduct = async (
-  token: string,
-  id: string
-): Promise<{ message: string }> => {
-  const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+export const deleteProduct = async (id: string): Promise<{ message: string }> => {
+  const response = await adminFetch(`/products/${id}`, {
     method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
   });
 
   if (!response.ok) {
@@ -234,7 +230,6 @@ export const deleteProduct = async (
   return await response.json();
 };
 export const createProduct = async (
-  token: string,
   productData: CreateProductRequest
 ): Promise<Product> => {
   const formData = new FormData();
@@ -258,11 +253,8 @@ export const createProduct = async (
     }
   });
 
-  const response = await fetch(`${API_BASE_URL}/products`, {
+  const response = await adminFetch(`/products`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
     body: formData,
   });
 
@@ -320,7 +312,6 @@ export const getProduct = async (
 };
 
 export const updateProduct = async (
-  token: string,
   id: string,
   productData: UpdateProductRequest
 ): Promise<Product> => {
@@ -348,12 +339,8 @@ export const updateProduct = async (
     }
   });
 
-  const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+  const response = await adminFetch(`/products/${id}`, {
     method: "PUT",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      // Don't set Content-Type header - let browser set it for multipart/form-data
-    },
     body: formData,
   });
 
@@ -401,16 +388,14 @@ export interface UpdateImageRequest {
 
 // Add these new API functions
 export const createProductVariation = async (
-  token: string,
   productId: string,
   variationData: CreateVariationRequest
 ): Promise<ProductVariation> => {
   const url = `${API_BASE_URL}/products/${productId}/variations`;
 
-  const response = await fetch(url, {
+  const response = await adminFetch(url, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(variationData),
@@ -431,17 +416,15 @@ export const createProductVariation = async (
 };
 
 export const updateProductVariation = async (
-  token: string,
   productId: string,
   variationId: string,
   variationData: UpdateVariationRequest
 ): Promise<ProductVariation> => {
-  const response = await fetch(
+  const response = await adminFetch(
     `${API_BASE_URL}/products/${productId}/variations/${variationId}`,
     {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(variationData),
@@ -463,17 +446,13 @@ export const updateProductVariation = async (
 };
 
 export const deleteProductVariation = async (
-  token: string,
   productId: string,
   variationId: string
 ): Promise<void> => {
-  const response = await fetch(
+  const response = await adminFetch(
     `${API_BASE_URL}/products/${productId}/variations/${variationId}`,
     {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     }
   );
 
@@ -489,7 +468,6 @@ export const deleteProductVariation = async (
 };
 
 export const addProductImages = async (
-  token: string,
   productId: string,
   images: File[],
   isPrimary?: boolean
@@ -504,11 +482,8 @@ export const addProductImages = async (
     formData.append("isPrimary", String(isPrimary));
   }
 
-  const response = await fetch(`${API_BASE_URL}/products/${productId}/images`, {
+  const response = await adminFetch(`/products/${productId}/images`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
     body: formData,
   });
 
@@ -527,17 +502,15 @@ export const addProductImages = async (
 };
 
 export const updateProductImage = async (
-  token: string,
   productId: string,
   imageId: string,
   imageData: UpdateImageRequest
 ): Promise<ProductImage> => {
-  const response = await fetch(
+  const response = await adminFetch(
     `${API_BASE_URL}/products/${productId}/images/${imageId}`,
     {
       method: "PUT",
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(imageData),
@@ -559,17 +532,13 @@ export const updateProductImage = async (
 };
 
 export const deleteProductImage = async (
-  token: string,
   productId: string,
   imageId: string
 ): Promise<void> => {
-  const response = await fetch(
+  const response = await adminFetch(
     `${API_BASE_URL}/products/${productId}/images/${imageId}`,
     {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
     }
   );
 

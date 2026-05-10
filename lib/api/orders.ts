@@ -1,4 +1,5 @@
 import { setSessionIdCookie, getSessionIdCookie, removeSessionIdCookie } from '../cookies/session';
+import { adminFetch } from './adminFetch';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -75,12 +76,8 @@ export interface OrderItem {
   totalPrice: number;
 }
 
-export const getOrders = async (token: string, page = 1, limit = 20): Promise<{ data: Order[]; total: number }> => {
-  const response = await fetch(`${API_BASE_URL}/admins/orders/history?page=${page}&limit=${limit}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
+export const getOrders = async (page = 1, limit = 20): Promise<{ data: Order[]; total: number }> => {
+  const response = await adminFetch(`/admins/orders/history?page=${page}&limit=${limit}`);
 
   if (!response.ok) {
     throw new Error('Failed to fetch orders');
@@ -234,7 +231,6 @@ export interface OrdersListResponse {
 
 // Add these new API functions
 export const getAllOrders = async (
-  token: string, 
   page = 1, 
   limit = 20, 
   orderStatus?: string,
@@ -275,11 +271,7 @@ export const getAllOrders = async (
     params.append('dateTo', dateTo);
   }
 
-  const response = await fetch(`${API_BASE_URL}/orders?${params}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
+  const response = await adminFetch(`/orders?${params}`);
 
   if (!response.ok) {
     throw new Error('Failed to fetch orders');
@@ -289,15 +281,13 @@ export const getAllOrders = async (
 };
 
 export const updateEnhancedOrderStatus = async (
-  token: string,
   orderId: string,
   statusData: UpdateOrderStatusRequest
 ): Promise<EnhancedOrderResponse> => {
-  const response = await fetch(`${API_BASE_URL}/orders/enhanced/${orderId}/status`, {
+  const response = await adminFetch(`/orders/enhanced/${orderId}/status`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(statusData),
   });
@@ -324,15 +314,13 @@ export const updateEnhancedOrderStatus = async (
 };
 
 export const updateEnhancedOrderPaymentStatus = async (
-  token: string,
   orderId: string,
   paymentData: UpdatePaymentStatusRequest
 ): Promise<EnhancedOrderResponse> => {
-  const response = await fetch(`${API_BASE_URL}/orders/enhanced/${orderId}/payment-status`, {
+  const response = await adminFetch(`/orders/enhanced/${orderId}/payment-status`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
     },
     body: JSON.stringify(paymentData),
   });
@@ -401,13 +389,11 @@ export interface CreateManualOrderResponse {
 }
 
 export const createManualOrder = async (
-  token: string,
   orderData: CreateManualOrderRequest
 ): Promise<CreateManualOrderResponse> => {
-  const response = await fetch(`${API_BASE_URL}/orders/enhanced/admin/manual-order`, {
+  const response = await adminFetch(`/orders/enhanced/admin/manual-order`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(orderData),
@@ -432,17 +418,12 @@ export interface ProductVariation {
 }
 
 export const getProductVariations = async (
-  token: string,
   search?: string
 ): Promise<{ success: boolean; data: ProductVariation[] }> => {
   const params = new URLSearchParams();
   if (search) params.append('search', search);
 
-  const response = await fetch(`${API_BASE_URL}/product-variations${search ? `?${params}` : ''}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
+  const response = await adminFetch(`/product-variations${search ? `?${params}` : ''}`);
 
   if (!response.ok) {
     throw new Error('Failed to fetch product variations');

@@ -28,7 +28,7 @@ import { MobileOrderCard } from '../Order/MobileOrderCard';
 export function OrdersManager() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderDetailOpen, setOrderDetailOpen] = useState(false);
-  const { token } = useAdmin();
+  const { isAuthenticated } = useAdmin();
 
   const {
     orders,
@@ -52,7 +52,7 @@ export function OrdersManager() {
     updateOrderStatus,
     updatePaymentStatus,
     applyFilters
-  } = useOrders(token);
+  } = useOrders(isAuthenticated);
 
   // Initial load and when filters change (except search - search is debounced)
   useEffect(() => {
@@ -66,7 +66,7 @@ export function OrdersManager() {
       dateToFilter || undefined
     );
   }, [
-    token, 
+    isAuthenticated, 
     currentPage, 
     orderStatusFilter, 
     paymentStatusFilter, 
