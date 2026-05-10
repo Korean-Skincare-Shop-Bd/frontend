@@ -58,6 +58,7 @@ import {
 import { useAdmin } from "@/contexts/AdminContext";
 import { toast } from "sonner";
 import Image from "next/image";
+import { cloudfrontLoader } from "@/lib/cloudfront-loader";
 
 export function BrandsManager() {
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -328,6 +329,7 @@ export function BrandsManager() {
                   {logoPreview ? (
                     <div className="relative inline-block w-20 h-20">
                       <Image
+                        loader={cloudfrontLoader}
                         src={logoPreview}
                         alt="Brand logo"
                         fill
@@ -421,6 +423,7 @@ export function BrandsManager() {
                     <div className="relative flex-shrink-0 bg-gray-100 rounded-lg w-12 h-12 overflow-hidden">
                       {brand.logoUrl ? (
                         <Image
+                          loader={cloudfrontLoader}
                           src={brand.logoUrl}
                           alt={brand.name}
                           fill
@@ -516,6 +519,7 @@ export function BrandsManager() {
                         <div className="relative flex-shrink-0 bg-gray-100 rounded-lg w-12 h-12 overflow-hidden">
                           {brand.logoUrl ? (
                             <Image
+                              loader={cloudfrontLoader}
                               src={brand.logoUrl}
                               alt={brand.name}
                               fill

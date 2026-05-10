@@ -51,6 +51,7 @@ import {
 import { useAdmin } from "@/contexts/AdminContext";
 import { toast } from "sonner";
 import Image from "next/image";
+import { cloudfrontLoader } from "@/lib/cloudfront-loader";
 
 export function BannersManager() {
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -242,6 +243,7 @@ export function BannersManager() {
                   {imagePreview ? (
                     <div className="relative w-full h-32 bg-gray-100">
                       <Image
+                        loader={cloudfrontLoader}
                         src={imagePreview}
                         alt="Banner preview"
                         fill
@@ -363,6 +365,7 @@ export function BannersManager() {
                 <div className="relative w-full h-48 bg-gray-100">
                   {banner.imageUrl ? (
                     <Image
+                      loader={cloudfrontLoader}
                       src={banner.imageUrl}
                       alt="Banner"
                       fill
@@ -525,6 +528,7 @@ export function BannersManager() {
               <div className="relative w-full h-64 md:h-96 bg-gray-100 rounded-lg overflow-hidden">
                 {previewBanner.imageUrl ? (
                   <Image
+                    loader={cloudfrontLoader}
                     src={previewBanner.imageUrl}
                     alt="Banner Preview"
                     fill

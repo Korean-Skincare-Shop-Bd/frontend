@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
+import { cloudfrontLoader } from "@/lib/cloudfront-loader";
 import {
   ArrowLeft,
   Save,
@@ -532,6 +533,7 @@ export default function EditProduct() {
                     <div className="relative">
                       <div className="group relative w-32 h-32 overflow-hidden rounded-lg border-2 border-gray-300">
                         <Image
+                          loader={cloudfrontLoader}
                           src={product.baseImageUrl}
                           alt={product.name}
                           width={128}
@@ -571,6 +573,7 @@ export default function EditProduct() {
                     <div className="relative">
                       <div className="relative w-32 h-32 overflow-hidden rounded-lg border-2 border-red-500 opacity-50 grayscale">
                         <Image
+                          loader={cloudfrontLoader}
                           src={product.baseImageUrl}
                           alt={product.name}
                           width={128}
@@ -732,6 +735,7 @@ export default function EditProduct() {
                               : "border-gray-300 hover:border-gray-400"
                           }`}>
                           <Image
+                            loader={cloudfrontLoader}
                             src={image.imageUrl}
                             alt={image.altText || product.name}
                             fill

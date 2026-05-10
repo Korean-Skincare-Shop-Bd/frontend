@@ -45,6 +45,7 @@ import { useAdmin } from "@/contexts/AdminContext";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Image from "next/image";
+import { cloudfrontLoader } from "@/lib/cloudfront-loader";
 
 const ITEMS_PER_PAGE = 20;
 
@@ -185,6 +186,7 @@ export function ProductsManager() {
                       <div className="flex-shrink-0 bg-gray-100 rounded-lg w-10 h-10 overflow-hidden">
                         {product.baseImageUrl ? (
                           <Image
+                            loader={cloudfrontLoader}
                             src={product.baseImageUrl}
                             alt={product.name}
                             width={40}
@@ -322,6 +324,7 @@ export function ProductsManager() {
                           <div className="flex-shrink-0 bg-gray-100 rounded-lg w-10 h-10 overflow-hidden">
                             {product.baseImageUrl ? (
                               <Image
+                                loader={cloudfrontLoader}
                                 src={product.baseImageUrl}
                                 alt={product.name}
                                 width={40}
