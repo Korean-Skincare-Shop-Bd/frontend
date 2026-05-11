@@ -17,7 +17,6 @@ const nextConfig = {
     deviceSizes: [640, 828, 1080, 1920],
     imageSizes: [128, 256, 384],
     remotePatterns: [
-      { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: 'di52x3c4ntpb8.cloudfront.net' },
     ],
   },
