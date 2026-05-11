@@ -71,7 +71,12 @@ export const createBrand = async (brandData: CreateBrandRequest): Promise<Brand>
   });
 
   if (!response.ok) {
-    throw new Error('Failed to create brand');
+    const errorData = await response.json().catch(() => null);
+    const message =
+      errorData?.errors?.[0]?.message ||
+      errorData?.message ||
+      'Failed to create brand';
+    throw new Error(message);
   }
 
   const result = await response.json();
@@ -97,7 +102,12 @@ export const updateBrand = async (id: string, brandData: Partial<CreateBrandRequ
   });
 
   if (!response.ok) {
-    throw new Error('Failed to update brand');
+    const errorData = await response.json().catch(() => null);
+    const message =
+      errorData?.errors?.[0]?.message ||
+      errorData?.message ||
+      'Failed to update brand';
+    throw new Error(message);
   }
 
   const result = await response.json();

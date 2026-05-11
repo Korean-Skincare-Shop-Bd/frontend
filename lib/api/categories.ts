@@ -63,7 +63,12 @@ export const createCategory = async (categoryData: CreateCategoryRequest): Promi
     });
 
     if (!response.ok) {
-        throw new Error('Failed to create category');
+        const errorData = await response.json().catch(() => null);
+        const message =
+            errorData?.errors?.[0]?.message ||
+            errorData?.message ||
+            'Failed to create category';
+        throw new Error(message);
     }
 
     const result = await response.json();
@@ -89,7 +94,12 @@ export const updateCategory = async (id: string, categoryData: Partial<CreateCat
     });
 
     if (!response.ok) {
-        throw new Error('Failed to update category');
+        const errorData = await response.json().catch(() => null);
+        const message =
+            errorData?.errors?.[0]?.message ||
+            errorData?.message ||
+            'Failed to update category';
+        throw new Error(message);
     }
 
     const result = await response.json();

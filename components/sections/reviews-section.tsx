@@ -20,7 +20,6 @@ export function ReviewsSection() {
         const [reviewsResponse, statisticsResponse] = await Promise.all([
           getReviews({
             // rating: 4, // Only get 4+ star reviews for the showcase
-            limit: 6,
             sortBy: 'createdAt',
             sortOrder: 'desc',
             hasComment: true // Only reviews with comments

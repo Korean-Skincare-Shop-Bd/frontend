@@ -64,6 +64,7 @@ import {
   UpdateImageRequest,
 } from "@/lib/api/products";
 import { useAdmin } from "@/contexts/AdminContext";
+import { getSlugValidationError } from "@/lib/slug";
 import { toast } from "sonner";
 
 export default function EditProduct() {
@@ -168,6 +169,13 @@ export default function EditProduct() {
   };
 
   const handleUpdateProduct = async () => {
+    const slug = (formData.slug || "").trim();
+    const slugError = getSlugValidationError(slug);
+    if (slugError) {
+      toast.error(slugError);
+      return;
+    }
+
     try {
       setSaving(true);
 
@@ -182,6 +190,7 @@ export default function EditProduct() {
 
       const updateData: UpdateProductRequest = {
         ...formData,
+        slug: slug || undefined,
         expiryDate: formData.expiryDate
           ? new Date(formData.expiryDate).toISOString()
           : undefined,
@@ -206,7 +215,7 @@ export default function EditProduct() {
       await fetchProduct();
     } catch (error) {
       console.error("Error updating product:", error);
-      toast.error("Failed to update product");
+      toast.error(error instanceof Error ? error.message : "Failed to update product");
     } finally {
       setSaving(false);
     }

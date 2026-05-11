@@ -1,6 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
+function toSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 import {
   Plus,
   Search,
@@ -56,6 +66,7 @@ import {
   CreateBrandRequest,
 } from "@/lib/api/brands";
 import { useAdmin } from "@/contexts/AdminContext";
+import { getSlugValidationError } from "@/lib/slug";
 import { toast } from "sonner";
 import Image from "next/image";
 import { cloudfrontLoader } from "@/lib/cloudfront-loader";
@@ -77,6 +88,7 @@ export function BrandsManager() {
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({
@@ -92,6 +104,12 @@ export function BrandsManager() {
   useEffect(() => {
     fetchBrands();
   }, [currentPage]);
+
+  useEffect(() => {
+    if (!slugManuallyEdited) {
+      setFormData((prev) => ({ ...prev, slug: toSlug(prev.name || "") }));
+    }
+  }, [formData.name, slugManuallyEdited]);
 
   const fetchBrands = async () => {
     try {
@@ -128,9 +146,20 @@ export function BrandsManager() {
       return;
     }
 
+    const slug = (formData.slug || "").trim();
+    const slugError = getSlugValidationError(slug);
+    if (slugError) {
+      toast.error(slugError);
+      return;
+    }
+
     try {
       setFormLoading(true);
-      const submitData = { ...formData, logo: logoFile || undefined };
+      const submitData = {
+        ...formData,
+        slug: slug || undefined,
+        logo: logoFile || undefined,
+      };
 
       if (editingBrand) {
         await updateBrand(editingBrand.id, submitData);
@@ -145,7 +174,7 @@ export function BrandsManager() {
       setDialogOpen(false);
     } catch (error) {
       console.error("Error saving brand:", error);
-      toast.error("Failed to save brand");
+      toast.error(error instanceof Error ? error.message : "Failed to save brand");
     } finally {
       setFormLoading(false);
     }
@@ -162,6 +191,7 @@ export function BrandsManager() {
     });
     setLogoPreview(brand.logoUrl || null);
     setLogoFile(null);
+    setSlugManuallyEdited(true);
     setDialogOpen(true);
   };
 
@@ -192,6 +222,7 @@ export function BrandsManager() {
     setEditingBrand(null);
     setLogoFile(null);
     setLogoPreview(null);
+    setSlugManuallyEdited(false);
   };
 
   const filteredBrands = Array.isArray(brands)
@@ -286,7 +317,10 @@ export function BrandsManager() {
                     id="brand-slug (Leave blank to auto-generate)"
                     className="rounded-l-none"
                     value={formData.slug || ''}
-                    onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-') }))}
+                    onChange={(e) => {
+                      setSlugManuallyEdited(true);
+                      setFormData(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-') }));
+                    }}
                     placeholder="brand-slug (Leave blank to auto-generate)"
                   />
                 </div>

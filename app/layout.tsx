@@ -2,7 +2,8 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster as ToastToaster } from "@/components/ui/toaster";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import FloatingActions from "@/components/layout/FloatingActions";
@@ -188,7 +189,8 @@ export default async function RootLayout({
               <Footer />
             </div>
             <FloatingActions />
-            <Toaster />
+            <ToastToaster />
+            <SonnerToaster />
           </AdminProvider>
         </ThemeProvider>
       </body>

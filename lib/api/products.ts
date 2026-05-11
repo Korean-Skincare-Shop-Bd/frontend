@@ -259,7 +259,12 @@ export const createProduct = async (
   });
 
   if (!response.ok) {
-    throw new Error("Failed to create product");
+    const errorData = await response.json().catch(() => null);
+    const message =
+      errorData?.errors?.[0]?.message ||
+      errorData?.message ||
+      'Failed to create product';
+    throw new Error(message);
   }
 
   const result = await response.json();
@@ -345,13 +350,14 @@ export const updateProduct = async (
   });
 
   if (!response.ok) {
-    if (response.status === 404) {
-      throw new Error("Product not found");
-    }
-    if (response.status === 401) {
-      throw new Error("Unauthorized");
-    }
-    throw new Error("Failed to update product");
+    const errorData = await response.json().catch(() => null);
+    const message =
+      errorData?.errors?.[0]?.message ||
+      errorData?.message ||
+      (response.status === 404 ? "Product not found" :
+       response.status === 401 ? "Unauthorized" :
+       "Failed to update product");
+    throw new Error(message);
   }
 
   const result = await response.json();

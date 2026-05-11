@@ -1,6 +1,16 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+
+function toSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 import { Plus, Search, Edit, Trash2, FolderOpen, MoreHorizontal } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,6 +60,7 @@ import {
   CategoriesResponse 
 } from '@/lib/api/categories';
 import { useAdmin } from '@/contexts/AdminContext';
+import { getSlugValidationError } from '@/lib/slug';
 import { toast } from 'sonner';
 
 export function CategoriesManager() {
@@ -67,6 +78,7 @@ export function CategoriesManager() {
     metaTitle: '',
     metaDescription: '',
   });
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({
@@ -82,6 +94,12 @@ export function CategoriesManager() {
   useEffect(() => {
     fetchCategories();
   }, [currentPage]);
+
+  useEffect(() => {
+    if (!slugManuallyEdited) {
+      setFormData((prev) => ({ ...prev, slug: toSlug(prev.name || "") }));
+    }
+  }, [formData.name, slugManuallyEdited]);
 
   const fetchCategories = async () => {
     try {
@@ -106,13 +124,21 @@ export function CategoriesManager() {
       return;
     }
 
+    const slug = (formData.slug || '').trim();
+    const slugError = getSlugValidationError(slug);
+    if (slugError) {
+      toast.error(slugError);
+      return;
+    }
+
     try {
       setFormLoading(true);
+      const payload = { ...formData, slug: slug || undefined };
       if (editingCategory) {
-        await updateCategory(editingCategory.id, formData);
+        await updateCategory(editingCategory.id, payload);
         toast.success('Category updated successfully');
       } else {
-        await createCategory(formData);
+        await createCategory(payload);
         toast.success('Category created successfully');
       }
       
@@ -121,7 +147,7 @@ export function CategoriesManager() {
       setDialogOpen(false);
     } catch (error) {
       console.error('Error saving category:', error);
-      toast.error('Failed to save category');
+      toast.error(error instanceof Error ? error.message : 'Failed to save category');
     } finally {
       setFormLoading(false);
     }
@@ -136,6 +162,7 @@ export function CategoriesManager() {
       metaTitle: category.metaTitle || '',
       metaDescription: category.metaDescription || '',
     });
+    setSlugManuallyEdited(true);
     setDialogOpen(true);
   };
 
@@ -164,6 +191,7 @@ export function CategoriesManager() {
       metaDescription: '',
     });
     setEditingCategory(null);
+    setSlugManuallyEdited(false);
   };
 
   const filteredCategories = categories?.filter(category =>
@@ -248,7 +276,10 @@ export function CategoriesManager() {
                   id="cat-slug"
                   className="rounded-l-none"
                   value={formData.slug || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-') }))}
+                  onChange={(e) => {
+                    setSlugManuallyEdited(true);
+                    setFormData(prev => ({ ...prev, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-') }));
+                  }}
                   placeholder="category-slug (Leave blank to auto-generate)"
                 />
               </div>

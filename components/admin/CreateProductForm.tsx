@@ -19,6 +19,7 @@ import { createProduct, CreateProductRequest } from "@/lib/api/products";
 import { getCategories, Category } from "@/lib/api/categories";
 import { getBrands, Brand } from "@/lib/api/brands";
 import { useAdmin } from "@/contexts/AdminContext";
+import { getSlugValidationError } from "@/lib/slug";
 import { toast } from "sonner";
 import Image from "next/image";
 
@@ -162,10 +163,18 @@ export function CreateProductForm() {
       return;
     }
 
+    const slug = (formData.slug || "").trim();
+    const slugError = getSlugValidationError(slug);
+    if (slugError) {
+      toast.error(slugError);
+      return;
+    }
+
     try {
       setLoading(true);
       const productData: CreateProductRequest = {
         ...formData,
+        slug: slug || undefined,
         image: mainImage || undefined,
         additionalImages:
           additionalImages.length > 0 ? additionalImages : undefined,
@@ -176,7 +185,7 @@ export function CreateProductForm() {
       router.push("/admin/products");
     } catch (error) {
       console.error("Error creating product:", error);
-      toast.error("Failed to create product");
+      toast.error(error instanceof Error ? error.message : "Failed to create product");
     } finally {
       setLoading(false);
     }
