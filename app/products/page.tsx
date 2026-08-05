@@ -33,6 +33,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const search = String(params.search || '');
   const category = String(params.category || '');
   const brand = String(params.brand || '');
+  const variationTagsParam = params.variationTags;
+  const variationTags = Array.isArray(variationTagsParam)
+    ? variationTagsParam[0]
+    : String(variationTagsParam || '');
 
   const [productsResult, brandsResult, categoriesResult] = await Promise.allSettled([
     getProducts({
@@ -41,6 +45,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       search: search || undefined,
       category: category || undefined,
       brand: brand || undefined,
+      variationTags: variationTags || undefined,
       sortBy: 'createdAt',
       sortOrder: 'desc',
     }),

@@ -145,7 +145,7 @@ export function HOTProductsClient({ products, error }: HOTProductsClientProps) {
           <div className="mt-12 text-center">
             <Button variant="outline" size="lg" asChild>
               <Link href={`/products?variationTags=HOT&page=1&per_page=${PAGINATION_LIMIT}`}>
-                View All Products
+                View All Hot Products
               </Link>
             </Button>
           </div>

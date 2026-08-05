@@ -145,7 +145,7 @@ export function TopProductsClient({ products, error }: TopProductsClientProps) {
           <div className="mt-12 text-center">
             <Button variant="outline" size="lg" asChild>
               <Link href={`/products?variationTags=NEW&page=1&per_page=${PAGINATION_LIMIT}`}>
-                View All Products
+                View All New Products
               </Link>
             </Button>
           </div>
