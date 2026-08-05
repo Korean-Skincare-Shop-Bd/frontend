@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { cloudfrontLoader } from "@/lib/cloudfront-loader";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -62,7 +63,6 @@ export function ProductInfo({
 }: ProductInfoProps) {
   const [selectedVariant, setSelectedVariant] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -89,6 +89,13 @@ export function ProductInfo({
     : 0;
 
   const currentUrl = typeof window !== "undefined" ? window.location.href : "";
+  const brandSlug =
+    product?.brand?.slug?.trim() ||
+    brandName
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
 
   useEffect(() => {
     // handle fb conversion api
@@ -244,7 +251,10 @@ export function ProductInfo({
       {/* Header Section */}
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-3">
+          <Link
+            href={`/products?brand=${encodeURIComponent(brandSlug)}`}
+            className="flex items-center gap-3"
+          >
             {brandLogo && (
               <div className="relative border-2 border-gray-200 rounded-full w-8 h-8 overflow-hidden">
                 <Image
@@ -260,7 +270,7 @@ export function ProductInfo({
             <span className="font-medium text-gray-600 dark:text-gray-50 uppercase tracking-wide textext-sm">
               {brandName}
             </span>
-          </div>
+          </Link>
         </div>
 
         <h1 className="font-bold text-gray-900 dark:text-gray-200 text-3xl leading-tight">

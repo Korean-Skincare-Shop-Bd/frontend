@@ -13,27 +13,32 @@ export function BrandMarquee({ brands }: BrandMarqueeProps) {
     return null;
   }
 
+  const duplicatedBrands = [...brands, ...brands];
+
+  const brandCards = duplicatedBrands.map((brand, index) => (
+    <BrandCard
+      key={`${brand.id}-${index}`}
+      id={brand.id}
+      name={brand.name}
+      logoUrl={brand.logoUrl ?? null}
+    />
+  ));
+
   return (
-    <div className="relative overflow-hidden">
-      <motion.div
-        animate={{ x: ['0%', '-50%'] }}
-        transition={{
-          duration: 30,
-          repeat: Infinity,
-          ease: 'linear',
-        }}
-        className="flex space-x-8 md:space-x-16"
-      >
-        {/* Duplicate brands for seamless loop */}
-        {[...brands, ...brands].map((brand, index) => (
-          <BrandCard 
-            key={`${brand.id}-${index}`}
-            id={brand.id}
-            name={brand.name}
-            logoUrl={brand.logoUrl ?? null}
-          />
-        ))}
-      </motion.div>
+    <div className="relative">
+      <div className="overflow-hidden">
+        <motion.div
+          animate={{ x: ['0%', '-50%'] }}
+          transition={{
+            duration: 120,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+          className="flex w-max gap-4 md:gap-16"
+        >
+          {brandCards}
+        </motion.div>
+      </div>
     </div>
   );
 }
