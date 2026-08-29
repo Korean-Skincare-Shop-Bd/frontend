@@ -30,7 +30,7 @@ export function BrandMarquee({ brands }: BrandMarqueeProps) {
         <motion.div
           animate={{ x: ['0%', '-50%'] }}
           transition={{
-            duration: 120,
+            duration: 240,
             repeat: Infinity,
             ease: 'linear',
           }}

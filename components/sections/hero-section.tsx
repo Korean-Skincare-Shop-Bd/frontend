@@ -106,7 +106,7 @@ export function HeroSection() {
     if (banners.length > 0) {
       const timer = setInterval(() => {
         setCurrentSlide((prev) => (prev + 1) % banners.length);
-      }, 8000); // Increased from 5000ms to 8000ms
+      }, 5000); // Increased from 5000ms to 8000ms
       return () => clearInterval(timer);
     }
   }, [banners.length]);

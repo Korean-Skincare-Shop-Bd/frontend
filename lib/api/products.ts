@@ -12,6 +12,7 @@ export interface Product {
   categoryId?: string;
   brandId?: string;
   baseImageUrl?: string;
+  baseImageAlt?: string;
   tags: string[];
   isPublished: boolean;
   expiryDate?: string;
@@ -91,7 +92,9 @@ export interface CreateProductRequest {
   isPublished?: boolean;
   expiryDate?: string;
   image?: File;
+  imageAlt?: string;
   additionalImages?: File[];
+  additionalImageAlts?: string[];
 }
 
 export interface ProductsResponse {
@@ -245,6 +248,8 @@ export const createProduct = async (
     if (value !== undefined && value !== null) {
       if (key === "additionalImages" && Array.isArray(value)) {
         value.forEach((file) => formData.append("additionalImages", file));
+      } else if (key === "additionalImageAlts" && Array.isArray(value)) {
+        value.forEach((alt) => formData.append("additionalImageAlts", alt));
       } else if (value instanceof File) {
         formData.append(key, value);
       } else {
@@ -328,6 +333,8 @@ export const updateProduct = async (
       if (key === "additionalImages" && Array.isArray(value)) {
         // Handle multiple file uploads for additional images
         value.forEach((file) => formData.append("additionalImages", file));
+      } else if (key === "additionalImageAlts" && Array.isArray(value)) {
+        value.forEach((alt) => formData.append("additionalImageAlts", alt));
       } else if (key === "removeImageIds" && Array.isArray(value)) {
         // Convert array to comma-separated string
         formData.append("removeImageIds", value.join(","));
@@ -513,7 +520,7 @@ export const updateProductImage = async (
   imageData: UpdateImageRequest
 ): Promise<ProductImage> => {
   const response = await adminFetch(
-    `${API_BASE_URL}/products/${productId}/images/${imageId}`,
+    `${API_BASE_URL}/products/images/${imageId}`,
     {
       method: "PUT",
       headers: {
@@ -542,7 +549,7 @@ export const deleteProductImage = async (
   imageId: string
 ): Promise<void> => {
   const response = await adminFetch(
-    `${API_BASE_URL}/products/${productId}/images/${imageId}`,
+    `${API_BASE_URL}/products/images/${imageId}`,
     {
       method: "DELETE",
     }
@@ -572,9 +579,11 @@ export interface UpdateProductRequest {
   isPublished?: boolean;
   expiryDate?: string;
   baseImageUrl?: string;
+  imageAlt?: string;
   // Image management fields
   removeImageIds?: string[];
   // File upload fields
   image?: File;
   additionalImages?: File[];
+  additionalImageAlts?: string[];
 }

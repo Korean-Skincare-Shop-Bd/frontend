@@ -14,6 +14,7 @@ import {
   Edit,
   Star,
   Undo,
+  Check,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -78,8 +79,15 @@ export default function EditProduct() {
   // New state for image management
   const [newMainImage, setNewMainImage] = useState<File | null>(null);
   const [newAdditionalImages, setNewAdditionalImages] = useState<File[]>([]);
+  const [newAdditionalImageAlts, setNewAdditionalImageAlts] = useState<
+    string[]
+  >([]);
   const [imagesToRemove, setImagesToRemove] = useState<string[]>([]);
   const [deleteMainImage, setDeleteMainImage] = useState(false);
+
+  // Alt text editing state
+  const [imageAlts, setImageAlts] = useState<Record<string, string>>({});
+  const [savingAltId, setSavingAltId] = useState<string | null>(null);
 
   // Variation dialog states
   const [showVariationDialog, setShowVariationDialog] = useState(false);
@@ -117,9 +125,15 @@ export default function EditProduct() {
         expiryDate: productData.expiryDate
           ? productData.expiryDate.split("T")[0]
           : "",
+        imageAlt: productData.baseImageAlt || "",
       });
       setVariations(productData.variations || []);
       setImages(productData.images || []);
+      setImageAlts(
+        Object.fromEntries(
+          (productData.images || []).map((img) => [img.id, img.altText || ""])
+        )
+      );
 
       // Debug: Log the product data to understand the structure
       console.log("Product data:", productData);
@@ -198,6 +212,8 @@ export default function EditProduct() {
         image: newMainImage || undefined,
         additionalImages:
           newAdditionalImages.length > 0 ? newAdditionalImages : undefined,
+        additionalImageAlts:
+          newAdditionalImages.length > 0 ? newAdditionalImageAlts : undefined,
         removeImageIds:
           finalImagesToRemove.length > 0 ? finalImagesToRemove : undefined,
       };
@@ -208,6 +224,7 @@ export default function EditProduct() {
       // Reset image management state
       setNewMainImage(null);
       setNewAdditionalImages([]);
+      setNewAdditionalImageAlts([]);
       setImagesToRemove([]);
       setDeleteMainImage(false);
 
@@ -334,10 +351,23 @@ export default function EditProduct() {
       return;
     }
     setNewAdditionalImages((prev) => [...prev, ...files]);
+    setNewAdditionalImageAlts((prev) => [
+      ...prev,
+      ...files.map(() => ""),
+    ]);
   };
 
   const removeNewAdditionalImage = (index: number) => {
     setNewAdditionalImages((prev) => prev.filter((_, i) => i !== index));
+    setNewAdditionalImageAlts((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleNewAdditionalImageAltChange = (index: number, value: string) => {
+    setNewAdditionalImageAlts((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
   };
 
   const markImageForRemoval = (imageId: string) => {
@@ -351,6 +381,30 @@ export default function EditProduct() {
 
   const isImageMarkedForRemoval = (imageId: string) => {
     return imagesToRemove.includes(imageId);
+  };
+
+  const handleImageAltChange = (imageId: string, value: string) => {
+    setImageAlts((prev) => ({ ...prev, [imageId]: value }));
+  };
+
+  const handleSaveImageAlt = async (imageId: string) => {
+    try {
+      setSavingAltId(imageId);
+      const updated = await updateProductImage(id, imageId, {
+        altText: imageAlts[imageId] || "",
+      });
+      setImages((prev) =>
+        prev.map((img) => (img.id === imageId ? { ...img, ...updated } : img))
+      );
+      toast.success("Image alt text updated");
+    } catch (error) {
+      console.error("Error updating image alt text:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update alt text"
+      );
+    } finally {
+      setSavingAltId(null);
+    }
   };
 
   if (loading) {
@@ -651,6 +705,20 @@ export default function EditProduct() {
                   )}
                 </div>
 
+                {(product.baseImageUrl || newMainImage) && !deleteMainImage && (
+                  <div>
+                    <Label htmlFor="imageAlt">Main Image Alt Text</Label>
+                    <Input
+                      id="imageAlt"
+                      value={formData.imageAlt || ""}
+                      onChange={(e) =>
+                        handleInputChange("imageAlt", e.target.value)
+                      }
+                      placeholder="Describe the main image for accessibility/SEO"
+                    />
+                  </div>
+                )}
+
                 {/* Main image info */}
                 {deleteMainImage && images.length > 0 && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
@@ -701,6 +769,17 @@ export default function EditProduct() {
                             variant="default">
                             New
                           </Badge>
+                          <Input
+                            value={newAdditionalImageAlts[index] ?? ""}
+                            onChange={(e) =>
+                              handleNewAdditionalImageAltChange(
+                                index,
+                                e.target.value
+                              )
+                            }
+                            placeholder="Alt text"
+                            className="h-8 text-xs mt-1"
+                          />
                         </div>
                       ))}
                     </div>
@@ -750,25 +829,25 @@ export default function EditProduct() {
                             fill
                             className="object-cover"
                           />
-                        </div>
 
-                        {/* Image controls overlay */}
-                        <div className="absolute inset-0 flex justify-center items-center gap-1 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant={
-                              isImageMarkedForRemoval(image.id)
-                                ? "default"
-                                : "destructive"
-                            }
-                            onClick={() => markImageForRemoval(image.id)}>
-                            {isImageMarkedForRemoval(image.id) ? (
-                              <Undo className="w-3 h-3" />
-                            ) : (
-                              <Trash2 className="w-3 h-3" />
-                            )}
-                          </Button>
+                          {/* Image controls overlay */}
+                          <div className="absolute inset-0 flex justify-center items-center gap-1 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant={
+                                isImageMarkedForRemoval(image.id)
+                                  ? "default"
+                                  : "destructive"
+                              }
+                              onClick={() => markImageForRemoval(image.id)}>
+                              {isImageMarkedForRemoval(image.id) ? (
+                                <Undo className="w-3 h-3" />
+                              ) : (
+                                <Trash2 className="w-3 h-3" />
+                              )}
+                            </Button>
+                          </div>
                         </div>
 
                         {/* Status badges */}
@@ -786,6 +865,35 @@ export default function EditProduct() {
                             Will Remove
                           </Badge>
                         )}
+
+                        {/* Alt text editing */}
+                        <div className="flex gap-1 mt-1">
+                          <Input
+                            value={imageAlts[image.id] ?? ""}
+                            onChange={(e) =>
+                              handleImageAltChange(image.id, e.target.value)
+                            }
+                            placeholder="Alt text"
+                            className="h-8 text-xs"
+                          />
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="outline"
+                            className="h-8 w-8 shrink-0"
+                            disabled={
+                              savingAltId === image.id ||
+                              (imageAlts[image.id] ?? "") ===
+                                (image.altText || "")
+                            }
+                            onClick={() => handleSaveImageAlt(image.id)}>
+                            {savingAltId === image.id ? (
+                              <div className="border-2 border-gray-400 border-t-transparent rounded-full w-3 h-3 animate-spin" />
+                            ) : (
+                              <Check className="w-3 h-3" />
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

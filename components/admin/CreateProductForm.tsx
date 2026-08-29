@@ -48,7 +48,9 @@ export function CreateProductForm() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [mainImage, setMainImage] = useState<File | null>(null);
+  const [mainImageAlt, setMainImageAlt] = useState("");
   const [additionalImages, setAdditionalImages] = useState<File[]>([]);
+  const [additionalImageAlts, setAdditionalImageAlts] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const { isAuthenticated } = useAdmin();
@@ -152,6 +154,7 @@ export function CreateProductForm() {
 
   const removeAdditionalImage = (index: number) => {
     setAdditionalImages((prev) => prev.filter((_, i) => i !== index));
+    setAdditionalImageAlts((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -176,8 +179,11 @@ export function CreateProductForm() {
         ...formData,
         slug: slug || undefined,
         image: mainImage || undefined,
+        imageAlt: mainImageAlt || undefined,
         additionalImages:
           additionalImages.length > 0 ? additionalImages : undefined,
+        additionalImageAlts:
+          additionalImageAlts.length > 0 ? additionalImageAlts : undefined,
       };
 
       await createProduct(productData);
@@ -517,9 +523,15 @@ export function CreateProductForm() {
                           variant="destructive"
                           size="icon"
                           className="-top-2 -right-2 absolute w-6 h-6"
-                          onClick={() => setMainImage(null)}>
+                          onClick={() => { setMainImage(null); setMainImageAlt(""); }}>
                           <X className="w-3 h-3" />
                         </Button>
+                        <Input
+                          className="mt-2 w-32 text-xs"
+                          placeholder="Alt text (optional)"
+                          value={mainImageAlt}
+                          onChange={(e) => setMainImageAlt(e.target.value)}
+                        />
                       </div>
                     ) : (
                       <label className="flex flex-col justify-center items-center bg-gray-50 hover:bg-gray-100 border-2 border-gray-300 border-dashed rounded-lg w-full h-32 cursor-pointer">
@@ -567,6 +579,16 @@ export function CreateProductForm() {
                               onClick={() => removeAdditionalImage(index)}>
                               <X className="w-3 h-3" />
                             </Button>
+                            <Input
+                              className="mt-1 text-xs"
+                              placeholder="Alt text (optional)"
+                              value={additionalImageAlts[index] ?? ""}
+                              onChange={(e) => {
+                                const updated = [...additionalImageAlts];
+                                updated[index] = e.target.value;
+                                setAdditionalImageAlts(updated);
+                              }}
+                            />
                           </div>
                         ))}
                       </div>
