@@ -9,13 +9,13 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    minimumCacheTTL: 2592000,
-    formats: ['image/webp'],
+    // Product images are already served (and cached) via CloudFront, so let
+    // Vercel skip its own resize/optimize pass instead of burning function
+    // CPU re-optimizing images that are already optimized.
+    unoptimized: true,
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    deviceSizes: [640, 828, 1080, 1920],
-    imageSizes: [128, 256, 384],
     remotePatterns: [
       { protocol: 'https', hostname: 'di52x3c4ntpb8.cloudfront.net' },
     ],

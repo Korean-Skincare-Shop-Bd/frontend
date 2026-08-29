@@ -125,7 +125,12 @@ export default function EditProduct() {
         expiryDate: productData.expiryDate
           ? productData.expiryDate.split("T")[0]
           : "",
-        imageAlt: productData.baseImageAlt || "",
+        imageAlt:
+          productData.baseImageAlt ||
+          productData.images?.find(
+            (img) => img.imageUrl === productData.baseImageUrl
+          )?.altText ||
+          "",
       });
       setVariations(productData.variations || []);
       setImages(productData.images || []);

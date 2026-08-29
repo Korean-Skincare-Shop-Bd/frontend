@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server';
 
+export const revalidate = 3600;
+
 export async function GET() {
   try {
     // Get the backend API URL from environment variables
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:8000/api/v1';
     const catalogUrl = `${backendUrl}/catalog/facebook.xml`;
-    
+
     // Fetch the catalog from backend
     const response = await fetch(catalogUrl, {
-      cache: 'no-store', // Always fetch fresh data for catalog
+      next: { revalidate: 3600 }, // Match the 1-hour Cache-Control below
     });
     
     if (!response.ok) {
