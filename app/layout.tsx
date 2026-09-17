@@ -8,6 +8,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import FloatingActions from "@/components/layout/FloatingActions";
 import { AdminProvider } from "@/contexts/AdminContext";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 import { getCategories } from "@/lib/api/categories";
 import PageViewEvent from "@/components/PixelComponent/PageViewEvent";
 import { serializeJsonLd } from "@/lib/json-ld";
@@ -188,6 +189,7 @@ export default async function RootLayout({
       <body className={inter.className}>
         {" "}
         <ThemeProvider>
+          <QueryProvider>
           <AdminProvider>
             <div className="flex flex-col min-h-screen">
               <PageViewEvent />
@@ -199,6 +201,7 @@ export default async function RootLayout({
             <ToastToaster />
             <SonnerToaster />
           </AdminProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

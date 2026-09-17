@@ -1,9 +1,9 @@
 import { HeroSection } from "@/components/sections/hero-section";
 import { BrandsShowcase } from "@/components/sections/brands-showcase";
-import { TopProducts } from "@/components/sections/TopProductsServer";
+import { TopProducts } from "@/components/sections/top-products";
 import { ReviewsSection } from "@/components/sections/reviews-section";
-import { SaleProducts } from "@/components/sections/SaleProductsServer";
-import { HOTProducts } from "@/components/sections/HOTProductsServer";
+import { SaleProducts } from "@/components/sections/SaleProducts";
+import { HOTProducts } from "@/components/sections/HotProduts";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 

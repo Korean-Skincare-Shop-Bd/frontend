@@ -1,44 +1,22 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Quote } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { getReviews, getReviewStatistics, type Review, type ReviewStatistics } from '@/lib/api/review';
+import { queryKeys } from '@/lib/queryKeys';
 
 export function ReviewsSection() {
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [statistics, setStatistics] = useState<ReviewStatistics | null>(null);
   const [currentReview, setCurrentReview] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch both reviews and statistics concurrently
-        const [reviewsResponse, statisticsResponse] = await Promise.all([
-          getReviews({
-            // rating: 4, // Only get 4+ star reviews for the showcase
-            sortBy: 'createdAt',
-            sortOrder: 'desc',
-            hasComment: true // Only reviews with comments
-          }),
-          getReviewStatistics()
-        ]);
-
-        setReviews(reviewsResponse.reviews);
-        setStatistics(statisticsResponse);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        // Fallback to empty state or keep loading state
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const reviewParams = { sortBy: 'createdAt' as const, sortOrder: 'desc' as const, hasComment: true };
+  const reviewsQuery = useQuery({ queryKey: queryKeys.reviews(reviewParams), queryFn: () => getReviews(reviewParams) });
+  const statisticsQuery = useQuery({ queryKey: queryKeys.reviewStatistics, queryFn: getReviewStatistics });
+  const reviews = reviewsQuery.data?.reviews ?? [];
+  const statistics = statisticsQuery.data ?? null;
+  const loading = reviewsQuery.isLoading || statisticsQuery.isLoading;
 
   useEffect(() => {
     if (reviews.length > 0) {

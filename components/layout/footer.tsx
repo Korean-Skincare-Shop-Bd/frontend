@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import {
   Crown,
@@ -15,46 +15,21 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { cloudfrontLoader } from "@/lib/cloudfront-loader";
 import { getCategories, Category } from "@/lib/api/categories";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface ApiResponse<T> {
   categories: T[];
 }
 
 export function Footer() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const categoriesQuery = useQuery({
+    queryKey: queryKeys.categories(1, 5),
+    queryFn: () => getCategories(1, 5),
+    refetchInterval: 10_000,
+  });
+  const categories = categoriesQuery.data?.categories ?? [];
+  const isLoadingCategories = categoriesQuery.isLoading;
   const currentYear = new Date().getFullYear();
-  const fetchCategories = async () => {
-    try {
-      setIsLoadingCategories(true);
-      const response = await getCategories(1, 5);
-      if (
-        response?.categories &&
-        (categories.length !== response.categories.length ||
-          !categories.every((cat, idx) => cat.id === response.categories[idx].id))
-      ) {
-        setCategories(response.categories);
-      }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      setCategories([]);
-    } finally {
-      setIsLoadingCategories(false);
-    }
-  };
-
-  useEffect(() => {
-
-
-    fetchCategories();
-
-    // Poll every 10 seconds for new categories
-     const interval = setInterval(() => {
-      fetchCategories(); // Refetch every 30 seconds
-    }, 10000); // 30 seconds
-
-    return () => clearInterval(interval); // Cleanup on unmount
-  }, []);
 
   return (
     <footer className="bg-gray-900 text-white">

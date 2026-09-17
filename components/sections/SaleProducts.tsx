@@ -1,47 +1,25 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getProducts, Product } from '@/lib/api/products';
+import { Product } from '@/lib/api/products';
+import { useProducts } from '@/hooks/useProducts';
 import { QuickViewModal } from '../ui/quick-view-modal';
 import { useToast } from '@/hooks/use-toast';
 import { addToEnhancedCart } from '@/lib/api/cart';
 import { ProductsSection } from '../product/ProductSections';
 
 export function SaleProducts() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading: loading, isError } = useProducts({ limit: 8, sortBy: 'createdAt', sortOrder: 'desc', variationTags: 'SALE' });
+  const products = data?.products ?? [];
+  const error = isError ? 'Failed to load products' : null;
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        // Fetch latest products (sorted by createdAt desc by default)
-        const response = await getProducts({
-          limit: 8, // Get 8 latest products
-          sortBy: 'createdAt',
-          sortOrder: 'desc',
-          variationTags: 'SALE'
-        });
-        setProducts(response.products);
-      } catch (err) {
-        console.error('Failed to fetch products:', err);
-        setError('Failed to load products');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
 
   const handleAddToCart = async (product: Product, variationId?: string) => {
     try {

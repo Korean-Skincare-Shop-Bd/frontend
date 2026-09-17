@@ -1,119 +1,75 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
-import {
-  adminLogin,
-  adminLogout,
-  AdminLoginRequest,
-  getCurrentAdmin,
-} from "@/lib/api/admin";
+import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { adminLogin, adminLogout, AdminLoginRequest, getCurrentAdmin } from "@/lib/api/admin";
 import { clearLegacyAdminStorage } from "@/lib/api/adminFetch";
+
+type Admin = { id: string; email: string; username: string };
 
 interface AdminContextType {
   isAuthenticated: boolean;
-  adminData: any;
+  adminData: Admin | null;
   login: (credentials: AdminLoginRequest) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
+const adminQueryKey = ["admin", "current"] as const;
 
 export function AdminProvider({ children }: { children: ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [adminData, setAdminData] = useState<{
-    id: string;
-    email: string;
-    username: string;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
+  useEffect(() => setMounted(true), []);
   useEffect(() => {
     if (!mounted) return;
-
-    let active = true;
-
     clearLegacyAdminStorage();
-
-    getCurrentAdmin()
-      .then((admin) => {
-        if (!active) return;
-        setAdminData({
-          id: admin.id,
-          email: admin.email,
-          username: admin.username,
-        });
-        setIsAuthenticated(true);
-      })
-      .catch(() => {
-        if (!active) return;
-        setAdminData(null);
-        setIsAuthenticated(false);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-
-    const handleUnauthorized = () => {
-      setAdminData(null);
-      setIsAuthenticated(false);
-    };
-
+    const handleUnauthorized = () => queryClient.setQueryData(adminQueryKey, null);
     window.addEventListener("admin:unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("admin:unauthorized", handleUnauthorized);
+  }, [mounted, queryClient]);
 
-    return () => {
-      active = false;
-      window.removeEventListener("admin:unauthorized", handleUnauthorized);
-    };
-  }, [mounted]);
+  const adminQuery = useQuery({
+    queryKey: adminQueryKey,
+    queryFn: async (): Promise<Admin | null> => {
+      try {
+        const admin = await getCurrentAdmin();
+        return { id: admin.id, email: admin.email, username: admin.username };
+      } catch {
+        return null;
+      }
+    },
+    enabled: mounted,
+    staleTime: Infinity,
+  });
+
+  const loginMutation = useMutation({
+    mutationFn: adminLogin,
+    onSuccess: (admin) => {
+      queryClient.setQueryData(adminQueryKey, admin);
+      clearLegacyAdminStorage();
+    },
+  });
 
   const login = async (credentials: AdminLoginRequest) => {
-    try {
-      const response = await adminLogin(credentials);
-
-      if (response) {
-        const { id, email, username } = response;
-
-        setAdminData({
-          id,
-          email,
-          username,
-        });
-        setIsAuthenticated(true);
-        clearLegacyAdminStorage();
-      }
-    } catch (error) {
-      throw error;
-    }
+    await loginMutation.mutateAsync(credentials);
   };
-
   const logout = async () => {
     await adminLogout().catch(() => undefined);
-    setAdminData(null);
-    setIsAuthenticated(false);
+    queryClient.setQueryData(adminQueryKey, null);
     clearLegacyAdminStorage();
   };
 
   return (
-    <AdminContext.Provider
-      value={{
-        isAuthenticated,
-        adminData,
-        login,
-        logout,
-        loading,
-      }}>
+    <AdminContext.Provider value={{
+      isAuthenticated: Boolean(adminQuery.data),
+      adminData: adminQuery.data ?? null,
+      login,
+      logout,
+      loading: !mounted || adminQuery.isLoading,
+    }}>
       {children}
     </AdminContext.Provider>
   );
@@ -121,8 +77,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
 export function useAdmin() {
   const context = useContext(AdminContext);
-  if (context === undefined) {
-    throw new Error("useAdmin must be used within an AdminProvider");
-  }
+  if (!context) throw new Error("useAdmin must be used within an AdminProvider");
   return context;
 }

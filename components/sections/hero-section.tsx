@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { cloudfrontLoader } from "@/lib/cloudfront-loader";
 import Link from "next/link";
@@ -45,46 +46,12 @@ interface ProcessedBanner {
 }
 
 export function HeroSection() {
-  const [banners, setBanners] = useState<ProcessedBanner[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchBanners = async () => {
-      try {
-        const activeBanners = await getActiveBanners();
-        console.log(activeBanners);
-
-        if (activeBanners.length > 0) {
-          console.log(1);
-          // Process API banners - add default title, subtitle, and CTA if not provided
-          const processedBanners: ProcessedBanner[] = activeBanners.map(
-            (banner, index) => ({
-              id: banner.id,
-              // title: `Discover Our Latest Collection`, // Default title
-              // subtitle: `Premium beauty products that enhance your natural glow`, // Default subtitle
-              imageUrl: banner.imageUrl,
-              cta: "Shop Now", // Default CTA
-              linkUrl: banner.linkUrl || "/products", // Default link
-            })
-          );
-
-          setBanners(processedBanners);
-        } else {
-          // Use fallback banners if no active banners
-          setBanners(fallbackBanners);
-        }
-      } catch (error) {
-        console.error("Failed to fetch active banners:", error);
-        // Use fallback banners on error
-        setBanners(fallbackBanners);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBanners();
-  }, []);
+  const bannersQuery = useQuery({ queryKey: ["banners", "active"], queryFn: getActiveBanners });
+  const banners: ProcessedBanner[] = bannersQuery.data?.length
+    ? bannersQuery.data.map((banner) => ({ id: banner.id, imageUrl: banner.imageUrl, cta: "Shop Now", linkUrl: banner.linkUrl || "/products" }))
+    : fallbackBanners;
+  const loading = bannersQuery.isLoading;
 
   // Preload the first few images for better performance
   useEffect(() => {

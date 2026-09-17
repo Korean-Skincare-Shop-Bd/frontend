@@ -1,18 +1,22 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 function contentSecurityPolicy(nonce: string) {
+  const isDevelopment = process.env.NODE_ENV !== "production";
+
   return [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' https://connect.facebook.net https://www.googletagmanager.com`,
+    // Next.js development uses inline bootstrap code and eval for Fast Refresh.
+    // Keep these relaxations development-only; production remains nonce-based.
+    `script-src 'self'${isDevelopment ? " 'unsafe-inline' 'unsafe-eval'" : ` 'nonce-${nonce}'`} https://connect.facebook.net https://www.googletagmanager.com`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
-    "connect-src 'self' https:",
+    `connect-src 'self' https:${isDevelopment ? " http://localhost:8000" : ""}`,
     "font-src 'self' data:",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    "upgrade-insecure-requests",
+    ...(isDevelopment ? [] : ["upgrade-insecure-requests"]),
   ].join("; ");
 }
 
