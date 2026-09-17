@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,7 +28,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Slider } from "@/components/ui/slider";
 import {
   Sheet,
   SheetContent,
@@ -49,7 +48,6 @@ import { QuickViewModal } from "@/components/ui/quick-view-modal";
 import { addToEnhancedCart } from "@/lib/api/cart";
 import { useToast } from "@/hooks/use-toast";
 import { ProductsSection } from "@/components/product/ProductSections";
-import PriceRangeFilter from "@/components/product/PriceRange";
 
 interface ProductsPageContentProps {
   initialProducts: Product[];
@@ -100,7 +98,6 @@ export default function ProductsPageContent({
     searchParams?.get("variationTags") || ""
   );
 
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
   const [sortBy, setSortBy] = useState<"price" | "name" | "createdAt">(
     "createdAt"
   );
@@ -109,6 +106,36 @@ export default function ProductsPageContent({
   const [currentPage, setCurrentPage] = useState(
     Math.max(1, parseInt(searchParams?.get("page") || "1") || 1)
   );
+  const [categoryBrandIds, setCategoryBrandIds] = useState<Set<string> | null>(null);
+
+  const availableBrands = useMemo(
+    () =>
+      brands.filter(
+        (brand) =>
+          (brand.productCount ?? 0) > 0 &&
+          (selectedCategory === "all" || categoryBrandIds?.has(brand.id))
+      ),
+    [brands, categoryBrandIds, selectedCategory]
+  );
+  const pageTitle = useMemo(() => {
+    const brandName = availableBrands.find(
+      (brand) => brand.id === selectedBrand || brand.slug === selectedBrand
+    )?.name;
+    const categoryName = categories.find(
+      (category) => category.id === selectedCategory || category.slug === selectedCategory
+    )?.name;
+    const collectionName = [brandName, categoryName].filter(Boolean).join(" ");
+
+    if (searchQuery.trim()) {
+      return `Search Results for \"${searchQuery.trim()}\"${collectionName ? ` in ${collectionName}` : ""}`;
+    }
+
+    return collectionName ? `${collectionName} Products` : "Our Products";
+  }, [availableBrands, categories, searchQuery, selectedBrand, selectedCategory]);
+
+  useEffect(() => {
+    document.title = `${pageTitle} | Korean Skincare Shop BD`;
+  }, [pageTitle]);
 
   // Update filter states when URL parameters change
   useEffect(() => {
@@ -118,6 +145,48 @@ export default function ProductsPageContent({
     setVariationTags(searchParams?.get("variationTags") || "");
     setCurrentPage(Math.max(1, parseInt(searchParams?.get("page") || "1") || 1));
   }, [searchParams]);
+
+  // A category page should only offer brands represented by products in that category.
+  useEffect(() => {
+    if (selectedCategory === "all") {
+      setCategoryBrandIds(null);
+      return;
+    }
+
+    setCategoryBrandIds(null);
+    let cancelled = false;
+    const fetchCategoryBrandIds = async () => {
+      try {
+        const brandIds = new Set<string>();
+        let page = 1;
+        let hasNext = true;
+
+        while (hasNext) {
+          const response = await getProducts({
+            category: selectedCategory,
+            page,
+            limit: 100,
+          });
+          response.products.forEach((product) => {
+            if (product.brandId) brandIds.add(product.brandId);
+            else if (product.brand?.id) brandIds.add(product.brand.id);
+          });
+          hasNext = response.hasNext;
+          page += 1;
+        }
+
+        if (!cancelled) setCategoryBrandIds(brandIds);
+      } catch (err) {
+        console.error("Failed to load brands for the selected category:", err);
+        if (!cancelled) setCategoryBrandIds(new Set());
+      }
+    };
+
+    fetchCategoryBrandIds();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCategory]);
 
   // Quick view modal state
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(
@@ -131,7 +200,6 @@ export default function ProductsPageContent({
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     brands: false,
-    price: false,
   });
   const { toast } = useToast();
   const isInitialRender = useRef(true);
@@ -182,12 +250,6 @@ export default function ProductsPageContent({
         if (selectedBrand !== "all") {
           params.brand = selectedBrand;
         }
-        if (priceRange[0] > 0) {
-          params.minPrice = priceRange[0];
-        }
-        if (priceRange[1] < 50000) {
-          params.maxPrice = priceRange[1];
-        }
         if (searchQuery) {
           params.search = searchQuery;
         }
@@ -221,7 +283,6 @@ export default function ProductsPageContent({
     searchQuery,
     selectedCategory,
     selectedBrand,
-    priceRange,
     sortBy,
     sortOrder,
     currentPage,
@@ -299,9 +360,7 @@ export default function ProductsPageContent({
 
   const clearFilters = () => {
     setSearchQuery("");
-    setSelectedCategory("all");
     setSelectedBrand("all");
-    setPriceRange([0, 50000]);
     setCurrentPage(1);
     setIsMobileFiltersOpen(false);
   };
@@ -376,33 +435,6 @@ export default function ProductsPageContent({
   // Filter component for reuse in both desktop sidebar and mobile sheet
   const FilterContent = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
-      {/* Category Filter */}
-      <div className="space-y-3">
-        <h3 className="font-semibold text-sm uppercase tracking-wider">
-          Category
-        </h3>
-        <Select
-          value={selectedCategory}
-          onValueChange={(value) => {
-            setSelectedCategory(value);
-            setCurrentPage(1);
-            if (isMobile) setIsMobileFiltersOpen(false);
-          }}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select Category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       {/* Brand Filter */}
       <div className="space-y-3">
         <Collapsible
@@ -428,8 +460,8 @@ export default function ProductsPageContent({
           <CollapsibleContent className="space-y-2">
             <div
               className={`space-y-2 ${
-                isMobile ? "mt-2" : ""
-              } max-h-48 overflow-y-auto`}
+                isMobile ? "mt-2 max-h-48 overflow-y-auto" : ""
+              }`}
             >
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -445,11 +477,13 @@ export default function ProductsPageContent({
                   All Brands
                 </label>
               </div>
-              {brands.map((brand) => (
+              {availableBrands.map((brand) => (
                 <div key={brand.id} className="flex items-center space-x-2">
                   <Checkbox
                     id={brand.id}
-                    checked={selectedBrand === brand.id}
+                    checked={
+                      selectedBrand === brand.id || selectedBrand === brand.slug
+                    }
                     onCheckedChange={() => {
                       setSelectedBrand(brand.id);
                       setCurrentPage(1);
@@ -466,22 +500,9 @@ export default function ProductsPageContent({
         </Collapsible>
       </div>
 
-      {/* Price Range Filter */}
-      <PriceRangeFilter
-        priceRange={priceRange}
-        setPriceRange={setPriceRange}
-        setCurrentPage={setCurrentPage}
-        isMobile={isMobile}
-        expandedSections={expandedSections}
-        toggleSection={toggleSection} // Optional: custom step
-      />
-
       {/* Clear Filters Button */}
       {(searchQuery ||
-        selectedCategory !== "all" ||
-        selectedBrand !== "all" ||
-        priceRange[0] > 0 ||
-        priceRange[1] < 50000) && (
+        selectedBrand !== "all") && (
         <Button variant="outline" onClick={clearFilters} className="w-full">
           Clear All Filters
         </Button>
@@ -496,7 +517,7 @@ export default function ProductsPageContent({
           {/* Header */}
           <div className="mb-6 sm:mb-8">
             <h1 className="mb-2 sm:mb-4 font-bold text-2xl sm:text-3xl lg:text-4xl golden-text">
-              Our Products
+              {pageTitle}
             </h1>
             {/* <p className="text-muted-foreground text-base sm:text-lg">
               Discover our complete collection of premium beauty products
@@ -546,29 +567,6 @@ export default function ProductsPageContent({
                     </div>
                   </SheetContent>
                 </Sheet>
-
-                {/* Category Filter - Mobile */}
-                <div className="lg:hidden flex-1 sm:flex-none sm:w-40">
-                  <Select
-                    value={selectedCategory}
-                    onValueChange={(value) => {
-                      setSelectedCategory(value);
-                      setCurrentPage(1);
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
 
                 {/* Sort Select */}
                 <div className="flex-1 sm:flex-none sm:w-40">
@@ -620,7 +618,7 @@ export default function ProductsPageContent({
           <div className="flex lg:flex-row flex-col gap-6 lg:gap-8">
             {/* Desktop Sidebar Filters */}
             <div className="hidden lg:block flex-shrink-0 w-64">
-              <Card className="top-4 sticky">
+              <Card className="top-4 sticky min-h-[calc(100vh-2rem)]">
                 <CardContent className="p-6">
                   <FilterContent />
                 </CardContent>
@@ -635,10 +633,7 @@ export default function ProductsPageContent({
                   Showing {products.length} of {pagination.total} products
                 </div>
                 {(searchQuery ||
-                  selectedCategory !== "all" ||
-                  selectedBrand !== "all" ||
-                  priceRange[0] > 0 ||
-                  priceRange[1] < 50000) && (
+                  selectedBrand !== "all") && (
                   <Button
                     variant="outline"
                     size="sm"

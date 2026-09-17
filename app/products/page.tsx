@@ -7,21 +7,59 @@ import { getBrands } from "@/lib/api/brands";
 import { getCategories } from "@/lib/api/categories";
 import { BASE_URL } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: 'Korean Skincare Products | Premium K-Beauty | Korean Skincare Shop BD',
-  description: 'Browse our complete collection of authentic Korean skincare and beauty products. Shop premium K-beauty essentials, serums, creams, masks, and more from trusted Korean brands.',
-  keywords: ['Korean skincare products', 'K-beauty products', 'Korean cosmetics', 'skincare Bangladesh', 'Korean beauty products Bangladesh', 'serums', 'moisturizers', 'sheet masks'],
-  openGraph: {
-    title: 'Korean Skincare Products Collection',
-    description: 'Discover premium Korean skincare and beauty products.',
-    url: 'https://www.koreanskincareshopbd.com/products',
-    type: 'website',
-    images: [{ url: '/logo2.png', width: 1200, height: 630, alt: 'Korean Skincare Products' }],
-  },
-};
-
 interface ProductsPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+const getSearchParam = (
+  params: Record<string, string | string[] | undefined>,
+  name: string
+) => {
+  const value = params[name];
+  return Array.isArray(value) ? value[0] || "" : value || "";
+};
+
+export async function generateMetadata({
+  searchParams,
+}: ProductsPageProps): Promise<Metadata> {
+  const params = await searchParams;
+  const search = getSearchParam(params, "search").trim();
+  const category = getSearchParam(params, "category");
+  const brand = getSearchParam(params, "brand");
+
+  const [brandsResult, categoriesResult] = await Promise.allSettled([
+    getBrands(1, 100),
+    getCategories(1, 100),
+  ]);
+  const brands = brandsResult.status === "fulfilled" ? brandsResult.value.data.brands : [];
+  const categories = categoriesResult.status === "fulfilled" ? categoriesResult.value.categories : [];
+  const brandName = brands.find((item) => item.id === brand || item.slug === brand)?.name;
+  const categoryName = categories.find((item) => item.id === category || item.slug === category)?.name;
+
+  const collectionName = [brandName, categoryName].filter(Boolean).join(" ");
+  const title = search
+    ? `Search Results for \"${search}\"${collectionName ? ` in ${collectionName}` : ""}`
+    : collectionName
+      ? `${collectionName} Products`
+      : "Korean Skincare Products";
+  const description = search
+    ? `Browse Korean skincare search results for ${search}${collectionName ? ` in ${collectionName}` : ""}.`
+    : collectionName
+      ? `Browse authentic Korean skincare products from ${collectionName}.`
+      : "Browse our complete collection of authentic Korean skincare and beauty products. Shop premium K-beauty essentials, serums, creams, masks, and more from trusted Korean brands.";
+
+  return {
+    title,
+    description,
+    keywords: [title, "Korean skincare products", "K-beauty products", "skincare Bangladesh"],
+    openGraph: {
+      title,
+      description,
+      url: "https://www.koreanskincareshopbd.com/products",
+      type: "website",
+      images: [{ url: "/logo2.png", width: 1200, height: 630, alt: "Korean Skincare Products" }],
+    },
+  };
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
@@ -29,9 +67,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   const page = Math.max(1, parseInt(String(params.page || '1')) || 1);
   const perPage = Math.max(1, parseInt(String(params.per_page || '48')) || 48);
-  const search = String(params.search || '');
-  const category = String(params.category || '');
-  const brand = String(params.brand || '');
+  const search = getSearchParam(params, 'search');
+  const category = getSearchParam(params, 'category');
+  const brand = getSearchParam(params, 'brand');
   const variationTagsParam = params.variationTags;
   const variationTags = Array.isArray(variationTagsParam)
     ? variationTagsParam[0]
