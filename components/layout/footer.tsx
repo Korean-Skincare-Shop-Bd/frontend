@@ -87,7 +87,7 @@ export function Footer() {
             </p>
             <p className="text-gray-400 leading-relaxed">
               Real Products. Real Results. Always Authentic.
-              "Experience the Luxury of Authentic Korean Skincare - Only at Korean Skincare SHOP BD."
+              &quot;Experience the Luxury of Authentic Korean Skincare - Only at Korean Skincare SHOP BD.&quot;
             </p>
             <div>
               <h4 className="mb-3 font-semibold text-white">Follow Us</h4>

@@ -1,48 +1,30 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { revalidatePath, revalidateTag } from 'next/cache'
+import { revalidatePath } from "next/cache";
+import { NextRequest, NextResponse } from "next/server";
+
+const ACTIONS = new Set(["created", "updated", "deleted"]);
+const PRODUCT_ID = /^[A-Za-z0-9_-]{1,128}$/;
 
 export async function POST(request: NextRequest) {
-  try {
-    // Verify the request is from your backend (add authentication)
-    const authHeader = request.headers.get('authorization')
-    const webhookSecret = process.env.WEBHOOK_SECRET || 'your-secret-key'
-    
-    if (authHeader !== `Bearer ${webhookSecret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    
-    const body = await request.json()
-    const { action, productId } = body // action: 'created', 'updated', 'deleted'
-    
-    console.log(`Product ${action}: ${productId}`)
-    
-    // Revalidate the sitemap and related pages
-    revalidatePath('/sitemap.xml')
-    revalidatePath('/products')
-    
-    // If you're using ISR for product pages, revalidate specific product
-    if (productId && action !== 'deleted') {
-      revalidatePath(`/products/${productId}`)
-    }
-    
-    return NextResponse.json({
-      success: true, 
-      message: `Product ${action} processed, sitemap updated` 
-    })
-    
-  } catch (error) {
-    console.error('Webhook error:', error)
-    return NextResponse.json(
-      { error: 'Failed to process webhook' }, 
-      { status: 500 }
-    )
+  const webhookSecret = process.env.WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error("WEBHOOK_SECRET is not configured");
+    return NextResponse.json({ error: "Webhook unavailable" }, { status: 503 });
   }
-}
-
-// For testing the webhook
-export async function GET() {
-  return NextResponse.json({ 
-    message: 'Product webhook endpoint ready',
-    usage: 'POST with { action: "created|updated|deleted", productId: "cuid" }'
-  })
+  if (request.headers.get("authorization") !== `Bearer ${webhookSecret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  try {
+    const body: unknown = await request.json();
+    if (typeof body !== "object" || body === null || Array.isArray(body)) return NextResponse.json({ error: "Invalid webhook payload" }, { status: 400 });
+    const { action, productId } = body as { action?: unknown; productId?: unknown };
+    if (typeof action !== "string" || !ACTIONS.has(action) || (productId !== undefined && (typeof productId !== "string" || !PRODUCT_ID.test(productId)))) {
+      return NextResponse.json({ error: "Invalid webhook payload" }, { status: 400 });
+    }
+    revalidatePath("/sitemap.xml");
+    revalidatePath("/products");
+    if (productId && action !== "deleted") revalidatePath(`/products/${productId}`);
+    return NextResponse.json({ success: true });
+  } catch {
+    return NextResponse.json({ error: "Invalid webhook payload" }, { status: 400 });
+  }
 }

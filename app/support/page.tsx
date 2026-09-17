@@ -80,7 +80,7 @@ const CustomerSupportPage: React.FC = () => {
             <h1 className="font-bold text-foreground text-3xl">Customer Support</h1>
           </div>
                     <p className="text-muted-foreground">
-            We're here to help you with any questions or concerns. Choose the support option that works best for you.
+            We&apos;re here to help you with any questions or concerns. Choose the support option that works best for you.
           </p>
         </div>
 

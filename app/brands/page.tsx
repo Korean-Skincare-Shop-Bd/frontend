@@ -4,6 +4,7 @@ import { BrandsLoading } from './BrandsPageLoading';
 import type { Metadata } from 'next';
 import { getBrands } from '@/lib/api/brands';
 import { BASE_URL } from '@/lib/utils';
+import { serializeJsonLd } from '@/lib/json-ld';
 
 export const metadata: Metadata = {
   title: 'Premium Korean Beauty Brands | Korean Skincare Shop BD',
@@ -53,7 +54,7 @@ export default async function BrandsPage() {
       {brandsSchema && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(brandsSchema) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(brandsSchema) }}
         />
       )}
       <Suspense fallback={<BrandsLoading />}>

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Heart, Users, Award, Target, Mail, Phone, MapPin } from 'lucide-react';
 import type { Metadata } from 'next';
 import { BASE_URL } from '@/lib/utils';
+import { serializeJsonLd } from '@/lib/json-ld';
 
 export const metadata: Metadata = {
   title: 'About Us | Korean Skincare Shop BD',
@@ -49,7 +50,7 @@ const AboutUsPage: React.FC = () => {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(localBusinessSchema) }}
       />
     <div className="bg-background min-h-screen">
       <div className="mx-auto px-4 py-8 max-w-4xl container">
@@ -80,7 +81,7 @@ const AboutUsPage: React.FC = () => {
                 Founded in 2024, we started as a small team with a big dream: to make quality products accessible to everyone in Bangladesh. What began as a passion project has grown into a trusted e-commerce platform serving thousands of customers nationwide.
               </p>
               <p className="text-muted-foreground leading-relaxed">
-                We believe that shopping should be convenient, reliable, and enjoyable. That's why we've built our platform with customer satisfaction at the heart of everything we do.
+                We believe that shopping should be convenient, reliable, and enjoyable. That&apos;s why we&apos;ve built our platform with customer satisfaction at the heart of everything we do.
               </p>
             </div>
           </section>
@@ -185,7 +186,7 @@ const AboutUsPage: React.FC = () => {
           <section className="bg-muted/50 p-8 rounded-lg text-center">
             <h2 className="mb-4 font-semibold text-foreground text-2xl">Get in Touch</h2>
             <p className="mb-6 text-muted-foreground">
-              Have questions or want to learn more about us? We'd love to hear from you.
+              Have questions or want to learn more about us? We&apos;d love to hear from you.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link

@@ -19,7 +19,7 @@ export default function AdminDashboard() {
           <div>
             <h1 className="mb-2 font-bold text-3xl">Admin Dashboard</h1>
             <p className="text-muted-foreground">
-              Welcome back! Here's what's happening with your store.
+              Welcome back! Here&apos;s what&apos;s happening with your store.
             </p>
           </div>
           <div className="flex gap-4 mt-4 md:mt-0">

@@ -6,6 +6,7 @@ import { getProducts } from "@/lib/api/products";
 import { getBrands } from "@/lib/api/brands";
 import { getCategories } from "@/lib/api/categories";
 import { BASE_URL } from "@/lib/utils";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 interface ProductsPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -136,7 +137,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
       {collectionSchema && (
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(collectionSchema) }}
         />
       )}
       <Suspense fallback={<ProductsLoading />}>

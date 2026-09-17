@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Mail, Phone, MapPin, MessageCircle } from 'lucide-react';
 import { BASE_URL } from '@/lib/utils';
+import { serializeJsonLd } from '@/lib/json-ld';
 
 const faqSchema = {
   "@context": "https://schema.org",
@@ -95,11 +96,11 @@ const ContactClient: React.FC = () => {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqSchema) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(localBusinessSchema) }}
       />
     <div className="bg-gradient-to-br from-background via-background to-muted/10 min-h-screen">
       <div className="mx-auto px-4 py-8 md:py-12 max-w-6xl container">

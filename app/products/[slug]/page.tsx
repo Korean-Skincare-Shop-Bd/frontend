@@ -12,6 +12,7 @@ import { ProductErrorState } from "@/components/product/ProductErrorState";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { BASE_URL } from "@/lib/utils";
+import { serializeJsonLd } from "@/lib/json-ld";
 
 // Pre-render all existing product pages at build time.
 // New products added after build are rendered on first visit and then cached.
@@ -271,11 +272,11 @@ async function ProductData({ slug }: { slug: string }) {
       <>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(productSchema) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbSchema) }}
         />
       <div className="bg-white dark:bg-gray-900 min-h-screen">
         <div className="mx-auto px-4 py-3 container">

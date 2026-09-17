@@ -207,7 +207,7 @@ export function ReviewDetailsView({ reviewId }: ReviewDetailsViewProps) {
           <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">Review not found</h3>
           <p className="text-muted-foreground">
-            The review you're looking for doesn't exist or has been deleted.
+            The review you&apos;re looking for doesn&apos;t exist or has been deleted.
           </p>
         </div>
       </div>

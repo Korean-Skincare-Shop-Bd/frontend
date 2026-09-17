@@ -135,7 +135,7 @@ export function ReviewsSection() {
             What Our Customers Say
           </h2>
           <p className="mx-auto max-w-2xl text-muted-foreground text-lg">
-            Don't just take our word for it. Here's what our satisfied customers have to say about their experience.
+            Don&apos;t just take our word for it. Here&apos;s what our satisfied customers have to say about their experience.
           </p>
         </div>
 
@@ -155,7 +155,7 @@ export function ReviewsSection() {
                     <div className="mb-6 text-center">
                       <Quote className="mx-auto mb-4 w-8 h-8 text-primary-400" />
                       <p className="mx-auto max-w-3xl break-words text-gray-700 dark:text-gray-300 text-base sm:text-lg md:text-xl italic leading-relaxed">
-                        "{reviews[currentReview].comment}"
+                        &quot;{reviews[currentReview].comment}&quot;
                       </p>
                     </div>
                     

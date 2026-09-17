@@ -194,7 +194,7 @@ export const OrderFilters = ({
           
           {searchQuery && (
             <Badge variant="secondary" className="text-xs">
-              Search: "{searchQuery}"
+              Search: &quot;{searchQuery}&quot;
               <button 
                 onClick={() => setSearchQuery('')}
                 className="hover:bg-secondary-foreground/20 ml-1 p-0.5 rounded-full"

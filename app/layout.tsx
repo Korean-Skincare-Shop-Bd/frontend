@@ -10,6 +10,8 @@ import FloatingActions from "@/components/layout/FloatingActions";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { getCategories } from "@/lib/api/categories";
 import PageViewEvent from "@/components/PixelComponent/PageViewEvent";
+import { serializeJsonLd } from "@/lib/json-ld";
+import { headers } from "next/headers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -102,6 +104,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const { categories } = await getCategories(1, 5);
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   // Structured data for the website
   const structuredData = {
@@ -137,10 +140,12 @@ export default async function RootLayout({
         <link rel="preload" href="/logo2.png" as="image" />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+          nonce={nonce}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
         />
         {/* Meta Pixel Code */}
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `
               !function(f,b,e,v,n,t,s)
@@ -156,8 +161,9 @@ export default async function RootLayout({
           }}
         />
         {/* <!-- Google tag (gtag.js) --> */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-NPTTRXW8L1"></script>
+        <script nonce={nonce} async src="https://www.googletagmanager.com/gtag/js?id=G-NPTTRXW8L1"></script>
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];

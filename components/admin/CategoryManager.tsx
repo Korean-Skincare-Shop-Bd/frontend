@@ -600,7 +600,7 @@ export function CategoriesManager() {
         <AlertDialogTitle className="text-lg">Are you sure?</AlertDialogTitle>
         <AlertDialogDescription className="text-sm">
           This action cannot be undone. This will permanently delete the category
-          <span className="font-medium"> "{categoryToDelete?.name}"</span> and may affect associated products.
+          <span className="font-medium"> &quot;{categoryToDelete?.name}&quot;</span> and may affect associated products.
         </AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter className="sm:flex-row flex-col gap-2">

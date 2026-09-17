@@ -501,7 +501,7 @@ export function SettingsManager() {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete Admin</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Are you sure you want to delete admin "{admin.username}"? This action cannot be undone.
+                                  Are you sure you want to delete admin &quot;{admin.username}&quot;? This action cannot be undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>

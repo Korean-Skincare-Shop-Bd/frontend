@@ -5,9 +5,6 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 const nextConfig = {
   // output: 'export',
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   images: {
     // Product images are already served (and cached) via CloudFront, so let
     // Vercel skip its own resize/optimize pass instead of burning function
