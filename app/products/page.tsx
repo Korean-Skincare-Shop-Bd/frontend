@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import ProductsPageContent from "./ProductPageClient";
 import { ProductsLoading } from "./ProductPageLoading";
-import PageViewEvent from "@/components/PixelComponent/PageViewEvent";
 import type { Metadata } from "next";
 import { getProducts } from "@/lib/api/products";
 import { getBrands } from "@/lib/api/brands";
@@ -109,7 +108,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           initialCategories={initialCategories}
           initialPagination={initialPagination}
         />
-        <PageViewEvent />
       </Suspense>
     </>
   );

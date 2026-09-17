@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -15,8 +14,4 @@ export const generateEventId = () => {
     const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
-};
-
-export const hashSHA256 = (value: string): string => {
-  return crypto.createHash("sha256").update(value).digest("hex");
 };

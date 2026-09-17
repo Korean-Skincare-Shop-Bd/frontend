@@ -11,8 +11,7 @@ import { ProductLoadingState } from "@/components/product/ProductLoadingState";
 import { ProductErrorState } from "@/components/product/ProductErrorState";
 import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
-import PageViewEvent from "@/components/PixelComponent/PageViewEvent";
-import { generateEventId, BASE_URL } from "@/lib/utils";
+import { BASE_URL } from "@/lib/utils";
 
 // Pre-render all existing product pages at build time.
 // New products added after build are rendered on first visit and then cached.

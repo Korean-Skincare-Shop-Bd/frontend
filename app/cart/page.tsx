@@ -28,8 +28,8 @@ import {
 } from "@/lib/api/cart";
 import { getProduct, Product, ProductVariation } from "@/lib/api/products";
 import { useRouter } from "next/navigation";
-import useFbIds from "@/hooks/useFbIds";
 import { generateEventId } from "@/lib/utils";
+import { sendCapiEvent } from "@/lib/meta/track";
 interface CartItemWithProduct extends CartItem {
   product?: Product;
   variation?: ProductVariation;
@@ -43,9 +43,6 @@ export default function CartPage() {
   const { toast } = useToast();
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const router = useRouter();
-  const { fbclid, fbp } = useFbIds();
-  const fbEventTime = Math.floor(Date.now() / 1000);
-  const eventId = generateEventId();
 
   // Fetch cart data and product details
   useEffect(() => {
@@ -231,31 +228,11 @@ export default function CartPage() {
       const res = await prepareCheckout();
 
       if (res?.data?.enhanced) {
-        // handle pixel and conversion api
-        fetch("/api/fb-conversion", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            eventName: "InitiateCheckout",
-            eventId: eventId,
-            eventTime: fbEventTime,
-          }),
-        }).catch(() => {});
-
-        (window as any).fbq(
-          "track",
-          "InitiateCheckout",
-          {
-            currency: "BDT",
-          },
-          {
-            eventID: eventId,
-            fbc: fbclid,
-            fbp,
-          }
-        );
+        const eventId = generateEventId();
+        const contents = items.map((item) => ({ id: item.productId, quantity: item.quantity }));
+        const customData = { value: total, currency: "BDT", content_ids: contents.map((item) => item.id), content_type: "product", contents, num_items: items.reduce((count, item) => count + item.quantity, 0) };
+        sendCapiEvent({ eventName: "InitiateCheckout", eventId, customData });
+        (window as any).fbq?.("track", "InitiateCheckout", customData, { eventID: eventId });
       }
       toast({
         title: "Success",

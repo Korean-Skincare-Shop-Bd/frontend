@@ -2,30 +2,26 @@
 
 import { useEffect, useState } from "react";
 
+const readCookie = (name: string) => {
+  const match = document.cookie.match(new RegExp(`(^|;)\\s*${name}\\s*=\\s*([^;]+)`));
+  return match ? decodeURIComponent(match[2]) : undefined;
+};
+
 export default function useFbIds() {
-  const [fbIds, setFbIds] = useState<{ fbclid?: string; fbp?: string }>({});
+  const [fbIds, setFbIds] = useState<{ fbc?: string; fbp?: string }>({});
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // 1️⃣ Get fbclid from URL
-    const urlParams = new URLSearchParams(window.location.search);
-    let fbclid = urlParams.get("fbclid") || undefined;
-
-    // Optional: store fbclid in cookie for persistence
-    if (fbclid) {
-      document.cookie = `fbclid=${fbclid}; path=/; max-age=${60 * 60 * 24 * 7}`;
-    } else {
-      // Try reading from cookie if URL param missing
-      const match = document.cookie.match(/(^|;) *fbclid=([^;]+)/);
-      fbclid = match ? match[2] : undefined;
+    let fbc = readCookie("_fbc");
+    if (!fbc) {
+      const fbclid = new URLSearchParams(window.location.search).get("fbclid");
+      if (fbclid) {
+        fbc = `fb.1.${Date.now()}.${fbclid}`;
+        document.cookie = `_fbc=${encodeURIComponent(fbc)}; path=/; max-age=${60 * 60 * 24 * 90}; SameSite=Lax`;
+      }
     }
-
-    // 2️⃣ Get fbp from cookie (set by Pixel automatically)
-    const fbpMatch = document.cookie.match(/(^|;) *_fbp=([^;]+)/);
-    const fbp = fbpMatch ? fbpMatch[2] : undefined;
-
-    setFbIds({ fbclid, fbp });
+    setFbIds({ fbc, fbp: readCookie("_fbp") });
   }, []);
 
   return fbIds;

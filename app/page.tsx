@@ -6,7 +6,6 @@ import { SaleProducts } from "@/components/sections/SaleProductsServer";
 import { HOTProducts } from "@/components/sections/HOTProductsServer";
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import PageViewEvent from "@/components/PixelComponent/PageViewEvent";
 
 // SEO Metadata for Homepage
 export const metadata: Metadata = {
@@ -86,7 +85,6 @@ export default function HomePage() {
         <HOTProducts />
       </Suspense>
       <ReviewsSection />
-      <PageViewEvent />
     </div>
   );
 }

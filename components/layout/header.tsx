@@ -48,7 +48,7 @@ import { getEnhancedCart } from "@/lib/api/cart";
 import { getSessionIdCookie } from "@/lib/cookies/session";
 import Image from "next/image";
 import { cloudfrontLoader } from "@/lib/cloudfront-loader";
-import useFbIds from "@/hooks/useFbIds";
+import { sendCapiEvent } from "@/lib/meta/track";
 import { PAGINATION_LIMIT } from "@/constants/constants";
 
 // Type definitions
@@ -109,9 +109,6 @@ export function Header() {
   const [items, setItems] = useState<CartItemWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
   // const sessionIdcookie = getSessionIdCookie();
-  const { fbclid, fbp } = useFbIds();
-  const eventId = generateEventId();
-  const fbEventTime = Math.floor(Date.now() / 1000);
 
   // Prevent hydration mismatch for theme
   useEffect(() => {
@@ -325,24 +322,10 @@ export function Header() {
       router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
     }
 
-    // handle pixel and conversion api
-    fetch("/api/fb-conversion", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        eventName: "Search",
-        eventId: eventId,
-        eventTime: fbEventTime,
-      }),
-    }).catch(() => {});
-
-    (window as any).fbq("track", "Search", {
-      eventID: eventId,
-      fbc: fbclid,
-      fbp: fbp,
-    });
+    const eventId = generateEventId();
+    const customData = { search_string: searchQuery.trim() };
+    sendCapiEvent({ eventName: "Search", eventId, customData });
+    (window as any).fbq?.("track", "Search", customData, { eventID: eventId });
   };
 
   const toggleAdmin = async () => {

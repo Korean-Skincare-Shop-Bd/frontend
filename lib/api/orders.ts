@@ -98,6 +98,9 @@ export interface CheckoutRequest {
   paymentMethod: 'CASH_ON_DELIVERY' | 'CARD' | 'MOBILE_BANKING';
   notes?: string;
   customShippingFee?: number; // Frontend-selected shipping fee
+  metaFbc?: string;
+  metaFbp?: string;
+  metaExternalId?: string;
 }
 
 export interface CheckoutResponse {

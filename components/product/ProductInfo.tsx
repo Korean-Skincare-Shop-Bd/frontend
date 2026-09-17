@@ -36,7 +36,7 @@ import { Product, ProductVariation } from "@/lib/api/products";
 import { useToast } from "@/hooks/use-toast";
 import { addToEnhancedCart } from "@/lib/api/cart";
 import { generateEventId } from "@/lib/utils";
-import useFbIds from "@/hooks/useFbIds";
+import { sendCapiEvent } from "@/lib/meta/track";
 
 interface ProductInfoProps {
   product?: Product; // Add full product object
@@ -68,9 +68,6 @@ export function ProductInfo({
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
-  const { fbclid, fbp } = useFbIds();
-  const eventId = generateEventId();
-  const fbEventTime = Math.floor(Date.now() / 1000);
 
   const currentVariant = variations[selectedVariant];
   const isOnSale =
@@ -98,19 +95,12 @@ export function ProductInfo({
       .replace(/^-+|-+$/g, "");
 
   useEffect(() => {
-    // handle fb conversion api
-    fetch("/api/fb-conversion", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        eventName: "ViewContent",
-        eventId: eventId,
-        eventTime: fbEventTime,
-      }),
-    });
-  }, []);
+    const eventId = generateEventId();
+    const catalogProductId = product?.id ?? currentVariant.productId;
+    const customData = { value: Number(displayPrice), currency: "BDT", content_ids: [catalogProductId], content_type: "product", content_name: name };
+    sendCapiEvent({ eventName: "ViewContent", eventId, customData });
+    (window as any).fbq?.("track", "ViewContent", customData, { eventID: eventId });
+  }, [currentVariant.id, product?.id]);
 
   const handleAddToCart = async () => {
     if (!product || !currentVariant) {
@@ -132,31 +122,10 @@ export function ProductInfo({
       });
 
       if (res?.data?.cart?.items) {
-        // handle pixel and conversion api
-        fetch("/api/fb-conversion", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            eventName: "AddToCart",
-            eventId: eventId,
-            eventTime: fbEventTime,
-          }),
-        }).catch(() => {});
-
-        (window as any).fbq(
-          "track",
-          "AddToCart",
-          {
-            currency: "BDT",
-          },
-          {
-            eventID: eventId,
-            fbc: fbclid,
-            fbp,
-          }
-        );
+        const eventId = generateEventId();
+        const customData = { value: Number(displayPrice) * quantity, currency: "BDT", content_ids: [product.id], content_type: "product", content_name: name, contents: [{ id: product.id, quantity }] };
+        sendCapiEvent({ eventName: "AddToCart", eventId, customData });
+        (window as any).fbq?.("track", "AddToCart", customData, { eventID: eventId });
       }
 
       window.dispatchEvent(new Event("cartUpdated"));

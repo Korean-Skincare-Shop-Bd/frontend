@@ -1,7 +1,9 @@
 "use client";
 
-import useFbIds from "@/hooks/useFbIds";
 import { generateEventId } from "@/lib/utils";
+import { sendCapiEvent } from "@/lib/meta/track";
+import useFbIds from "@/hooks/useFbIds";
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
 export default function PageViewEvent({
@@ -9,18 +11,16 @@ export default function PageViewEvent({
 }: {
   eventName?: string;
 }) {
-  const eventID = generateEventId();
-  const { fbclid, fbp } = useFbIds();
+  const pathname = usePathname();
+  useFbIds();
 
   useEffect(() => {
+    const eventID = generateEventId();
+    sendCapiEvent({ eventName, eventId: eventID });
     if (typeof window !== "undefined" && (window as any).fbq) {
-      (window as any).fbq("track", eventName, {
-        eventID: eventID,
-        fbc: fbclid,
-        fbp: fbp,
-      });
+      (window as any).fbq("track", eventName, {}, { eventID });
     }
-  }, [eventID, fbclid, fbp]);
+  }, [eventName, pathname]);
 
   return null;
 }

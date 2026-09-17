@@ -9,6 +9,7 @@ import { Footer } from "@/components/layout/footer";
 import FloatingActions from "@/components/layout/FloatingActions";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { getCategories } from "@/lib/api/categories";
+import PageViewEvent from "@/components/PixelComponent/PageViewEvent";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -151,7 +152,6 @@ export default async function RootLayout({
               s.parentNode.insertBefore(t,s)}(window, document,'script',
               'https://connect.facebook.net/en_US/fbevents.js');
               fbq('init', '${process.env.NEXT_FB_PIXEL_ID}');
-              fbq('track', 'PageView');
             `,
           }}
         />
@@ -184,6 +184,7 @@ export default async function RootLayout({
         <ThemeProvider>
           <AdminProvider>
             <div className="flex flex-col min-h-screen">
+              <PageViewEvent />
               <Header />
               <main className="flex-1">{children}</main>
               <Footer />

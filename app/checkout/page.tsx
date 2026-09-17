@@ -54,8 +54,7 @@ import {
 } from "@/lib/api/shipping";
 import { getSessionIdCookie } from "@/lib/cookies/session";
 import { getProduct, Product, ProductVariation } from "@/lib/api/products";
-import { generateEventId, hashSHA256 } from "@/lib/utils";
-import useFbIds from "@/hooks/useFbIds";
+import { getMetaIdentifiers, rememberContact } from "@/lib/meta/identity";
 
 const paymentMethods = [
   {
@@ -147,8 +146,6 @@ export default function CheckoutPage() {
   });
   const [sameAsBilling, setSameAsBilling] = useState(true);
   const [items, setItems] = useState<CartItemWithProduct[]>([]);
-  const { fbclid, fbp } = useFbIds();
-  const fbEventTime = Math.floor(Date.now() / 1000);
 
   useEffect(() => {
     const fetchSessionId = async () => {
@@ -448,44 +445,16 @@ export default function CheckoutPage() {
       setProcessing(true);
       setErrors({}); // Clear any existing errors
 
-      const result = await processCheckout(formData);
+      const result = await processCheckout({ ...formData, ...getMetaIdentifiers() });
 
       // send data to facebook conversion API
       if (result.success) {
-        // call Facebook conversion API from next api folder
-        fetch("/api/fb-conversion", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            eventName: "Purchase",
-            eventId: result.data.orderId,
-            eventTime: fbEventTime,
-            customData: {
-              value: total,
-              currency: "BDT",
-            },
-            customerData: {
-              em: [hashSHA256(formData.email)],
-              fn: [hashSHA256(formData.phone)],
-            },
-          }),
-        }).catch(() => {});
-
-        (window as any).fbq(
-          "track",
-          "Purchase",
-          {
-            value: total,
-            currency: "BDT",
-          },
-          {
-            eventID: result.data.orderId,
-            fbc: fbclid,
-            fbp: fbp,
-          }
-        );
+        const nameParts = formData.customerName.trim().split(/\s+/);
+        const contents = items.map((item) => ({ id: item.productId, quantity: item.quantity }));
+        const customData = { value: total, currency: "BDT", content_ids: contents.map((item) => item.id), content_type: "product", contents, num_items: items.reduce((count, item) => count + item.quantity, 0), order_id: result.data.orderId };
+        const customerData = { email: formData.email, phone: formData.phone, firstName: nameParts[0], lastName: nameParts.slice(1).join(" "), country: "BD" };
+        rememberContact(customerData);
+        (window as any).fbq?.("track", "Purchase", customData, { eventID: result.data.orderId });
       }
 
       toast({
