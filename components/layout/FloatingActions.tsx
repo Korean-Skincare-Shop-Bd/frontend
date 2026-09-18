@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 export default function FloatingActions() {
   const whatsapp = "https://wa.me/8801534554311";
   const messenger = "https://m.me/skincarekoreanshop";
@@ -13,7 +15,7 @@ export default function FloatingActions() {
         aria-label="WhatsApp"
         className="w-12 h-12 rounded-full shadow-lg hover:opacity-90 transition-opacity"
       >
-        <img src="/whatsapp-svgrepo-com.svg" alt="WhatsApp" className="w-12 h-12" />
+        <Image src="/whatsapp-svgrepo-com.svg" alt="WhatsApp" width={48} height={48} unoptimized className="w-12 h-12" />
       </a>
 
       <a
@@ -23,7 +25,7 @@ export default function FloatingActions() {
         aria-label="Messenger"
         className="w-12 h-12 rounded-full shadow-lg hover:opacity-90 transition-opacity"
       >
-        <img src="/messenger.svg" alt="Messenger" className="w-12 h-12" />
+        <Image src="/messenger.svg" alt="Messenger" width={48} height={48} unoptimized className="w-12 h-12" />
       </a>
     </div>
   );

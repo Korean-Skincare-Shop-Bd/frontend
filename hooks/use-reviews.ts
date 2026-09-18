@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useToast } from './use-toast';
 import {
   Review,
@@ -52,7 +52,7 @@ export const useReviews = (isAuthenticated: boolean) => {
   });
 
   // Fetch reviews with current filters
-  const fetchReviews = async (
+  const fetchReviews = useCallback(async (
     page?: number,
     customFilters?: Partial<ReviewFilters>
   ) => {
@@ -91,10 +91,10 @@ export const useReviews = (isAuthenticated: boolean) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated, filters, currentPage, pagination.limit, toast]);
 
   // Fetch statistics
-  const fetchStatistics = async () => {
+  const fetchStatistics = useCallback(async () => {
     if (!isAuthenticated) return;
 
     try {
@@ -108,7 +108,7 @@ export const useReviews = (isAuthenticated: boolean) => {
         variant: 'destructive',
       });
     }
-  };
+  }, [isAuthenticated, toast]);
 
   // Update review
   const updateReviewById = async (id: string, updateData: UpdateReviewParams) => {

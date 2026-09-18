@@ -111,6 +111,9 @@ export function ReviewsManager() {
       fetchReviews();
       fetchStatistics();
     }
+    // Only run this initial fetch when auth state changes, not on every
+    // fetchReviews/fetchStatistics identity change (those change with filters/page).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
   // Refetch when filters or page changes
@@ -118,7 +121,7 @@ export function ReviewsManager() {
     if (isAuthenticated) {
       fetchReviews();
     }
-  }, [currentPage, filters]);
+  }, [currentPage, filters, isAuthenticated, fetchReviews]);
 
   // Handle filter changes
   const handleFilterChange = (key: string, value: string) => {

@@ -100,7 +100,7 @@ export function ProductInfo({
     const customData = { value: Number(displayPrice), currency: "BDT", content_ids: [catalogProductId], content_type: "product", content_name: name };
     sendCapiEvent({ eventName: "ViewContent", eventId, customData });
     (window as any).fbq?.("track", "ViewContent", customData, { eventID: eventId });
-  }, [currentVariant.id, product?.id]);
+  }, [currentVariant.id, currentVariant.productId, product?.id, displayPrice, name]);
 
   const handleAddToCart = async () => {
     if (!product || !currentVariant) {

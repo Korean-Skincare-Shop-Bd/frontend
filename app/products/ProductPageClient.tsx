@@ -97,6 +97,10 @@ export default function ProductsPageContent({
   const [variationTags, setVariationTags] = useState(
     searchParams?.get("variationTags") || ""
   );
+  const [minPrice, setMinPrice] = useState(searchParams?.get("minPrice") || "");
+  const [maxPrice, setMaxPrice] = useState(searchParams?.get("maxPrice") || "");
+  const [debouncedMinPrice, setDebouncedMinPrice] = useState(minPrice);
+  const [debouncedMaxPrice, setDebouncedMaxPrice] = useState(maxPrice);
 
   const [sortBy, setSortBy] = useState<"price" | "name" | "createdAt">(
     "createdAt"
@@ -143,8 +147,59 @@ export default function ProductsPageContent({
     setSelectedCategory(searchParams?.get("category") || "all");
     setSelectedBrand(searchParams?.get("brand") || "all");
     setVariationTags(searchParams?.get("variationTags") || "");
+    setMinPrice(searchParams?.get("minPrice") || "");
+    setMaxPrice(searchParams?.get("maxPrice") || "");
     setCurrentPage(Math.max(1, parseInt(searchParams?.get("page") || "1") || 1));
   }, [searchParams]);
+
+  // Debounce price inputs before triggering a fetch
+  const isPriceInitialRender = useRef(true);
+  useEffect(() => {
+    if (isPriceInitialRender.current) {
+      isPriceInitialRender.current = false;
+      return;
+    }
+    const timeout = setTimeout(() => {
+      setDebouncedMinPrice(minPrice);
+      setDebouncedMaxPrice(maxPrice);
+      setCurrentPage(1);
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [minPrice, maxPrice]);
+
+  // Reflect current filters + pagination in the URL so they're shareable/bookmarkable
+  const isUrlSyncInitialRender = useRef(true);
+  useEffect(() => {
+    if (isUrlSyncInitialRender.current) {
+      isUrlSyncInitialRender.current = false;
+      return;
+    }
+
+    const params = new URLSearchParams();
+    if (searchQuery) params.set("search", searchQuery);
+    if (selectedCategory !== "all") params.set("category", selectedCategory);
+    if (selectedBrand !== "all") params.set("brand", selectedBrand);
+    if (variationTags) params.set("variationTags", variationTags);
+    if (debouncedMinPrice) params.set("minPrice", debouncedMinPrice);
+    if (debouncedMaxPrice) params.set("maxPrice", debouncedMaxPrice);
+    if (currentPage > 1) params.set("page", currentPage.toString());
+    params.set("per_page", perPage.toString());
+
+    const query = params.toString();
+    router.replace(query ? `/products?${query}` : "/products", {
+      scroll: false,
+    });
+  }, [
+    searchQuery,
+    selectedCategory,
+    selectedBrand,
+    variationTags,
+    debouncedMinPrice,
+    debouncedMaxPrice,
+    currentPage,
+    perPage,
+    router,
+  ]);
 
   // A category page should only offer brands represented by products in that category.
   useEffect(() => {
@@ -256,6 +311,12 @@ export default function ProductsPageContent({
         if (variationTags) {
           params.variationTags = variationTags;
         }
+        if (debouncedMinPrice) {
+          params.minPrice = Number(debouncedMinPrice);
+        }
+        if (debouncedMaxPrice) {
+          params.maxPrice = Number(debouncedMaxPrice);
+        }
 
         // Fetch products using getProducts API
         const response = await getProducts(params);
@@ -287,6 +348,8 @@ export default function ProductsPageContent({
     sortOrder,
     currentPage,
     variationTags,
+    debouncedMinPrice,
+    debouncedMaxPrice,
   ]);
 
   // Helper functions
@@ -361,6 +424,10 @@ export default function ProductsPageContent({
   const clearFilters = () => {
     setSearchQuery("");
     setSelectedBrand("all");
+    setMinPrice("");
+    setMaxPrice("");
+    setDebouncedMinPrice("");
+    setDebouncedMaxPrice("");
     setCurrentPage(1);
     setIsMobileFiltersOpen(false);
   };
@@ -419,10 +486,6 @@ export default function ProductsPageContent({
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
-    const params = new URLSearchParams(searchParams?.toString() || "");
-    params.set("page", newPage.toString());
-    params.set("per_page", perPage.toString());
-    router.push(`/products?${params.toString()}`);
   };
 
   const toggleSection = (section: keyof typeof expandedSections) => {
@@ -435,6 +498,36 @@ export default function ProductsPageContent({
   // Filter component for reuse in both desktop sidebar and mobile sheet
   const FilterContent = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
+      {/* Price Filter */}
+      <div className="space-y-3">
+        <h3 className="font-semibold text-sm uppercase tracking-wider">
+          Price
+        </h3>
+        <div className="flex items-center gap-2">
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            placeholder="Min"
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+            className="h-9"
+            aria-label="Minimum price"
+          />
+          <span className="text-muted-foreground text-sm">-</span>
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            placeholder="Max"
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+            className="h-9"
+            aria-label="Maximum price"
+          />
+        </div>
+      </div>
+
       {/* Brand Filter */}
       <div className="space-y-3">
         <Collapsible
@@ -485,7 +578,7 @@ export default function ProductsPageContent({
                       selectedBrand === brand.id || selectedBrand === brand.slug
                     }
                     onCheckedChange={() => {
-                      setSelectedBrand(brand.id);
+                      setSelectedBrand(brand.slug || brand.id);
                       setCurrentPage(1);
                       if (isMobile) setIsMobileFiltersOpen(false);
                     }}
@@ -502,7 +595,9 @@ export default function ProductsPageContent({
 
       {/* Clear Filters Button */}
       {(searchQuery ||
-        selectedBrand !== "all") && (
+        selectedBrand !== "all" ||
+        minPrice ||
+        maxPrice) && (
         <Button variant="outline" onClick={clearFilters} className="w-full">
           Clear All Filters
         </Button>
@@ -633,7 +728,9 @@ export default function ProductsPageContent({
                   Showing {products.length} of {pagination.total} products
                 </div>
                 {(searchQuery ||
-                  selectedBrand !== "all") && (
+                  selectedBrand !== "all" ||
+                  minPrice ||
+                  maxPrice) && (
                   <Button
                     variant="outline"
                     size="sm"

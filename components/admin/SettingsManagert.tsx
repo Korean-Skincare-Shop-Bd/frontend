@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Save, User, Key, UserPlus, Edit, Trash2, Shield, Eye, EyeOff } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -91,7 +91,7 @@ export function SettingsManager() {
 
   // const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
   // Fetch all admins (you'll need to implement this endpoint)
-  const fetchAdmins = async () => {
+  const fetchAdmins = useCallback(async () => {
     if (!isAuthenticated) return;
     
     try {
@@ -109,9 +109,7 @@ export function SettingsManager() {
     } finally {
       setAdminsLoading(false);
     }
-  };
-
-  
+  }, [isAuthenticated]);
 
   // Create new admin
    const handleCreateAdmin = async (e: React.FormEvent) => {
@@ -179,7 +177,7 @@ export function SettingsManager() {
 
   useEffect(() => {
     fetchAdmins();
-  }, [isAuthenticated]);
+  }, [fetchAdmins]);
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

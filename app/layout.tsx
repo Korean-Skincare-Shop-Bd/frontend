@@ -143,11 +143,13 @@ export default async function RootLayout({
         <script
           type="application/ld+json"
           nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
         />
         {/* Meta Pixel Code */}
         <script
           nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `
               !function(f,b,e,v,n,t,s)
@@ -163,9 +165,10 @@ export default async function RootLayout({
           }}
         />
         {/* <!-- Google tag (gtag.js) --> */}
-        <script nonce={nonce} async src="https://www.googletagmanager.com/gtag/js?id=G-NPTTRXW8L1"></script>
+        <script nonce={nonce} suppressHydrationWarning async src="https://www.googletagmanager.com/gtag/js?id=G-NPTTRXW8L1"></script>
         <script
           nonce={nonce}
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];

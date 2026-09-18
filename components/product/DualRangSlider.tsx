@@ -33,10 +33,10 @@ const DualRangeSlider: React.FC<DualRangeSliderProps> = ({
 
   const getPercentage = (val: number) => ((val - min) / (max - min)) * 100;
   
-  const getValueFromPercentage = (percentage: number) => {
+  const getValueFromPercentage = useCallback((percentage: number) => {
     const rawValue = min + (percentage / 100) * (max - min);
     return Math.round(rawValue / step) * step;
-  };
+  }, [min, max, step]);
 
   const handleMouseDown = useCallback((type: 'min' | 'max') => (e: React.MouseEvent) => {
     if (disabled) return;
@@ -66,7 +66,7 @@ const DualRangeSlider: React.FC<DualRangeSliderProps> = ({
       const newMax = Math.max(newValue, value[0] + step);
       onChange([value[0], Math.min(max, newMax)]);
     }
-  }, [isDragging, value, min, max, step, onChange]);
+  }, [isDragging, value, min, max, step, onChange, getValueFromPercentage]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     updateValue(e.clientX);
