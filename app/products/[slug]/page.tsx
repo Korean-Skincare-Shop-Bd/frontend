@@ -16,7 +16,7 @@ import { serializeJsonLd } from "@/lib/json-ld";
 
 // Pre-render all existing product pages at build time.
 // New products added after build are rendered on first visit and then cached.
-export const revalidate = 600;
+export const revalidate = 3600;
 
 const CUID_RE = /^c[a-z0-9]{24}$/;
 

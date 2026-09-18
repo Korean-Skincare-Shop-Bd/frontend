@@ -206,7 +206,7 @@ export const getProducts = async (
 
   const response = await fetch(
     `${API_BASE_URL}/products/public?${searchParams.toString()}`,
-    { next: { revalidate: 60 } }
+    { next: { revalidate: 300 } }
   );
 
   if (!response.ok) {
@@ -304,7 +304,7 @@ export const getProduct = async (
 
   const response = await fetch(
     `${API_BASE_URL}/products/public/${id}?${searchParams.toString()}`,
-    { next: { revalidate: 120 } }
+    { next: { revalidate: 600 } }
   );
 
   if (!response.ok) {
