@@ -10,10 +10,9 @@ import { Footer } from "@/components/layout/footer";
 import FloatingActions from "@/components/layout/FloatingActions";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { QueryProvider } from "@/components/providers/QueryProvider";
-import { getCategories } from "@/lib/api/categories";
 import PageViewEvent from "@/components/PixelComponent/PageViewEvent";
 import { serializeJsonLd } from "@/lib/json-ld";
-import { headers } from "next/headers";
+import { getFbPixelScript, GA_CONFIG_SCRIPT } from "@/lib/security/inline-scripts";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -100,14 +99,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { categories } = await getCategories(1, 5);
-  const nonce = (await headers()).get("x-nonce") ?? undefined;
-
   // Structured data for the website
   const structuredData = {
     "@context": "https://schema.org",
@@ -142,41 +138,21 @@ export default async function RootLayout({
         <link rel="preload" href="/logo2.png" as="image" />
         <script
           type="application/ld+json"
-          nonce={nonce}
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
         />
         {/* Meta Pixel Code */}
         <script
-          nonce={nonce}
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: `
-              !function(f,b,e,v,n,t,s)
-              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-              n.queue=[];t=b.createElement(e);t.async=!0;
-              t.src=v;s=b.getElementsByTagName(e)[0];
-              s.parentNode.insertBefore(t,s)}(window, document,'script',
-              'https://connect.facebook.net/en_US/fbevents.js');
-              fbq('init', '${process.env.NEXT_FB_PIXEL_ID}');
-            `,
+            __html: getFbPixelScript(process.env.NEXT_FB_PIXEL_ID ?? ""),
           }}
         />
         {/* <!-- Google tag (gtag.js) --> */}
-        <script nonce={nonce} suppressHydrationWarning async src="https://www.googletagmanager.com/gtag/js?id=G-NPTTRXW8L1"></script>
+        <script suppressHydrationWarning async src="https://www.googletagmanager.com/gtag/js?id=G-NPTTRXW8L1"></script>
         <script
-          nonce={nonce}
           suppressHydrationWarning
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-NPTTRXW8L1');
-            `,
-          }}
+          dangerouslySetInnerHTML={{ __html: GA_CONFIG_SCRIPT }}
         />
         <noscript>
           {/* eslint-disable-next-line @next/next/no-img-element */}
