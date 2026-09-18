@@ -41,13 +41,152 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { getProducts, Product, GetProductsParams } from "@/lib/api/products";
-import { getBrands, Brand } from "@/lib/api/brands";
-import { getCategories, Category } from "@/lib/api/categories";
+import { Product, GetProductsParams } from "@/lib/api/products";
+import { Brand } from "@/lib/api/brands";
+import { Category } from "@/lib/api/categories";
 import { QuickViewModal } from "@/components/ui/quick-view-modal";
 import { addToEnhancedCart } from "@/lib/api/cart";
 import { useToast } from "@/hooks/use-toast";
 import { ProductsSection } from "@/components/product/ProductSections";
+import { useProducts } from "@/hooks/useProducts";
+import { useBrands } from "@/hooks/useBrands";
+import { useCategories } from "@/hooks/useCategories";
+import { useCategoryBrandIds } from "@/hooks/useCategoryBrandIds";
+
+interface FilterContentProps {
+  isMobile?: boolean;
+  minPrice: string;
+  maxPrice: string;
+  onMinPriceChange: (value: string) => void;
+  onMaxPriceChange: (value: string) => void;
+  expandedSections: { brands: boolean };
+  toggleSection: (section: "brands") => void;
+  selectedBrand: string;
+  availableBrands: Brand[];
+  onSelectBrand: (brand: string) => void;
+  searchQuery: string;
+  clearFilters: () => void;
+}
+
+// Defined outside the parent component so its identity is stable across
+// re-renders. When it was declared inline, every keystroke in the price
+// inputs re-rendered the parent, creating a brand-new component type each
+// time — React then unmounted/remounted the inputs and dropped focus.
+function FilterContent({
+  isMobile = false,
+  minPrice,
+  maxPrice,
+  onMinPriceChange,
+  onMaxPriceChange,
+  expandedSections,
+  toggleSection,
+  selectedBrand,
+  availableBrands,
+  onSelectBrand,
+  searchQuery,
+  clearFilters,
+}: FilterContentProps) {
+  return (
+    <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
+      {/* Price Filter */}
+      <div className="space-y-3">
+        <h3 className="font-semibold text-sm uppercase tracking-wider">
+          Price
+        </h3>
+        <div className="flex items-center gap-2">
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            placeholder="Min"
+            value={minPrice}
+            onChange={(e) => onMinPriceChange(e.target.value)}
+            className="h-9"
+            aria-label="Minimum price"
+          />
+          <span className="text-muted-foreground text-sm">-</span>
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            placeholder="Max"
+            value={maxPrice}
+            onChange={(e) => onMaxPriceChange(e.target.value)}
+            className="h-9"
+            aria-label="Maximum price"
+          />
+        </div>
+      </div>
+
+      {/* Brand Filter */}
+      <div className="space-y-3">
+        <Collapsible
+          open={isMobile ? expandedSections.brands : true}
+          onOpenChange={() => isMobile && toggleSection("brands")}
+        >
+          <CollapsibleTrigger
+            className={`flex items-center justify-between w-full ${
+              isMobile ? "py-2" : ""
+            }`}
+          >
+            <h3 className="font-semibold text-sm uppercase tracking-wider">
+              Brands
+            </h3>
+            {isMobile && (
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  expandedSections.brands ? "rotate-180" : ""
+                }`}
+              />
+            )}
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-2">
+            <div
+              className={`space-y-2 ${
+                isMobile ? "mt-2 max-h-48 overflow-y-auto" : ""
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="all-brands"
+                  checked={selectedBrand === "all"}
+                  onCheckedChange={() => onSelectBrand("all")}
+                />
+                <label htmlFor="all-brands" className="text-sm cursor-pointer">
+                  All Brands
+                </label>
+              </div>
+              {availableBrands.map((brand) => (
+                <div key={brand.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={brand.id}
+                    checked={
+                      selectedBrand === brand.id || selectedBrand === brand.slug
+                    }
+                    onCheckedChange={() => onSelectBrand(brand.slug || brand.id)}
+                  />
+                  <label htmlFor={brand.id} className="text-sm cursor-pointer">
+                    {brand.name}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+
+      {/* Clear Filters Button */}
+      {(searchQuery ||
+        selectedBrand !== "all" ||
+        minPrice ||
+        maxPrice) && (
+        <Button variant="outline" onClick={clearFilters} className="w-full">
+          Clear All Filters
+        </Button>
+      )}
+    </div>
+  );
+}
 
 interface ProductsPageContentProps {
   initialProducts: Product[];
@@ -92,15 +231,9 @@ export default function ProductsPageContent({
   const lockedCategoryName = lockedCategory?.name;
 
   // State for data
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [brands, setBrands] = useState<Brand[]>(initialBrands);
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [perPage] = useState(
     Math.max(1, parseInt(searchParams?.get("per_page") || "48") || 48)
   );
-  const [pagination, setPagination] = useState(initialPagination);
 
   // State for filters
   const [searchQuery, setSearchQuery] = useState(
@@ -128,7 +261,16 @@ export default function ProductsPageContent({
   const [currentPage, setCurrentPage] = useState(
     Math.max(1, parseInt(searchParams?.get("page") || "1") || 1)
   );
-  const [categoryBrandIds, setCategoryBrandIds] = useState<Set<string> | null>(null);
+
+  const { brands, error: brandsError } = useBrands(100, {
+    initialData: initialBrands,
+  });
+  const { categories, error: categoriesError } = useCategories(100, {
+    initialData: initialCategories,
+  });
+  const categoryBrandIdsQuery = useCategoryBrandIds(selectedCategory);
+  const categoryBrandIds =
+    selectedCategory === "all" ? null : categoryBrandIdsQuery.data ?? null;
 
   const availableBrands = useMemo(
     () =>
@@ -225,48 +367,6 @@ export default function ProductsPageContent({
     lockedCategoryKey,
   ]);
 
-  // A category page should only offer brands represented by products in that category.
-  useEffect(() => {
-    if (selectedCategory === "all") {
-      setCategoryBrandIds(null);
-      return;
-    }
-
-    setCategoryBrandIds(null);
-    let cancelled = false;
-    const fetchCategoryBrandIds = async () => {
-      try {
-        const brandIds = new Set<string>();
-        let page = 1;
-        let hasNext = true;
-
-        while (hasNext) {
-          const response = await getProducts({
-            category: selectedCategory,
-            page,
-            limit: 100,
-          });
-          response.products.forEach((product) => {
-            if (product.brandId) brandIds.add(product.brandId);
-            else if (product.brand?.id) brandIds.add(product.brand.id);
-          });
-          hasNext = response.hasNext;
-          page += 1;
-        }
-
-        if (!cancelled) setCategoryBrandIds(brandIds);
-      } catch (err) {
-        console.error("Failed to load brands for the selected category:", err);
-        if (!cancelled) setCategoryBrandIds(new Set());
-      }
-    };
-
-    fetchCategoryBrandIds();
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedCategory]);
-
   // Quick view modal state
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(
     null
@@ -281,100 +381,67 @@ export default function ProductsPageContent({
     brands: false,
   });
   const { toast } = useToast();
-  const isInitialRender = useRef(true);
 
-  // Fetch initial data (brands and categories) — skip if server already provided them
-  useEffect(() => {
-    if (initialBrands.length > 0 && initialCategories.length > 0) return;
-    const fetchInitialData = async () => {
-      try {
-        const [brandsResponse, categoriesResponse] = await Promise.all([
-          getBrands(1, 100),
-          getCategories(1, 100),
-        ]);
-
-        setBrands(brandsResponse.data.brands);
-        setCategories(categoriesResponse.categories);
-      } catch (err) {
-        console.error("Failed to fetch initial data:", err);
-        setError("Failed to load filters");
-      }
+  const productParams: GetProductsParams = useMemo(() => {
+    const params: GetProductsParams = {
+      page: currentPage,
+      limit: perPage,
+      sortBy,
+      sortOrder,
     };
-
-    fetchInitialData();
-  }, []);
-
-  // Fetch products based on filters — skip first run if server already provided data
-  useEffect(() => {
-    if (isInitialRender.current && initialProducts.length > 0) {
-      isInitialRender.current = false;
-      return;
-    }
-    isInitialRender.current = false;
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-
-        // Build params object
-        const params: GetProductsParams = {
-          page: currentPage,
-          limit: perPage,
-          sortBy,
-          sortOrder,
-        };
-
-        if (selectedCategory !== "all") {
-          params.category = selectedCategory;
-        }
-        if (selectedBrand !== "all") {
-          params.brand = selectedBrand;
-        }
-        if (searchQuery) {
-          params.search = searchQuery;
-        }
-        if (variationTags) {
-          params.variationTags = variationTags;
-        }
-        if (debouncedMinPrice) {
-          params.minPrice = Number(debouncedMinPrice);
-        }
-        if (debouncedMaxPrice) {
-          params.maxPrice = Number(debouncedMaxPrice);
-        }
-
-        // Fetch products using getProducts API
-        const response = await getProducts(params);
-
-        setProducts(response.products);
-        setPagination({
-          page: response.page,
-          limit: response.limit,
-          total: response.total,
-          totalPages: response.totalPages,
-          hasNext: response.hasNext,
-          hasPrev: response.hasPrev,
-        });
-        setError(null);
-      } catch (err) {
-        console.error("Failed to fetch products:", err);
-        setError("Failed to load products");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
+    if (selectedCategory !== "all") params.category = selectedCategory;
+    if (selectedBrand !== "all") params.brand = selectedBrand;
+    if (searchQuery) params.search = searchQuery;
+    if (variationTags) params.variationTags = variationTags;
+    if (debouncedMinPrice) params.minPrice = Number(debouncedMinPrice);
+    if (debouncedMaxPrice) params.maxPrice = Number(debouncedMaxPrice);
+    return params;
   }, [
-    searchQuery,
-    selectedCategory,
-    selectedBrand,
+    currentPage,
+    perPage,
     sortBy,
     sortOrder,
-    currentPage,
+    selectedCategory,
+    selectedBrand,
+    searchQuery,
     variationTags,
     debouncedMinPrice,
     debouncedMaxPrice,
   ]);
+
+  // Seed the very first query with the server-rendered data so the page doesn't
+  // show a loading state (or refetch) for content the server already fetched
+  // with these exact params. Once any filter changes, this no longer applies.
+  const initialProductParamsRef = useRef(productParams);
+  const isInitialProductParams =
+    JSON.stringify(productParams) ===
+    JSON.stringify(initialProductParamsRef.current);
+
+  const productsQuery = useProducts(productParams, {
+    initialData:
+      isInitialProductParams && initialProducts.length > 0
+        ? {
+            data: undefined,
+            products: initialProducts,
+            ...initialPagination,
+          }
+        : undefined,
+    placeholderData: (previousData) => previousData,
+  });
+
+  const products = productsQuery.data?.products ?? [];
+  const pagination = {
+    page: productsQuery.data?.page ?? initialPagination.page,
+    limit: productsQuery.data?.limit ?? initialPagination.limit,
+    total: productsQuery.data?.total ?? initialPagination.total,
+    totalPages: productsQuery.data?.totalPages ?? initialPagination.totalPages,
+    hasNext: productsQuery.data?.hasNext ?? initialPagination.hasNext,
+    hasPrev: productsQuery.data?.hasPrev ?? initialPagination.hasPrev,
+  };
+  const loading = productsQuery.isLoading;
+  const error = productsQuery.isError
+    ? "Failed to load products"
+    : brandsError || categoriesError;
 
   // Helper functions
   const getMainImage = (product: Product): string => {
@@ -519,115 +586,11 @@ export default function ProductsPageContent({
     }));
   };
 
-  // Filter component for reuse in both desktop sidebar and mobile sheet
-  const FilterContent = ({ isMobile = false }: { isMobile?: boolean }) => (
-    <div className={`space-y-6 ${isMobile ? "px-0" : ""}`}>
-      {/* Price Filter */}
-      <div className="space-y-3">
-        <h3 className="font-semibold text-sm uppercase tracking-wider">
-          Price
-        </h3>
-        <div className="flex items-center gap-2">
-          <Input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            placeholder="Min"
-            value={minPrice}
-            onChange={(e) => setMinPrice(e.target.value)}
-            className="h-9"
-            aria-label="Minimum price"
-          />
-          <span className="text-muted-foreground text-sm">-</span>
-          <Input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            placeholder="Max"
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(e.target.value)}
-            className="h-9"
-            aria-label="Maximum price"
-          />
-        </div>
-      </div>
-
-      {/* Brand Filter */}
-      <div className="space-y-3">
-        <Collapsible
-          open={isMobile ? expandedSections.brands : true}
-          onOpenChange={() => isMobile && toggleSection("brands")}
-        >
-          <CollapsibleTrigger
-            className={`flex items-center justify-between w-full ${
-              isMobile ? "py-2" : ""
-            }`}
-          >
-            <h3 className="font-semibold text-sm uppercase tracking-wider">
-              Brands
-            </h3>
-            {isMobile && (
-              <ChevronDown
-                className={`w-4 h-4 transition-transform ${
-                  expandedSections.brands ? "rotate-180" : ""
-                }`}
-              />
-            )}
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-2">
-            <div
-              className={`space-y-2 ${
-                isMobile ? "mt-2 max-h-48 overflow-y-auto" : ""
-              }`}
-            >
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="all-brands"
-                  checked={selectedBrand === "all"}
-                  onCheckedChange={() => {
-                    setSelectedBrand("all");
-                    setCurrentPage(1);
-                    if (isMobile) setIsMobileFiltersOpen(false);
-                  }}
-                />
-                <label htmlFor="all-brands" className="text-sm cursor-pointer">
-                  All Brands
-                </label>
-              </div>
-              {availableBrands.map((brand) => (
-                <div key={brand.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={brand.id}
-                    checked={
-                      selectedBrand === brand.id || selectedBrand === brand.slug
-                    }
-                    onCheckedChange={() => {
-                      setSelectedBrand(brand.slug || brand.id);
-                      setCurrentPage(1);
-                      if (isMobile) setIsMobileFiltersOpen(false);
-                    }}
-                  />
-                  <label htmlFor={brand.id} className="text-sm cursor-pointer">
-                    {brand.name}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </div>
-
-      {/* Clear Filters Button */}
-      {(searchQuery ||
-        selectedBrand !== "all" ||
-        minPrice ||
-        maxPrice) && (
-        <Button variant="outline" onClick={clearFilters} className="w-full">
-          Clear All Filters
-        </Button>
-      )}
-    </div>
-  );
+  const handleSelectBrand = (brand: string) => {
+    setSelectedBrand(brand);
+    setCurrentPage(1);
+    setIsMobileFiltersOpen(false);
+  };
 
   return (
     <>
@@ -682,7 +645,20 @@ export default function ProductsPageContent({
                       </SheetDescription>
                     </SheetHeader>
                     <div className="mt-6">
-                      <FilterContent isMobile={true} />
+                      <FilterContent
+                        isMobile={true}
+                        minPrice={minPrice}
+                        maxPrice={maxPrice}
+                        onMinPriceChange={setMinPrice}
+                        onMaxPriceChange={setMaxPrice}
+                        expandedSections={expandedSections}
+                        toggleSection={toggleSection}
+                        selectedBrand={selectedBrand}
+                        availableBrands={availableBrands}
+                        onSelectBrand={handleSelectBrand}
+                        searchQuery={searchQuery}
+                        clearFilters={clearFilters}
+                      />
                     </div>
                   </SheetContent>
                 </Sheet>
@@ -739,7 +715,19 @@ export default function ProductsPageContent({
             <div className="hidden lg:block flex-shrink-0 w-64">
               <Card className="top-4 sticky min-h-[calc(100vh-2rem)]">
                 <CardContent className="p-6">
-                  <FilterContent />
+                  <FilterContent
+                    minPrice={minPrice}
+                    maxPrice={maxPrice}
+                    onMinPriceChange={setMinPrice}
+                    onMaxPriceChange={setMaxPrice}
+                    expandedSections={expandedSections}
+                    toggleSection={toggleSection}
+                    selectedBrand={selectedBrand}
+                    availableBrands={availableBrands}
+                    onSelectBrand={handleSelectBrand}
+                    searchQuery={searchQuery}
+                    clearFilters={clearFilters}
+                  />
                 </CardContent>
               </Card>
             </div>
