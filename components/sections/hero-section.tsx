@@ -17,7 +17,7 @@ const fallbackBanners = [
     subtitle: "Premium skincare essentials for radiant skin",
     gradient: "from-pink-400 to-purple-500",
     cta: "Shop Skincare",
-    linkUrl: "/products?category=skincare",
+    linkUrl: "/products/category/skincare",
   },
   {
     id: "fallback-2", 
@@ -25,7 +25,7 @@ const fallbackBanners = [
     subtitle: "Professional quality cosmetics for every occasion",
     gradient: "from-rose-400 to-pink-500",
     cta: "Explore Makeup",
-    linkUrl: "/products?category=makeup",
+    linkUrl: "/products/category/makeup",
   },
   {
     id: "fallback-3",
@@ -33,7 +33,7 @@ const fallbackBanners = [
     subtitle: "Captivating scents that define your presence",
     gradient: "from-violet-400 to-purple-500",
     cta: "Discover Scents",
-    linkUrl: "/products?category=fragrances",
+    linkUrl: "/products/category/fragrances",
   },
 ];
 

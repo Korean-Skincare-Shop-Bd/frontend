@@ -59,10 +59,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const categoryFilterPages: MetadataRoute.Sitemap = Array.from(categorySlugs).map((slug) => ({
-    url: `${BASE_URL}/products?category=${slug}`,
+    url: `${BASE_URL}/products/category/${slug}`,
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
-    priority: 0.7,
+    priority: 0.8,
   }));
 
   return [...STATIC_PAGES, ...productEntries, ...brandFilterPages, ...categoryFilterPages];

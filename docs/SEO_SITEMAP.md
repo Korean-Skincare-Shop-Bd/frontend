@@ -1,83 +1,19 @@
 # SEO & Sitemap Configuration
 
-This project uses `next-sitemap` to automatically generate XML sitemaps for better SEO and Google search visibility.
+This project uses Next.js's built-in `MetadataRoute.Sitemap` API — `app/sitemap.ts` and `app/robots.ts` — to generate `/sitemap.xml` and `/robots.txt` dynamically at request time (revalidated hourly). There is no separate build step or generated file to keep in sync.
 
-## Files Generated
+## Files
 
-- `public/sitemap.xml` - Main sitemap index
-- `public/sitemap-0.xml` - Contains all static and dynamic URLs
-- `public/robots.txt` - Search engine crawler instructions
+- `app/sitemap.ts` — serves `/sitemap.xml`. Includes static pages, every product (`/products/[slug]`), every category (`/products/category/[slug]`), and brand-filtered listing pages (`/products?brand=[slug]`).
+- `app/robots.ts` — serves `/robots.txt`.
 
-## Configuration
+## URL structure
 
-The sitemap configuration is in `next-sitemap.config.js` and includes:
+- `/products` — base listing, canonical to itself (or to `?brand=` when a brand filter is applied).
+- `/products/category/[slug]` — category landing page. Accepts `?brand=` as a query param; the combined page self-canonicalizes only when that category+brand combination actually has products, otherwise it canonicalizes back to the plain category page and is marked `noindex`.
+- `/products?search=`, `?min_price=`, `?max_price=`, `?variation_tags=` — user-specific refinements, always marked `noindex, follow`. Not included in the sitemap.
+- `/products/[slug]` — product detail page. Legacy CUID-based URLs (`/products/<cuid>`) permanently redirect (308) to the slug URL.
 
-### Static Pages (High Priority)
-- `/` - Homepage (Priority: 1.0, Daily updates)
-- `/products` - Products listing (Priority: 1.0, Daily updates)
-- `/about` - About page (Priority: 0.8, Weekly updates)
-- `/contact` - Contact page (Priority: 0.8, Weekly updates)
-- `/cart` - Shopping cart (Priority: 0.7, Daily updates)
+## Updating
 
-### Support Pages (Medium Priority)
-- `/shipping` - Shipping info (Priority: 0.6, Monthly updates)
-- `/support` - Support page (Priority: 0.6, Weekly updates)
-- `/privacy` - Privacy policy (Priority: 0.5, Monthly updates)
-- `/terms` - Terms of service (Priority: 0.5, Monthly updates)
-
-### Dynamic Pages
-- `/products/[id]` - Individual product pages (Priority: 0.9, Weekly updates)
-- Future: Category pages can be added when implemented
-
-### Excluded Pages
-- `/admin/*` - Admin dashboard (private)
-- `/api/*` - API routes (not user-facing)
-- `/checkout` - Checkout process (private)
-
-## How It Works
-
-1. **Build Time Generation**: Sitemap is generated during `pnpm build` via the `postbuild` script
-2. **Dynamic Content**: Fetches product data from `https://api.koreanskincareshopbd.com/products`
-3. **SEO Optimization**: Different priorities and update frequencies for different page types
-
-## Manual Regeneration
-
-To regenerate the sitemap without a full build:
-
-```bash
-pnpm run postbuild
-```
-
-## Validation
-
-Use the validation script to check if all sitemap URLs are accessible:
-
-```bash
-node scripts/validate-sitemap.js
-```
-
-## Google Search Console Setup
-
-1. Submit your sitemap to Google Search Console: `https://www.koreanskincareshopbd.com/sitemap.xml`
-2. Monitor indexing status and fix any issues
-3. The robots.txt file automatically references the sitemap
-
-## Important Notes
-
-- The sitemap is automatically generated on every build
-- Product pages are fetched dynamically from your API
-- Update the API endpoint in `next-sitemap.config.js` if it changes
-- Add new static pages to the `staticPages` array in the config file
-
-## SEO Best Practices Implemented
-
-✅ Proper XML sitemap structure  
-✅ Search engine friendly robots.txt  
-✅ Page priority hierarchy  
-✅ Appropriate update frequencies  
-✅ Clean URLs without query parameters  
-✅ Excluded private/admin pages  
-✅ Dynamic product page inclusion  
-✅ Last modification timestamps  
-
-This configuration will help your Korean Skincare Shop website get properly indexed by Google and other search engines.
+Add new static pages directly to the `STATIC_PAGES` array in `app/sitemap.ts`. Category and product entries are fetched live from the API on each sitemap request, so nothing needs regenerating manually.

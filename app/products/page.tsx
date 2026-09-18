@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { permanentRedirect } from "next/navigation";
 import ProductsPageContent from "./ProductPageClient";
 import { ProductsLoading } from "./ProductPageLoading";
 import type { Metadata } from "next";
@@ -25,34 +26,46 @@ export async function generateMetadata({
 }: ProductsPageProps): Promise<Metadata> {
   const params = await searchParams;
   const search = getSearchParam(params, "search").trim();
-  const category = getSearchParam(params, "category");
+  // Note: ?category= redirects permanently to /products/category/[slug] in the page
+  // component below, so this route only ever renders without a category filter.
   const brand = getSearchParam(params, "brand");
+  const minPrice = getSearchParam(params, "min_price");
+  const maxPrice = getSearchParam(params, "max_price");
+  const variationTags = getSearchParam(params, "variation_tags");
+  const page = Math.max(1, parseInt(String(params.page || "1")) || 1);
 
-  const [brandsResult, categoriesResult] = await Promise.allSettled([
-    getBrands(1, 100),
-    getCategories(1, 100),
-  ]);
-  const brands = brandsResult.status === "fulfilled" ? brandsResult.value.data.brands : [];
-  const categories = categoriesResult.status === "fulfilled" ? categoriesResult.value.categories : [];
+  // Only the base listing and single-facet brand filter are stable, link-worthy
+  // pages. Search, price range and tag filters are user-specific and shouldn't be
+  // indexed as separate URLs (duplicate-content / crawl-budget risk).
+  const hasNoiseParams = Boolean(search || minPrice || maxPrice || variationTags);
+
+  const brandsResult = await getBrands(1, 100).catch(() => null);
+  const brands = brandsResult?.data.brands ?? [];
   const brandName = brands.find((item) => item.id === brand || item.slug === brand)?.name;
-  const categoryName = categories.find((item) => item.id === category || item.slug === category)?.name;
 
-  const collectionName = [brandName, categoryName].filter(Boolean).join(" ");
   const title = search
-    ? `Search Results for \"${search}\"${collectionName ? ` in ${collectionName}` : ""}`
-    : collectionName
-      ? `${collectionName} Products`
+    ? `Search Results for \"${search}\"${brandName ? ` in ${brandName}` : ""}`
+    : brandName
+      ? `${brandName} Products`
       : "Korean Skincare Products";
   const description = search
-    ? `Browse Korean skincare search results for ${search}${collectionName ? ` in ${collectionName}` : ""}.`
-    : collectionName
-      ? `Browse authentic Korean skincare products from ${collectionName}.`
+    ? `Browse Korean skincare search results for ${search}${brandName ? ` in ${brandName}` : ""}.`
+    : brandName
+      ? `Browse authentic Korean skincare products from ${brandName}.`
       : "Browse our complete collection of authentic Korean skincare and beauty products. Shop premium K-beauty essentials, serums, creams, masks, and more from trusted Korean brands.";
+
+  const canonicalParams = new URLSearchParams();
+  if (brand) canonicalParams.set("brand", brand);
+  if (page > 1) canonicalParams.set("page", String(page));
+  const canonicalQuery = canonicalParams.toString();
+  const canonical = `/products${canonicalQuery ? `?${canonicalQuery}` : ""}`;
 
   return {
     title,
     description,
     keywords: [title, "Korean skincare products", "K-beauty products", "skincare Bangladesh"],
+    alternates: { canonical },
+    robots: hasNoiseParams ? { index: false, follow: true } : undefined,
     openGraph: {
       title,
       description,
@@ -66,24 +79,41 @@ export async function generateMetadata({
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const params = await searchParams;
 
+  // Category is now a path segment (/products/category/[slug]) so it's the single
+  // canonical URL for a category. Old ?category= links redirect there permanently,
+  // carrying over any other filters, instead of duplicating the content at two URLs.
+  const legacyCategory = getSearchParam(params, "category");
+  if (legacyCategory) {
+    const redirectParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (key === "category" || value === undefined) return;
+      const v = Array.isArray(value) ? value[0] : value;
+      if (v) redirectParams.set(key, v);
+    });
+    const query = redirectParams.toString();
+    permanentRedirect(`/products/category/${legacyCategory}${query ? `?${query}` : ""}`);
+  }
+
   const page = Math.max(1, parseInt(String(params.page || '1')) || 1);
   const perPage = Math.max(1, parseInt(String(params.per_page || '48')) || 48);
   const search = getSearchParam(params, 'search');
-  const category = getSearchParam(params, 'category');
   const brand = getSearchParam(params, 'brand');
-  const variationTagsParam = params.variationTags;
+  const variationTagsParam = params.variation_tags;
   const variationTags = Array.isArray(variationTagsParam)
     ? variationTagsParam[0]
     : String(variationTagsParam || '');
+  const minPrice = getSearchParam(params, 'min_price');
+  const maxPrice = getSearchParam(params, 'max_price');
 
   const [productsResult, brandsResult, categoriesResult] = await Promise.allSettled([
     getProducts({
       page,
       limit: perPage,
       search: search || undefined,
-      category: category || undefined,
       brand: brand || undefined,
       variationTags: variationTags || undefined,
+      minPrice: minPrice ? Number(minPrice) : undefined,
+      maxPrice: maxPrice ? Number(maxPrice) : undefined,
       sortBy: 'createdAt',
       sortOrder: 'desc',
     }),

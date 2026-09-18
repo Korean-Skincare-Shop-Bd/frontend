@@ -144,7 +144,7 @@ export function SaleProductsClient({ products, error }: SaleProductsClientProps)
 
           <div className="mt-12 text-center">
             <Button variant="outline" size="lg" asChild>
-              <Link href={`/products?variationTags=SALE&page=1&per_page=${PAGINATION_LIMIT}`}>
+              <Link href={`/products?variation_tags=SALE&page=1&per_page=${PAGINATION_LIMIT}`}>
                 View All Products on Sale
               </Link>
             </Button>

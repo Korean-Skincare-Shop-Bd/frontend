@@ -160,7 +160,7 @@ export function Footer() {
                 categories.map((category) => (
                   <Link
                     key={category.id}
-                    href={`/products?category=${category.slug || category.id}`}
+                    href={`/products/category/${category.slug || category.id}`}
                     className="block text-gray-400 hover:text-primary capitalize transition-colors">
                     {category.name}
                   </Link>
@@ -168,22 +168,22 @@ export function Footer() {
               ) : (
                 <>
                   <Link
-                    href="/products?category=skincare"
+                    href="/products/category/skincare"
                     className="block text-gray-400 hover:text-primary transition-colors">
                     Skincare
                   </Link>
                   <Link
-                    href="/products?category=makeup"
+                    href="/products/category/makeup"
                     className="block text-gray-400 hover:text-primary transition-colors">
                     Makeup
                   </Link>
                   <Link
-                    href="/products?category=fragrances"
+                    href="/products/category/fragrances"
                     className="block text-gray-400 hover:text-primary transition-colors">
                     Fragrances
                   </Link>
                   <Link
-                    href="/products?category=haircare"
+                    href="/products/category/haircare"
                     className="block text-gray-400 hover:text-primary transition-colors">
                     Hair Care
                   </Link>

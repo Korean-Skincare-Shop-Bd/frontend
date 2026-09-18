@@ -206,7 +206,7 @@ export const getProducts = async (
 
   const response = await fetch(
     `${API_BASE_URL}/products/public?${searchParams.toString()}`,
-    { next: { revalidate: 300 } }
+    { next: { revalidate: 300 }, signal: AbortSignal.timeout(8000) }
   );
 
   if (!response.ok) {
@@ -304,7 +304,7 @@ export const getProduct = async (
 
   const response = await fetch(
     `${API_BASE_URL}/products/public/${id}?${searchParams.toString()}`,
-    { next: { revalidate: 600 } }
+    { next: { revalidate: 600 }, signal: AbortSignal.timeout(8000) }
   );
 
   if (!response.ok) {

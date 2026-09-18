@@ -384,7 +384,7 @@ export function Header() {
                       categories.map((category) => (
                         <NavigationMenuLink key={category.id} asChild>
                           <Link
-                            href={`/products?category=${category.slug || category.id}&page=1&per_page=${PAGINATION_LIMIT}`}
+                            href={`/products/category/${category.slug || category.id}?page=1&per_page=${PAGINATION_LIMIT}`}
                             className="block space-y-1 hover:bg-accent focus:bg-accent p-3 rounded-md outline-none no-underline leading-none transition-colors hover:text-accent-foreground focus:text-accent-foreground select-none"
                           >
                             <div className="font-medium text-sm leading-none">
@@ -650,7 +650,7 @@ export function Header() {
                             categories.map((category) => (
                               <Link
                                 key={category.id}
-                                href={`/products?category=${category.slug || category.id}&page=1&per_page=${PAGINATION_LIMIT}`}
+                                href={`/products/category/${category.slug || category.id}?page=1&per_page=${PAGINATION_LIMIT}`}
                                 className="block py-3 px-2 text-muted-foreground hover:text-primary transition-colors rounded-md hover:bg-accent/30 active:bg-accent/50 touch-manipulation touch-target"
                                 onClick={() => setIsOpen(false)}
                               >

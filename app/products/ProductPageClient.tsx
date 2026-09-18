@@ -61,6 +61,14 @@ interface ProductsPageContentProps {
     hasNext: boolean;
     hasPrev: boolean;
   };
+  /** Base path the URL is synced to. Defaults to the flat "/products" listing. */
+  basePath?: string;
+  /**
+   * When set, the page is scoped to a single category (e.g. /products/category/[slug]).
+   * The category is no longer a query param — it lives in the path — so filter/URL-sync
+   * logic below treats it as fixed rather than reading/writing it from searchParams.
+   */
+  lockedCategory?: { id: string; slug?: string; name: string };
 }
 
 export default function ProductsPageContent({
@@ -68,10 +76,20 @@ export default function ProductsPageContent({
   initialBrands,
   initialCategories,
   initialPagination,
+  basePath = "/products",
+  lockedCategory,
 }: ProductsPageContentProps) {
   const searchParams = useSearchParams();
 
   const router = useRouter();
+
+  // `lockedCategory` is a fresh object literal on every server render (it's built
+  // inline in the category page component), so its reference is never stable.
+  // Depend on these primitives instead of the object itself in effects/memos below —
+  // otherwise an effect that fires on "lockedCategory changed" never settles, since
+  // every render looks like a change even when the category didn't.
+  const lockedCategoryKey = lockedCategory ? lockedCategory.slug || lockedCategory.id : null;
+  const lockedCategoryName = lockedCategory?.name;
 
   // State for data
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -89,16 +107,16 @@ export default function ProductsPageContent({
     searchParams?.get("search") || ""
   );
   const [selectedCategory, setSelectedCategory] = useState(
-    searchParams?.get("category") || "all"
+    lockedCategory ? lockedCategory.slug || lockedCategory.id : searchParams?.get("category") || "all"
   );
   const [selectedBrand, setSelectedBrand] = useState(
     searchParams?.get("brand") || "all"
   );
   const [variationTags, setVariationTags] = useState(
-    searchParams?.get("variationTags") || ""
+    searchParams?.get("variation_tags") || ""
   );
-  const [minPrice, setMinPrice] = useState(searchParams?.get("minPrice") || "");
-  const [maxPrice, setMaxPrice] = useState(searchParams?.get("maxPrice") || "");
+  const [minPrice, setMinPrice] = useState(searchParams?.get("min_price") || "");
+  const [maxPrice, setMaxPrice] = useState(searchParams?.get("max_price") || "");
   const [debouncedMinPrice, setDebouncedMinPrice] = useState(minPrice);
   const [debouncedMaxPrice, setDebouncedMaxPrice] = useState(maxPrice);
 
@@ -125,9 +143,11 @@ export default function ProductsPageContent({
     const brandName = availableBrands.find(
       (brand) => brand.id === selectedBrand || brand.slug === selectedBrand
     )?.name;
-    const categoryName = categories.find(
-      (category) => category.id === selectedCategory || category.slug === selectedCategory
-    )?.name;
+    const categoryName =
+      lockedCategoryName ||
+      categories.find(
+        (category) => category.id === selectedCategory || category.slug === selectedCategory
+      )?.name;
     const collectionName = [brandName, categoryName].filter(Boolean).join(" ");
 
     if (searchQuery.trim()) {
@@ -135,7 +155,7 @@ export default function ProductsPageContent({
     }
 
     return collectionName ? `${collectionName} Products` : "Our Products";
-  }, [availableBrands, categories, searchQuery, selectedBrand, selectedCategory]);
+  }, [availableBrands, categories, searchQuery, selectedBrand, selectedCategory, lockedCategoryName]);
 
   useEffect(() => {
     document.title = `${pageTitle} | Korean Skincare Shop BD`;
@@ -144,13 +164,15 @@ export default function ProductsPageContent({
   // Update filter states when URL parameters change
   useEffect(() => {
     setSearchQuery(searchParams?.get("search") || "");
-    setSelectedCategory(searchParams?.get("category") || "all");
+    if (!lockedCategoryKey) {
+      setSelectedCategory(searchParams?.get("category") || "all");
+    }
     setSelectedBrand(searchParams?.get("brand") || "all");
-    setVariationTags(searchParams?.get("variationTags") || "");
-    setMinPrice(searchParams?.get("minPrice") || "");
-    setMaxPrice(searchParams?.get("maxPrice") || "");
+    setVariationTags(searchParams?.get("variation_tags") || "");
+    setMinPrice(searchParams?.get("min_price") || "");
+    setMaxPrice(searchParams?.get("max_price") || "");
     setCurrentPage(Math.max(1, parseInt(searchParams?.get("page") || "1") || 1));
-  }, [searchParams]);
+  }, [searchParams, lockedCategoryKey]);
 
   // Debounce price inputs before triggering a fetch
   const isPriceInitialRender = useRef(true);
@@ -177,16 +199,16 @@ export default function ProductsPageContent({
 
     const params = new URLSearchParams();
     if (searchQuery) params.set("search", searchQuery);
-    if (selectedCategory !== "all") params.set("category", selectedCategory);
+    if (!lockedCategoryKey && selectedCategory !== "all") params.set("category", selectedCategory);
     if (selectedBrand !== "all") params.set("brand", selectedBrand);
-    if (variationTags) params.set("variationTags", variationTags);
-    if (debouncedMinPrice) params.set("minPrice", debouncedMinPrice);
-    if (debouncedMaxPrice) params.set("maxPrice", debouncedMaxPrice);
+    if (variationTags) params.set("variation_tags", variationTags);
+    if (debouncedMinPrice) params.set("min_price", debouncedMinPrice);
+    if (debouncedMaxPrice) params.set("max_price", debouncedMaxPrice);
     if (currentPage > 1) params.set("page", currentPage.toString());
     params.set("per_page", perPage.toString());
 
     const query = params.toString();
-    router.replace(query ? `/products?${query}` : "/products", {
+    router.replace(query ? `${basePath}?${query}` : basePath, {
       scroll: false,
     });
   }, [
@@ -199,6 +221,8 @@ export default function ProductsPageContent({
     currentPage,
     perPage,
     router,
+    basePath,
+    lockedCategoryKey,
   ]);
 
   // A category page should only offer brands represented by products in that category.

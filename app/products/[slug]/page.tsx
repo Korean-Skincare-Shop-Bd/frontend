@@ -9,7 +9,7 @@ import { ProductTabsWrapper } from "@/components/product/ProductTabsWrapper";
 import { RelatedProducts } from "@/components/product/RelatedProduct";
 import { ProductLoadingState } from "@/components/product/ProductLoadingState";
 import { ProductErrorState } from "@/components/product/ProductErrorState";
-import { notFound, redirect } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
 import { BASE_URL } from "@/lib/utils";
 import { serializeJsonLd } from "@/lib/json-ld";
@@ -117,19 +117,16 @@ export async function generateMetadata({
 
 async function ProductData({ slug }: { slug: string }) {
   try {
-    // If the URL still uses the old CUID format, redirect to the slug URL
-    if (CUID_RE.test(slug)) {
-      const product = await getProduct(slug);
-      if (product?.slug) {
-        redirect(`/products/${product.slug}`);
-      }
-    }
-
     // Fetch product data server-side
     const product = await getProduct(slug);
 
     if (!product) {
       notFound();
+    }
+
+    // If the URL still uses the old CUID format, redirect to the slug URL
+    if (CUID_RE.test(slug) && product.slug) {
+      permanentRedirect(`/products/${product.slug}`);
     }
 
     // Calculate average rating server-side
@@ -253,7 +250,7 @@ async function ProductData({ slug }: { slug: string }) {
         "@type": "ListItem",
         position: 3,
         name: product.category.name,
-        item: `${BASE_URL}/products?category=${product.category.slug || product.category.id}`,
+        item: `${BASE_URL}/products/category/${product.category.slug || product.category.id}`,
       });
     }
     breadcrumbItems.push({
@@ -291,7 +288,7 @@ async function ProductData({ slug }: { slug: string }) {
             </Link>
             <span>/</span>
             <Link
-              href={`/products?category=${product.category?.slug || product.category?.id}`}
+              href={`/products/category/${product.category?.slug || product.category?.id}`}
               className="hover:text-primary"
             >
               {product.category?.name
@@ -352,6 +349,18 @@ async function ProductData({ slug }: { slug: string }) {
       </>
     );
   } catch (error) {
+    // notFound()/permanentRedirect() throw special digest errors that Next.js
+    // needs to see propagate up to actually produce the 404/redirect.
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      typeof (error as { digest?: unknown }).digest === "string" &&
+      ((error as { digest: string }).digest === "NEXT_NOT_FOUND" ||
+        (error as { digest: string }).digest.startsWith("NEXT_REDIRECT"))
+    ) {
+      throw error;
+    }
     return <ProductErrorState error="Failed to load product" />;
   }
 }
