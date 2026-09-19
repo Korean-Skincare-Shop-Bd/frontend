@@ -1,39 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getFbPixelScript, GA_CONFIG_SCRIPT } from "@/lib/security/inline-scripts";
 
-async function sha256Base64(value: string): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(value)
-  );
-  return btoa(String.fromCharCode(...Array.from(new Uint8Array(digest))));
-}
-
-// Hashes of the two fixed inline <script> bodies rendered by app/layout.tsx.
-// Computed once per warm isolate and reused, since the content never
-// changes at runtime.
-let inlineScriptHashesPromise: Promise<[string, string]> | null = null;
-function getInlineScriptHashes(): Promise<[string, string]> {
-  if (!inlineScriptHashesPromise) {
-    inlineScriptHashesPromise = Promise.all([
-      sha256Base64(getFbPixelScript(process.env.NEXT_FB_PIXEL_ID ?? "")),
-      sha256Base64(GA_CONFIG_SCRIPT),
-    ]);
-  }
-  return inlineScriptHashesPromise;
-}
-
-async function contentSecurityPolicy() {
+function contentSecurityPolicy(nonce: string) {
   const isDevelopment = process.env.NODE_ENV !== "production";
 
-  const scriptSrc = ["'self'"];
+  const scriptSrc = ["'self'", `'nonce-${nonce}'`];
   if (isDevelopment) {
     // Next.js development uses inline bootstrap code and eval for Fast Refresh.
     // Keep this relaxation development-only; production stays hash-based.
     scriptSrc.push("'unsafe-inline'", "'unsafe-eval'");
-  } else {
-    const [fbHash, gaHash] = await getInlineScriptHashes();
-    scriptSrc.push(`'sha256-${fbHash}'`, `'sha256-${gaHash}'`);
   }
   scriptSrc.push(
     "https://connect.facebook.net",
@@ -56,8 +30,19 @@ async function contentSecurityPolicy() {
 }
 
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next();
-  response.headers.set("Content-Security-Policy", await contentSecurityPolicy());
+  // Next.js App Router sends inline Flight payloads during hydration. A
+  // request nonce allows those scripts while keeping the production CSP
+  // strict; hash-only CSPs cannot cover payloads whose contents change per
+  // request.
+  const nonceBytes = crypto.getRandomValues(new Uint8Array(16));
+  const nonce = btoa(String.fromCharCode(...Array.from(nonceBytes)));
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
+
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+  response.headers.set("Content-Security-Policy", contentSecurityPolicy(nonce));
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
