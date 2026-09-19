@@ -10,6 +10,7 @@ import { QuickViewModal } from '../ui/quick-view-modal';
 import { useToast } from '@/hooks/use-toast';
 import { addToEnhancedCart } from '@/lib/api/cart';
 import { ProductsSection } from '../product/ProductSections';
+import { PAGINATION_LIMIT } from '@/constants/constants';
 
 export function SaleProducts() {
   const { data, isLoading: loading, isError } = useProducts({ limit: 8, sortBy: 'createdAt', sortOrder: 'desc', variationTags: 'SALE' });
@@ -166,8 +167,8 @@ export function SaleProducts() {
 
           <div className="mt-12 text-center">
             <Button variant="outline" size="lg" asChild>
-              <Link href="/products">
-                View All Products
+              <Link href={`/products?variation_tags=SALE&page=1&per_page=${PAGINATION_LIMIT}`}>
+                View All Products on Sale
               </Link>
             </Button>
           </div>
