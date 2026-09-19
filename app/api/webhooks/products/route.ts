@@ -22,7 +22,11 @@ export async function POST(request: NextRequest) {
     }
     revalidatePath("/sitemap.xml");
     revalidatePath("/products");
-    if (productId && action !== "deleted") revalidatePath(`/products/${productId}`);
+    // Product detail URLs use slugs, while the webhook currently identifies
+    // products by database ID. Purge the dynamic ISR route pattern so edits
+    // cannot leave the slug page serving stale product data.
+    revalidatePath("/products/[slug]", "page");
+    if (productId) revalidatePath(`/products/${productId}`);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Invalid webhook payload" }, { status: 400 });

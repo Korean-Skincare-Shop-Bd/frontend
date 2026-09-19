@@ -13,7 +13,6 @@ import { QueryProvider } from "@/components/providers/QueryProvider";
 import PageViewEvent from "@/components/PixelComponent/PageViewEvent";
 import { serializeJsonLd } from "@/lib/json-ld";
 import { getFbPixelScript, GA_CONFIG_SCRIPT } from "@/lib/security/inline-scripts";
-import { headers } from "next/headers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -100,12 +99,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const nonce = (await headers()).get("x-nonce") ?? undefined;
   // Structured data for the website
   const structuredData = {
     "@context": "https://schema.org",
@@ -140,13 +138,11 @@ export default async function RootLayout({
         <link rel="preload" href="/logo2.png" as="image" />
         <script
           type="application/ld+json"
-          nonce={nonce}
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
         />
         {/* Meta Pixel Code */}
         <script
-          nonce={nonce}
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: getFbPixelScript(process.env.NEXT_FB_PIXEL_ID ?? ""),
@@ -155,7 +151,6 @@ export default async function RootLayout({
         {/* <!-- Google tag (gtag.js) --> */}
         <script suppressHydrationWarning async src="https://www.googletagmanager.com/gtag/js?id=G-NPTTRXW8L1"></script>
         <script
-          nonce={nonce}
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: GA_CONFIG_SCRIPT }}
         />

@@ -14,8 +14,8 @@ import type { Metadata } from "next";
 import { BASE_URL } from "@/lib/utils";
 import { serializeJsonLd } from "@/lib/json-ld";
 
-// Pre-render all existing product pages at build time.
-// New products added after build are rendered on first visit and then cached.
+// Pre-render the most recently published product pages at build time. Product
+// pages not included here are generated on first visit and then cached by ISR.
 export const revalidate = 3600;
 
 const CUID_RE = /^c[a-z0-9]{24}$/;

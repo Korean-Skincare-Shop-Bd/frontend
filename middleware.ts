@@ -1,9 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-function contentSecurityPolicy(nonce: string) {
+function contentSecurityPolicy() {
   const isDevelopment = process.env.NODE_ENV !== "production";
 
-  const scriptSrc = ["'self'", `'nonce-${nonce}'`];
+  // Keep the app statically optimizable. A request nonce requires headers()
+  // in the root layout, which turns ISR pages into dynamic renders. Next.js
+  // App Router emits inline Flight payloads, so static/ISR output needs the
+  // inline script allowance here.
+  const scriptSrc = ["'self'", "'unsafe-inline'"];
   if (isDevelopment) {
     // Next.js development uses inline bootstrap code and eval for Fast Refresh.
     // Keep this relaxation development-only; production stays hash-based.
@@ -30,19 +34,8 @@ function contentSecurityPolicy(nonce: string) {
 }
 
 export async function middleware(request: NextRequest) {
-  // Next.js App Router sends inline Flight payloads during hydration. A
-  // request nonce allows those scripts while keeping the production CSP
-  // strict; hash-only CSPs cannot cover payloads whose contents change per
-  // request.
-  const nonceBytes = crypto.getRandomValues(new Uint8Array(16));
-  const nonce = btoa(String.fromCharCode(...Array.from(nonceBytes)));
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-nonce", nonce);
-
-  const response = NextResponse.next({
-    request: { headers: requestHeaders },
-  });
-  response.headers.set("Content-Security-Policy", contentSecurityPolicy(nonce));
+  const response = NextResponse.next();
+  response.headers.set("Content-Security-Policy", contentSecurityPolicy());
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
