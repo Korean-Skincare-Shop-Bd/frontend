@@ -138,17 +138,31 @@ async function ProductData({ slug }: { slug: string }) {
           ) / product.reviews.length
         : 0;
 
-    // Fetch related products server-side using slugs when available
-    const [relatedByCategory, relatedByBrand] = await Promise.all([
-      getProducts({
-        limit: 3,
-        category: product.category?.slug || product.category?.id,
-      }),
-      getProducts({
-        limit: 3,
-        brand: product.brand?.slug || product.brand?.id,
-      }),
+    // Related products are supplementary. Do not hide a valid product page
+    // just because one recommendation query fails or a product has no brand.
+    const relatedResults = await Promise.allSettled([
+      product.category?.slug || product.category?.id
+        ? getProducts({
+            limit: 3,
+            category: product.category.slug || product.category.id,
+          })
+        : Promise.resolve({ products: [] }),
+      product.brand?.slug || product.brand?.id
+        ? getProducts({
+            limit: 3,
+            brand: product.brand.slug || product.brand.id,
+          })
+        : Promise.resolve({ products: [] }),
     ]);
+
+    const relatedByCategory =
+      relatedResults[0].status === "fulfilled"
+        ? relatedResults[0].value
+        : { products: [] };
+    const relatedByBrand =
+      relatedResults[1].status === "fulfilled"
+        ? relatedResults[1].value
+        : { products: [] };
 
     const relatedProducts = [
       ...relatedByCategory.products,
