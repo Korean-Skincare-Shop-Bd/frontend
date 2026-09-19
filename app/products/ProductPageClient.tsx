@@ -290,14 +290,18 @@ export default function ProductsPageContent({
       categories.find(
         (category) => category.id === selectedCategory || category.slug === selectedCategory
       )?.name;
-    const collectionName = [brandName, categoryName].filter(Boolean).join(" ");
+    const filterCollectionName = [brandName, categoryName].filter(Boolean).join(" ");
 
     if (searchQuery.trim()) {
-      return `Search Results for \"${searchQuery.trim()}\"${collectionName ? ` in ${collectionName}` : ""}`;
+      return `Search Results for \"${searchQuery.trim()}\"${filterCollectionName ? ` in ${filterCollectionName}` : ""}`;
     }
 
+    const variationTagWords: Record<string, string> = { NEW: "New", HOT: "Hot", SALE: "Sale" };
+    const variationTagWord = variationTagWords[variationTags.toUpperCase()];
+    const collectionName = [variationTagWord, brandName, categoryName].filter(Boolean).join(" ");
+
     return collectionName ? `${collectionName} Products` : "Our Products";
-  }, [availableBrands, categories, searchQuery, selectedBrand, selectedCategory, lockedCategoryName]);
+  }, [availableBrands, categories, searchQuery, selectedBrand, selectedCategory, lockedCategoryName, variationTags]);
 
   useEffect(() => {
     document.title = `${pageTitle} | Korean Skincare Shop BD`;

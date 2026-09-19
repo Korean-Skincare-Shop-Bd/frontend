@@ -43,15 +43,19 @@ export async function generateMetadata({
   const brands = brandsResult?.data.brands ?? [];
   const brandName = brands.find((item) => item.id === brand || item.slug === brand)?.name;
 
+  const variationTagWords: Record<string, string> = { NEW: "New", HOT: "Hot", SALE: "Sale" };
+  const variationTagWord = variationTagWords[variationTags.toUpperCase()];
+  const collectionName = [variationTagWord, brandName].filter(Boolean).join(" ");
+
   const title = search
     ? `Search Results for \"${search}\"${brandName ? ` in ${brandName}` : ""}`
-    : brandName
-      ? `${brandName} Products`
+    : collectionName
+      ? `${collectionName} Products`
       : "Korean Skincare Products";
   const description = search
     ? `Browse Korean skincare search results for ${search}${brandName ? ` in ${brandName}` : ""}.`
-    : brandName
-      ? `Browse authentic Korean skincare products from ${brandName}.`
+    : collectionName
+      ? `Browse our ${collectionName.toLowerCase()} from authentic Korean skincare and beauty brands.`
       : "Browse our complete collection of authentic Korean skincare and beauty products. Shop premium K-beauty essentials, serums, creams, masks, and more from trusted Korean brands.";
 
   const canonicalParams = new URLSearchParams();

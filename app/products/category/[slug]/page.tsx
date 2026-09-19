@@ -67,15 +67,19 @@ export async function generateMetadata({
 
   const canIndexBrand = Boolean(brand && brandName && brandHasProducts);
 
+  const variationTagWords: Record<string, string> = { NEW: "New", HOT: "Hot", SALE: "Sale" };
+  const variationTagWord = variationTagWords[variationTags.toUpperCase()];
+  const collectionName = [variationTagWord, canIndexBrand ? brandName : undefined, category.name]
+    .filter(Boolean)
+    .join(" ");
+
   const title = search
     ? `Search Results for "${search}" in ${category.name}`
-    : canIndexBrand
-      ? `${brandName} ${category.name} Products`
-      : `${category.name} Products`;
+    : `${collectionName} Products`;
   const description = search
     ? `Browse ${category.name} search results for ${search}.`
-    : canIndexBrand
-      ? `Browse authentic ${brandName} ${category.name} products.`
+    : variationTagWord || canIndexBrand
+      ? `Browse our ${collectionName.toLowerCase()} - authentic Korean skincare and beauty products.`
       : category.description ||
         `Browse our collection of ${category.name} - authentic Korean skincare and beauty products.`;
 
