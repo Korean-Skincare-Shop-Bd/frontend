@@ -21,7 +21,6 @@ import { getBrands, Brand } from "@/lib/api/brands";
 import { useAdmin } from "@/contexts/AdminContext";
 import { getSlugValidationError } from "@/lib/slug";
 import { toast } from "sonner";
-import Image from "next/image";
 
 function toSlug(text: string): string {
   return text
@@ -49,7 +48,9 @@ export function CreateProductForm() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [mainImage, setMainImage] = useState<File | null>(null);
   const [mainImageAlt, setMainImageAlt] = useState("");
+  const [mainImagePreview, setMainImagePreview] = useState<string | null>(null);
   const [additionalImages, setAdditionalImages] = useState<File[]>([]);
+  const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([]);
   const [additionalImageAlts, setAdditionalImageAlts] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
@@ -122,6 +123,22 @@ export function CreateProductForm() {
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
+
+  useEffect(() => {
+    if (!mainImage) {
+      setMainImagePreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(mainImage);
+    setMainImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [mainImage]);
+
+  useEffect(() => {
+    const urls = additionalImages.map((file) => URL.createObjectURL(file));
+    setAdditionalImagePreviews(urls);
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, [additionalImages]);
 
   useEffect(() => {
     if (!slugManuallyEdited) {
@@ -509,10 +526,11 @@ export function CreateProductForm() {
                 <div>
                   <Label>Main Product Image</Label>
                   <div className="mt-2">
-                    {mainImage ? (
+                    {mainImage && mainImagePreview ? (
                       <div className="inline-block relative">
-                        <Image
-                          src={URL.createObjectURL(mainImage)}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={mainImagePreview}
                           alt="Main product"
                           width={128}
                           height={128}
@@ -564,11 +582,11 @@ export function CreateProductForm() {
                         {additionalImages.map((image, index) => (
                           <div key={index} className="relative">
                             <div className="relative w-full h-24 overflow-hidden rounded-lg">
-                              <Image
-                                src={URL.createObjectURL(image)}
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={additionalImagePreviews[index]}
                                 alt={`Additional ${index + 1}`}
-                                fill
-                                className="object-cover"
+                                className="w-full h-full object-cover"
                               />
                             </div>
                             <Button

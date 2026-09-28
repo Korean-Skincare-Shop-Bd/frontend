@@ -48,7 +48,7 @@ import { QuickViewModal } from "@/components/ui/quick-view-modal";
 import { addToEnhancedCart } from "@/lib/api/cart";
 import { useToast } from "@/hooks/use-toast";
 import { ProductsSection } from "@/components/product/ProductSections";
-import { useProducts } from "@/hooks/useProducts";
+import { useInfiniteProducts } from "@/hooks/useProducts";
 import { useBrands } from "@/hooks/useBrands";
 import { useCategories } from "@/hooks/useCategories";
 import { useCategoryBrandIds } from "@/hooks/useCategoryBrandIds";
@@ -258,9 +258,6 @@ export default function ProductsPageContent({
   );
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [currentPage, setCurrentPage] = useState(
-    Math.max(1, parseInt(searchParams?.get("page") || "1") || 1)
-  );
 
   const { brands, error: brandsError } = useBrands(100, {
     initialData: initialBrands,
@@ -300,7 +297,7 @@ export default function ProductsPageContent({
     const variationTagWord = variationTagWords[variationTags.toUpperCase()];
     const collectionName = [variationTagWord, brandName, categoryName].filter(Boolean).join(" ");
 
-    return collectionName ? `${collectionName} Products` : "Our Products";
+    return collectionName || "Our Products";
   }, [availableBrands, categories, searchQuery, selectedBrand, selectedCategory, lockedCategoryName, variationTags]);
 
   useEffect(() => {
@@ -317,7 +314,6 @@ export default function ProductsPageContent({
     setVariationTags(searchParams?.get("variation_tags") || "");
     setMinPrice(searchParams?.get("min_price") || "");
     setMaxPrice(searchParams?.get("max_price") || "");
-    setCurrentPage(Math.max(1, parseInt(searchParams?.get("page") || "1") || 1));
   }, [searchParams, lockedCategoryKey]);
 
   // Debounce price inputs before triggering a fetch
@@ -330,7 +326,6 @@ export default function ProductsPageContent({
     const timeout = setTimeout(() => {
       setDebouncedMinPrice(minPrice);
       setDebouncedMaxPrice(maxPrice);
-      setCurrentPage(1);
     }, 500);
     return () => clearTimeout(timeout);
   }, [minPrice, maxPrice]);
@@ -350,8 +345,6 @@ export default function ProductsPageContent({
     if (variationTags) params.set("variation_tags", variationTags);
     if (debouncedMinPrice) params.set("min_price", debouncedMinPrice);
     if (debouncedMaxPrice) params.set("max_price", debouncedMaxPrice);
-    if (currentPage > 1) params.set("page", currentPage.toString());
-    params.set("per_page", perPage.toString());
 
     const query = params.toString();
     router.replace(query ? `${basePath}?${query}` : basePath, {
@@ -364,8 +357,6 @@ export default function ProductsPageContent({
     variationTags,
     debouncedMinPrice,
     debouncedMaxPrice,
-    currentPage,
-    perPage,
     router,
     basePath,
     lockedCategoryKey,
@@ -386,9 +377,8 @@ export default function ProductsPageContent({
   });
   const { toast } = useToast();
 
-  const productParams: GetProductsParams = useMemo(() => {
-    const params: GetProductsParams = {
-      page: currentPage,
+  const productParams: Omit<GetProductsParams, "page"> = useMemo(() => {
+    const params: Omit<GetProductsParams, "page"> = {
       limit: perPage,
       sortBy,
       sortOrder,
@@ -401,7 +391,6 @@ export default function ProductsPageContent({
     if (debouncedMaxPrice) params.maxPrice = Number(debouncedMaxPrice);
     return params;
   }, [
-    currentPage,
     perPage,
     sortBy,
     sortOrder,
@@ -421,7 +410,7 @@ export default function ProductsPageContent({
     JSON.stringify(productParams) ===
     JSON.stringify(initialProductParamsRef.current);
 
-  const productsQuery = useProducts(productParams, {
+  const productsQuery = useInfiniteProducts(productParams, {
     initialData:
       isInitialProductParams && initialProducts.length > 0
         ? {
@@ -430,22 +419,68 @@ export default function ProductsPageContent({
             ...initialPagination,
           }
         : undefined,
-    placeholderData: (previousData) => previousData,
   });
 
-  const products = productsQuery.data?.products ?? [];
+  const products = useMemo(() => {
+    const allProducts = productsQuery.data?.pages.flatMap((page) => page.products) ?? [];
+    // Guard against the same product landing on two pages (offset pagination
+    // can shift rows across page boundaries when items share a sort key tie).
+    const seen = new Set<string>();
+    return allProducts.filter((product) => {
+      if (seen.has(product.id)) return false;
+      seen.add(product.id);
+      return true;
+    });
+  }, [productsQuery.data]);
+  const firstPage = productsQuery.data?.pages[0];
   const pagination = {
-    page: productsQuery.data?.page ?? initialPagination.page,
-    limit: productsQuery.data?.limit ?? initialPagination.limit,
-    total: productsQuery.data?.total ?? initialPagination.total,
-    totalPages: productsQuery.data?.totalPages ?? initialPagination.totalPages,
-    hasNext: productsQuery.data?.hasNext ?? initialPagination.hasNext,
-    hasPrev: productsQuery.data?.hasPrev ?? initialPagination.hasPrev,
+    total: firstPage?.total ?? initialPagination.total,
   };
   const loading = productsQuery.isLoading;
+  const isFetchingNextPage = productsQuery.isFetchingNextPage;
+  const hasNextPage = productsQuery.hasNextPage;
   const error = productsQuery.isError
     ? "Failed to load products"
     : brandsError || categoriesError;
+
+  // Infinite scroll: load the next page once the sentinel below the grid
+  // enters the viewport.
+  //
+  // The observer is created once (empty dep array) and reads the latest
+  // fetch state through refs. Depending on `productsQuery`/`hasNextPage`/
+  // `isFetchingNextPage` directly would recreate the observer on every
+  // render; since `observer.observe()` fires immediately for an already-
+  // intersecting element, that reconnect loop called fetchNextPage() many
+  // times before state caught up, fetching the same page more than once
+  // (surfacing as duplicate React keys for the repeated products).
+  const loadMoreSentinelRef = useRef<HTMLDivElement | null>(null);
+  const fetchNextPageRef = useRef(productsQuery.fetchNextPage);
+  fetchNextPageRef.current = productsQuery.fetchNextPage;
+  const hasNextPageRef = useRef(hasNextPage);
+  hasNextPageRef.current = hasNextPage;
+  const isFetchingNextPageRef = useRef(isFetchingNextPage);
+  isFetchingNextPageRef.current = isFetchingNextPage;
+
+  useEffect(() => {
+    const sentinel = loadMoreSentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0]?.isIntersecting &&
+          hasNextPageRef.current &&
+          !isFetchingNextPageRef.current
+        ) {
+          fetchNextPageRef.current();
+        }
+      },
+      { rootMargin: "400px" }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   // Helper functions
   const getMainImage = (product: Product): string => {
@@ -513,7 +548,6 @@ export default function ProductsPageContent({
         setSortBy("createdAt");
         setSortOrder("desc");
     }
-    setCurrentPage(1);
   };
 
   const clearFilters = () => {
@@ -523,7 +557,6 @@ export default function ProductsPageContent({
     setMaxPrice("");
     setDebouncedMinPrice("");
     setDebouncedMaxPrice("");
-    setCurrentPage(1);
     setIsMobileFiltersOpen(false);
   };
 
@@ -579,10 +612,6 @@ export default function ProductsPageContent({
     }
   };
 
-  const handlePageChange = (newPage: number) => {
-    setCurrentPage(newPage);
-  };
-
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -592,7 +621,6 @@ export default function ProductsPageContent({
 
   const handleSelectBrand = (brand: string) => {
     setSelectedBrand(brand);
-    setCurrentPage(1);
     setIsMobileFiltersOpen(false);
   };
 
@@ -619,10 +647,7 @@ export default function ProductsPageContent({
                 type="search"
                 placeholder="Search products..."
                 value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="pr-4 pl-10 h-10 sm:h-11"
               />
             </div>
@@ -982,196 +1007,29 @@ export default function ProductsPageContent({
                     </div>
                   )}
 
-                  {/* Pagination */}
-                  {pagination.totalPages > 1 && (
-                    <div className="flex sm:flex-row flex-col justify-center items-center gap-4 mt-8">
-                      {/* Mobile Pagination */}
-                      <div className="sm:hidden flex justify-center items-center gap-2">
+                  {/* Infinite scroll sentinel + status */}
+                  <div ref={loadMoreSentinelRef} className="mt-8">
+                    {isFetchingNextPage ? (
+                      <div className="flex justify-center items-center gap-2 py-6 text-muted-foreground">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Loading more products...
+                      </div>
+                    ) : hasNextPage ? (
+                      <div className="flex justify-center py-6">
                         <Button
                           variant="outline"
-                          size="sm"
-                          onClick={() => handlePageChange(currentPage - 1)}
-                          disabled={!pagination.hasPrev || loading}
+                          onClick={() => productsQuery.fetchNextPage()}
                         >
-                          Previous
-                        </Button>
-
-                        <span className="px-3 text-muted-foreground text-sm">
-                          {currentPage} of {pagination.totalPages}
-                        </span>
-
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handlePageChange(currentPage + 1)}
-                          disabled={!pagination.hasNext || loading}
-                        >
-                          Next
+                          Load More
                         </Button>
                       </div>
-
-                      {/* Desktop Pagination */}
-                      <div className="hidden sm:flex justify-center items-center gap-2">
-                        <Button
-                          variant="outline"
-                          onClick={() => handlePageChange(currentPage - 1)}
-                          disabled={!pagination.hasPrev || loading}
-                        >
-                          Previous
-                        </Button>
-
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          {/* Show first few pages */}
-                          {Array.from(
-                            { length: Math.min(3, pagination.totalPages) },
-                            (_, i) => {
-                              const pageNum = i + 1;
-                              return (
-                                <Button
-                                  key={pageNum}
-                                  variant={
-                                    currentPage === pageNum
-                                      ? "default"
-                                      : "outline"
-                                  }
-                                  size="sm"
-                                  onClick={() => handlePageChange(pageNum)}
-                                  disabled={loading}
-                                  className="w-10"
-                                >
-                                  {pageNum}
-                                </Button>
-                              );
-                            }
-                          )}
-
-                          {/* Show ellipsis and last page if needed */}
-                          {pagination.totalPages > 5 && currentPage <= 3 && (
-                            <>
-                              <span className="px-2 text-muted-foreground">
-                                ...
-                              </span>
-                              <Button
-                                variant={
-                                  currentPage === pagination.totalPages
-                                    ? "default"
-                                    : "outline"
-                                }
-                                size="sm"
-                                onClick={() =>
-                                  handlePageChange(pagination.totalPages)
-                                }
-                                disabled={loading}
-                                className="w-10"
-                              >
-                                {pagination.totalPages}
-                              </Button>
-                            </>
-                          )}
-
-                          {/* Show middle pages if current page is in the middle */}
-                          {pagination.totalPages > 5 &&
-                            currentPage > 3 &&
-                            currentPage < pagination.totalPages - 2 && (
-                              <>
-                                <span className="px-2 text-muted-foreground">
-                                  ...
-                                </span>
-                                {Array.from({ length: 3 }, (_, i) => {
-                                  const pageNum = currentPage - 1 + i;
-                                  return (
-                                    <Button
-                                      key={pageNum}
-                                      variant={
-                                        currentPage === pageNum
-                                          ? "default"
-                                          : "outline"
-                                      }
-                                      size="sm"
-                                      onClick={() => handlePageChange(pageNum)}
-                                      disabled={loading}
-                                      className="w-10"
-                                    >
-                                      {pageNum}
-                                    </Button>
-                                  );
-                                })}
-                                <span className="px-2 text-muted-foreground">
-                                  ...
-                                </span>
-                                <Button
-                                  variant={
-                                    currentPage === pagination.totalPages
-                                      ? "default"
-                                      : "outline"
-                                  }
-                                  size="sm"
-                                  onClick={() =>
-                                    handlePageChange(pagination.totalPages)
-                                  }
-                                  disabled={loading}
-                                  className="w-10"
-                                >
-                                  {pagination.totalPages}
-                                </Button>
-                              </>
-                            )}
-
-                          {/* Show last few pages if current page is near the end */}
-                          {pagination.totalPages > 5 &&
-                            currentPage >= pagination.totalPages - 2 && (
-                              <>
-                                <span className="px-2 text-muted-foreground">
-                                  ...
-                                </span>
-                                {Array.from(
-                                  {
-                                    length: Math.min(3, pagination.totalPages),
-                                  },
-                                  (_, i) => {
-                                    const pageNum =
-                                      pagination.totalPages - 2 + i;
-                                    if (pageNum <= 3) return null; // Avoid duplicate pages
-                                    return (
-                                      <Button
-                                        key={pageNum}
-                                        variant={
-                                          currentPage === pageNum
-                                            ? "default"
-                                            : "outline"
-                                        }
-                                        size="sm"
-                                        onClick={() => handlePageChange(pageNum)}
-                                        disabled={loading}
-                                        className="w-10"
-                                      >
-                                        {pageNum}
-                                      </Button>
-                                    );
-                                  }
-                                )}
-                              </>
-                            )}
-                        </div>
-
-                        <Button
-                          variant="outline"
-                          onClick={() => handlePageChange(currentPage + 1)}
-                          disabled={!pagination.hasNext || loading}
-                        >
-                          Next
-                        </Button>
-                      </div>
-
-                      {/* Page Info */}
-                      <div className="sm:text-left text-center">
-                        <p className="text-muted-foreground text-xs sm:text-sm">
-                          Page {currentPage} of {pagination.totalPages} (
-                          {pagination.total} total products)
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                    ) : products.length > 0 ? (
+                      <p className="py-6 text-muted-foreground text-sm text-center">
+                        You&apos;ve reached the end — {products.length} of{" "}
+                        {pagination.total} products
+                      </p>
+                    ) : null}
+                  </div>
                 </>
               )}
             </div>

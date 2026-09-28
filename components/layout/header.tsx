@@ -50,6 +50,10 @@ import Image from "next/image";
 import { cloudfrontLoader } from "@/lib/cloudfront-loader";
 import { sendCapiEvent } from "@/lib/meta/track";
 import { PAGINATION_LIMIT } from "@/constants/constants";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useProductSuggestions } from "@/hooks/useProducts";
+import type { Product } from "@/lib/api/products";
+import { Loader2 } from "lucide-react";
 
 // Type definitions
 interface Brand {
@@ -91,6 +95,104 @@ interface CartItemWithProduct {
   loading?: boolean;
 }
 
+function getSuggestionImage(product: Product): string {
+  const mainImage = product.images?.find((img) => img.isMainImage);
+  return mainImage?.imageUrl || product.baseImageUrl || "/placeholder-product.png";
+}
+
+function getSuggestionPrice(product: Product): number | null {
+  if (!product.variations.length) return null;
+  const variation = product.variations[0];
+  return Number(variation.salePrice) || Number(variation.price);
+}
+
+interface SearchSuggestionsDropdownProps {
+  query: string;
+  products: Product[];
+  isLoading: boolean;
+  onSelect: () => void;
+}
+
+function SearchSuggestionsDropdown({
+  query,
+  products,
+  isLoading,
+  onSelect,
+}: SearchSuggestionsDropdownProps) {
+  return (
+    <div
+      // Keeps the search input focused when a suggestion is clicked, so the
+      // dropdown's onBlur-close doesn't race the Link's onClick navigation.
+      onMouseDown={(e) => e.preventDefault()}
+      className="top-full left-0 z-50 absolute bg-background shadow-lg mt-2 border rounded-lg w-full max-h-[70vh] overflow-y-auto"
+    >
+      {isLoading ? (
+        <div className="flex justify-center items-center gap-2 py-6 text-muted-foreground text-sm">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          Searching...
+        </div>
+      ) : products.length > 0 ? (
+        <>
+          <ul className="py-2">
+            {products.map((product) => {
+              const price = getSuggestionPrice(product);
+              return (
+                <li key={product.id}>
+                  <Link
+                    href={`/products/${product.slug || product.id}`}
+                    onClick={onSelect}
+                    className="flex items-center gap-3 hover:bg-accent px-4 py-2 transition-colors"
+                  >
+                    <div className="relative flex-shrink-0 rounded w-10 h-10 overflow-hidden">
+                      <Image
+                        src={getSuggestionImage(product)}
+                        alt={product.name}
+                        fill
+                        sizes="40px"
+                        className="object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            "/placeholder-product.png";
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">
+                        {product.name}
+                      </p>
+                      {product.brand?.name && (
+                        <p className="text-muted-foreground text-xs truncate">
+                          {product.brand.name}
+                        </p>
+                      )}
+                    </div>
+                    {price !== null && (
+                      <span className="flex-shrink-0 font-semibold text-sm">
+                        ৳{price}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+          <Link
+            href={`/products?search=${encodeURIComponent(query)}`}
+            onClick={onSelect}
+            className="block hover:bg-accent px-4 py-3 border-t font-medium text-primary text-sm text-center transition-colors"
+          >
+            View all results for &quot;{query}&quot;
+          </Link>
+        </>
+      ) : (
+        <div className="py-6 text-muted-foreground text-sm text-center">
+          No products found for &quot;{query}&quot;
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -108,7 +210,19 @@ export function Header() {
   const { toast } = useToast();
   const [items, setItems] = useState<CartItemWithProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   // const sessionIdcookie = getSessionIdCookie();
+
+  const debouncedSearchQuery = useDebounce(searchQuery.trim(), 300);
+  const { data: suggestionsData, isFetching: isSuggestionsLoading } =
+    useProductSuggestions(debouncedSearchQuery);
+  const suggestions = suggestionsData?.products ?? [];
+  const showSuggestions =
+    isSearchFocused && debouncedSearchQuery.length >= 2;
+
+  const closeSuggestions = () => {
+    setIsSearchFocused(false);
+  };
 
   // Prevent hydration mismatch for theme
   useEffect(() => {
@@ -318,6 +432,7 @@ export function Header() {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    closeSuggestions();
     if (searchQuery.trim()) {
       router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
     }
@@ -483,8 +598,19 @@ export function Header() {
                 placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setTimeout(closeSuggestions, 150)}
                 className="pr-4 pl-10 w-full"
+                autoComplete="off"
               />
+              {showSuggestions && (
+                <SearchSuggestionsDropdown
+                  query={debouncedSearchQuery}
+                  products={suggestions}
+                  isLoading={isSuggestionsLoading}
+                  onSelect={closeSuggestions}
+                />
+              )}
             </div>
           </form>
 
@@ -572,8 +698,19 @@ export function Header() {
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setTimeout(closeSuggestions, 150)}
               className="pr-4 pl-10"
+              autoComplete="off"
             />
+            {showSuggestions && (
+              <SearchSuggestionsDropdown
+                query={debouncedSearchQuery}
+                products={suggestions}
+                isLoading={isSuggestionsLoading}
+                onSelect={closeSuggestions}
+              />
+            )}
           </form>
         </div>
       </div>

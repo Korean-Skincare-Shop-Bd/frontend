@@ -22,7 +22,9 @@ function contentSecurityPolicy() {
     "default-src 'self'",
     `script-src ${scriptSrc.join(" ")}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: https:",
+    // blob: is required for client-side file previews (e.g. admin image upload forms)
+    // rendered via URL.createObjectURL() before the file is uploaded.
+    "img-src 'self' data: blob: https:",
     `connect-src 'self' https:${isDevelopment ? " http://localhost:8000" : ""}`,
     "font-src 'self' data:",
     "object-src 'none'",

@@ -75,7 +75,7 @@ export async function generateMetadata({
 
   const title = search
     ? `Search Results for "${search}" in ${category.name}`
-    : `${collectionName} Products`;
+    : collectionName;
   const description = search
     ? `Browse ${category.name} search results for ${search}.`
     : variationTagWord || canIndexBrand

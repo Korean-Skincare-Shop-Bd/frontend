@@ -50,7 +50,7 @@ export async function generateMetadata({
   const title = search
     ? `Search Results for \"${search}\"${brandName ? ` in ${brandName}` : ""}`
     : collectionName
-      ? `${collectionName} Products`
+      ? collectionName
       : "Korean Skincare Products";
   const description = search
     ? `Browse Korean skincare search results for ${search}${brandName ? ` in ${brandName}` : ""}.`
