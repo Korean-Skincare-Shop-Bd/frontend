@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { cloudfrontLoader } from "@/lib/cloudfront-loader";
@@ -94,13 +94,25 @@ export function ProductInfo({
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
 
+  const viewedProductRef = useRef<string | null>(null);
+
   useEffect(() => {
+    const catalogProductId = product?.id ?? currentVariant?.productId;
+    if (!catalogProductId || viewedProductRef.current === catalogProductId) return;
+    viewedProductRef.current = catalogProductId;
+
+    const price = Number(displayPrice);
     const eventId = generateEventId();
-    const catalogProductId = product?.id ?? currentVariant.productId;
-    const customData = { value: Number(displayPrice), currency: "BDT", content_ids: [catalogProductId], content_type: "product", content_name: name };
+    const customData = {
+      currency: "BDT",
+      content_ids: [catalogProductId],
+      content_type: "product",
+      content_name: name,
+      ...(Number.isFinite(price) ? { value: price } : {}),
+    };
     sendCapiEvent({ eventName: "ViewContent", eventId, customData });
     (window as any).fbq?.("track", "ViewContent", customData, { eventID: eventId });
-  }, [currentVariant.id, currentVariant.productId, product?.id, displayPrice, name]);
+  }, [product?.id, currentVariant?.productId, displayPrice, name]);
 
   const handleAddToCart = async () => {
     if (!product || !currentVariant) {

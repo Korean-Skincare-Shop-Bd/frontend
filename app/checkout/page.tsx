@@ -450,11 +450,32 @@ export default function CheckoutPage() {
       // send data to facebook conversion API
       if (result.success) {
         const nameParts = formData.customerName.trim().split(/\s+/);
-        const contents = items.map((item) => ({ id: item.productId, quantity: item.quantity }));
-        const customData = { value: total, currency: "BDT", content_ids: contents.map((item) => item.id), content_type: "product", contents, num_items: items.reduce((count, item) => count + item.quantity, 0), order_id: result.data.orderId };
-        const customerData = { email: formData.email, phone: formData.phone, firstName: nameParts[0], lastName: nameParts.slice(1).join(" "), country: "BD" };
+        const contents = items.map((item) => ({
+          id: item.productId,
+          quantity: item.quantity,
+        }));
+        const customData = {
+          value: total,
+          currency: "BDT",
+          content_ids: contents.map((item) => item.id),
+          content_type: "product",
+          contents,
+          num_items: items.reduce((count, item) => count + item.quantity, 0),
+          order_id: result.data.orderId,
+        };
+        const customerData = {
+          email: formData.email,
+          phone: formData.phone,
+          firstName: nameParts[0],
+          lastName: nameParts.slice(1).join(" "),
+          country: "BD",
+        };
+
+        // The backend sends the authoritative CAPI Purchase with this ID.
         rememberContact(customerData);
-        (window as any).fbq?.("track", "Purchase", customData, { eventID: result.data.orderId });
+        (window as any).fbq?.("track", "Purchase", customData, {
+          eventID: result.data.orderId,
+        });
       }
 
       toast({

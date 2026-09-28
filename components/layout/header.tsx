@@ -433,12 +433,13 @@ export function Header() {
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     closeSuggestions();
-    if (searchQuery.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
-    }
+    const query = searchQuery.trim();
+    if (!query) return;
+
+    router.push(`/products?search=${encodeURIComponent(query)}`);
 
     const eventId = generateEventId();
-    const customData = { search_string: searchQuery.trim() };
+    const customData = { search_string: query };
     sendCapiEvent({ eventName: "Search", eventId, customData });
     (window as any).fbq?.("track", "Search", customData, { eventID: eventId });
   };

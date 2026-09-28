@@ -6,11 +6,19 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 const ALLOWED_EVENTS = new Set(["PageView", "ViewContent", "Search", "AddToCart", "InitiateCheckout", "Purchase"]);
-const MAX_REQUESTS_PER_MINUTE = 30;
+const MAX_REQUESTS_PER_MINUTE = 120;
 const requestCounts = new Map<string, { count: number; resetAt: number }>();
 
 function isRateLimited(key: string) {
   const now = Date.now();
+
+  // Bound memory: module state is never garbage collected on its own.
+  if (requestCounts.size > 10_000) {
+    requestCounts.forEach((entry, entryKey) => {
+      if (entry.resetAt <= now) requestCounts.delete(entryKey);
+    });
+  }
+
   const current = requestCounts.get(key);
   if (!current || current.resetAt <= now) {
     requestCounts.set(key, { count: 1, resetAt: now + 60_000 });
@@ -28,7 +36,7 @@ function hasSafeEventData(value: unknown, depth = 0): boolean {
   if (depth > 4) return false;
   if (value === null || typeof value === "boolean" || typeof value === "number") return true;
   if (typeof value === "string") return value.length <= 500;
-  if (Array.isArray(value)) return value.length <= 25 && value.every((item) => hasSafeEventData(item, depth + 1));
+  if (Array.isArray(value)) return value.length <= 100 && value.every((item) => hasSafeEventData(item, depth + 1));
   return isPlainObject(value)
     && Object.keys(value).length <= 30
     && Object.entries(value).every(([key, item]) => key.length <= 80 && hasSafeEventData(item, depth + 1));
@@ -39,13 +47,22 @@ function optionalString(value: unknown): string | undefined {
 }
 
 export async function POST(request: NextRequest) {
+  let body: unknown;
   try {
-    const clientIp = firstIp(request.headers.get("x-forwarded-for")) ?? "unknown";
-    if (isRateLimited(clientIp)) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid event payload" }, { status: 400 });
+  }
 
-    const body: unknown = await request.json();
+  try {
+    const cookieStore = await cookies();
+
+    const clientIp = firstIp(request.headers.get("x-forwarded-for"));
+    const rateLimitKey = cookieStore.get("ks_external_id")?.value ?? clientIp ?? "unknown";
+    if (isRateLimited(rateLimitKey)) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+
     if (!isPlainObject(body)) return NextResponse.json({ error: "Invalid event payload" }, { status: 400 });
-    const { eventName, eventId, eventTime, customData = {}, customerData = {} } = body;
+    const { eventName, eventId, eventTime, eventSourceUrl, customData = {}, customerData = {} } = body;
     const nowInSeconds = Math.floor(Date.now() / 1000);
     if (
       typeof eventName !== "string" || !ALLOWED_EVENTS.has(eventName) ||
@@ -54,7 +71,6 @@ export async function POST(request: NextRequest) {
       !hasSafeEventData(customData) || !isPlainObject(customerData) || !hasSafeEventData(customerData)
     ) return NextResponse.json({ error: "Invalid event payload" }, { status: 400 });
 
-    const cookieStore = await cookies();
     const pixelId = process.env.NEXT_FB_PIXEL_ID;
     const accessToken = process.env.NEXT_FB_PIXEL_ACCESS_TOKEN;
     if (!pixelId || !accessToken) {
@@ -62,11 +78,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Tracking is unavailable" }, { status: 503 });
     }
 
-    let fbc = cookieStore.get("_fbc")?.value;
-    if (!fbc) {
-      const legacyFbclid = cookieStore.get("fbclid")?.value;
-      if (legacyFbclid) fbc = `fb.1.${Date.now()}.${legacyFbclid}`;
-    }
+    const fbc = cookieStore.get("_fbc")?.value;
+    const sourceUrl = optionalString(eventSourceUrl);
+    const safeSourceUrl = sourceUrl && sourceUrl.length <= 1000 && /^https:\/\//.test(sourceUrl) ? sourceUrl : undefined;
+
     const userData = compact({
       em: normalizeEmail(optionalString(customerData.email)), ph: normalizePhone(optionalString(customerData.phone)),
       fn: normalizeName(optionalString(customerData.firstName)), ln: normalizeName(optionalString(customerData.lastName)),
@@ -79,15 +94,32 @@ export async function POST(request: NextRequest) {
 
     const response = await fetch(`https://graph.facebook.com/v23.0/${pixelId}/events?access_token=${accessToken}`, {
       method: "POST",
-      body: JSON.stringify({ data: [{ event_name: eventName, event_time: eventTime, event_id: eventId, action_source: "website", user_data: userData, custom_data: customData, original_event_data: { event_name: eventName, event_time: eventTime } }] }),
+      body: JSON.stringify({
+        data: [{
+          event_name: eventName, event_time: eventTime, event_id: eventId, action_source: "website",
+          ...(safeSourceUrl ? { event_source_url: safeSourceUrl } : {}),
+          user_data: userData, custom_data: customData,
+          original_event_data: { event_name: eventName, event_time: eventTime },
+        }],
+      }),
       headers: { "Content-Type": "application/json" },
     });
+
+    const result = await response.json().catch(() => null);
+
     if (!response.ok) {
-      console.error("Meta rejected event", { eventName, status: response.status });
+      console.error("[CAPI] Meta rejected event", {
+        eventName,
+        status: response.status,
+        message: result?.error?.message,
+        code: result?.error?.code,
+        fbtrace_id: result?.error?.fbtrace_id,
+      });
       return NextResponse.json({ error: "Tracking request failed" }, { status: 502 });
     }
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: "Invalid event payload" }, { status: 400 });
+  } catch (error) {
+    console.error("[CAPI] unhandled error", error);
+    return NextResponse.json({ error: "Tracking request failed" }, { status: 500 });
   }
 }

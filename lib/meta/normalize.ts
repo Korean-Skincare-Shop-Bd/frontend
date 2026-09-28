@@ -9,13 +9,21 @@ export const normalizeEmail = (value?: string | null) => hashIfPresent(value?.to
 export const normalizePhone = (value?: string | null) => {
   if (!value) return undefined;
   let digits = value.replace(/\D/g, "");
-  if (digits.startsWith("00")) digits = digits.slice(2);
-  if (digits.startsWith("01")) digits = `88${digits}`;
-  else if (digits.startsWith("1") && digits.length === 10) digits = `880${digits}`;
+  if (digits.startsWith("00")) digits = digits.slice(2); // 00880... -> 880...
+  if (digits.startsWith("8800")) digits = `880${digits.slice(4)}`; // 880 + 01712... -> 8801712...
+  else if (digits.startsWith("01")) digits = `88${digits}`; // 01712... -> 8801712...
+  else if (digits.length === 10 && digits.startsWith("1")) digits = `880${digits}`;
+  if (digits.length < 7) return undefined; // junk input
   return hashIfPresent(digits);
 };
 export const normalizeName = (value?: string | null) => hashIfPresent(value?.toLowerCase().replace(/[^a-z\u0980-\u09ff ]/g, "").trim());
-export const normalizeCountry = (value = "BD") => hashIfPresent(value.toLowerCase().slice(0, 2));
+const COUNTRY_BY_NAME: Record<string, string> = { bangladesh: "bd" };
+export const normalizeCountry = (value?: string | null) => {
+  const raw = value?.trim().toLowerCase();
+  if (!raw) return hashIfPresent("bd");
+  if (/^[a-z]{2}$/.test(raw)) return hashIfPresent(raw);
+  return hashIfPresent(COUNTRY_BY_NAME[raw] ?? "bd");
+};
 export const normalizeCity = (value?: string | null) => hashIfPresent(value?.toLowerCase().replace(/[^a-z]/g, ""));
 export const normalizeZip = (value?: string | null) => hashIfPresent(value?.toLowerCase().replace(/[^a-z0-9]/g, ""));
 export const normalizeExternalId = (value?: string | null) => hashIfPresent(value);
