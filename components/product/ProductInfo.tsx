@@ -110,7 +110,7 @@ export function ProductInfo({
       content_name: name,
       ...(Number.isFinite(price) ? { value: price } : {}),
     };
-    sendCapiEvent({ eventName: "ViewContent", eventId, customData });
+    // Browser pixel only (no server CAPI call) to save function invocations.
     (window as any).fbq?.("track", "ViewContent", customData, { eventID: eventId });
   }, [product?.id, currentVariant?.productId, displayPrice, name]);
 

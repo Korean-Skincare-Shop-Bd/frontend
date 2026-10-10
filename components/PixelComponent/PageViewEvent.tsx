@@ -1,7 +1,6 @@
 "use client";
 
 import { generateEventId } from "@/lib/utils";
-import { sendCapiEvent } from "@/lib/meta/track";
 import useFbIds from "@/hooks/useFbIds";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
@@ -16,7 +15,9 @@ export default function PageViewEvent({
 
   useEffect(() => {
     const eventID = generateEventId();
-    sendCapiEvent({ eventName, eventId: eventID });
+    // Browser pixel only: each server-side CAPI call is a Vercel function
+    // invocation. Conversion events (AddToCart, InitiateCheckout, Purchase)
+    // still go through CAPI.
     if (typeof window !== "undefined" && (window as any).fbq) {
       (window as any).fbq("track", eventName, {}, { eventID });
     }

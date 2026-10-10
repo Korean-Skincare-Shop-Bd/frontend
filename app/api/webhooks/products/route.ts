@@ -1,4 +1,4 @@
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
 
 const ACTIONS = new Set(["created", "updated", "deleted"]);
@@ -16,17 +16,27 @@ export async function POST(request: NextRequest) {
   try {
     const body: unknown = await request.json();
     if (typeof body !== "object" || body === null || Array.isArray(body)) return NextResponse.json({ error: "Invalid webhook payload" }, { status: 400 });
-    const { action, productId } = body as { action?: unknown; productId?: unknown };
-    if (typeof action !== "string" || !ACTIONS.has(action) || (productId !== undefined && (typeof productId !== "string" || !PRODUCT_ID.test(productId)))) {
+    const { action, productId, slug } = body as { action?: unknown; productId?: unknown; slug?: unknown };
+    if (
+      typeof action !== "string" || !ACTIONS.has(action) ||
+      (productId !== undefined && (typeof productId !== "string" || !PRODUCT_ID.test(productId))) ||
+      (slug !== undefined && (typeof slug !== "string" || !PRODUCT_ID.test(slug)))
+    ) {
       return NextResponse.json({ error: "Invalid webhook payload" }, { status: 400 });
     }
     revalidatePath("/sitemap.xml");
     revalidatePath("/products");
-    // Product detail URLs use slugs, while the webhook currently identifies
-    // products by database ID. Purge the dynamic ISR route pattern so edits
-    // cannot leave the slug page serving stale product data.
-    revalidatePath("/products/[slug]", "page");
-    if (productId) revalidatePath(`/products/${productId}`);
+    revalidateTag("products-list");
+    if (typeof slug === "string") {
+      // Targeted purge: only the changed product page is re-rendered/re-written.
+      revalidateTag(`product:${slug}`);
+      revalidatePath(`/products/${slug}`);
+    } else {
+      // Backend did not send a slug: fall back to purging every product page.
+      // Have the backend include `slug` in the payload to avoid this.
+      revalidatePath("/products/[slug]", "page");
+      if (productId) revalidatePath(`/products/${productId}`);
+    }
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Invalid webhook payload" }, { status: 400 });

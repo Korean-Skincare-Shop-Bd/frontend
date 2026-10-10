@@ -43,7 +43,7 @@ export const getCategories = async (page = 1, limit: number = 20): Promise<Categ
         params.append('limit', limit.toString());
     }
     const response = await fetch(`${API_BASE_URL}/categories?${params.toString()}`,
-        { next: { revalidate: 300 } }
+        { next: { revalidate: 3600 } }
     );
 
     if (!response.ok) {

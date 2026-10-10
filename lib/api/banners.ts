@@ -115,7 +115,7 @@ export const getActiveBanners = async (): Promise<Banner[]> => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            next: { revalidate: 300 },
+            next: { revalidate: 3600 },
         });
 
         if (!response.ok) {

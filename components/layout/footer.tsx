@@ -25,7 +25,6 @@ export function Footer() {
   const categoriesQuery = useQuery({
     queryKey: queryKeys.categories(1, 5),
     queryFn: () => getCategories(1, 5),
-    refetchInterval: 10_000,
   });
   const categories = categoriesQuery.data?.categories ?? [];
   const isLoadingCategories = categoriesQuery.isLoading;
