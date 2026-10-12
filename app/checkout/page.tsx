@@ -767,7 +767,9 @@ export default function CheckoutPage() {
                           <Label htmlFor="region">Region *</Label>
                           <Select
                             value={selectedRegion}
-                            onValueChange={handleRegionChange}
+                            onValueChange={(value) =>
+                              handleRegionChange(value as "dhaka" | "outside_dhaka")
+                            }
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select region" />

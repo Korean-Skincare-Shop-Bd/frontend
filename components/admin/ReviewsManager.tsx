@@ -459,7 +459,7 @@ export function ReviewsManager() {
                       <TableHead className="w-12">
                         <Checkbox
                           checked={selectedReviews.size === reviews.length && reviews.length > 0}
-                          onCheckedChange={handleSelectAll}
+                          onCheckedChange={(checked) => handleSelectAll(checked === true)}
                         />
                       </TableHead>
                       <TableHead>Customer</TableHead>
