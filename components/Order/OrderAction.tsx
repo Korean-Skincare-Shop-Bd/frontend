@@ -55,6 +55,8 @@ export const OrderActions = ({ order, onViewOrder, onUpdateStatus, onUpdatePayme
       {/* Separator */}
       <div className="my-1 bg-border h-px" />
 
+      {order.paymentMethod !== "BKASH" && (
+        <>
       {/* Payment Status Updates */}
       <DropdownMenuItem onClick={() => onUpdatePaymentStatus(order.id, PAYMENT_STATUSES.PAID)}>
         <CheckCircle className="mr-2 w-4 h-4 text-green-600" />
@@ -68,6 +70,8 @@ export const OrderActions = ({ order, onViewOrder, onUpdateStatus, onUpdatePayme
         <XCircle className="mr-2 w-4 h-4 text-orange-600" />
         Mark Payment Refunded
       </DropdownMenuItem>
+        </>
+      )}
 
       <div className="my-1 bg-border h-px" />
 

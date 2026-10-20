@@ -118,6 +118,24 @@ export function OrdersManager() {
     }
   };
 
+  // After a bKash refund: refresh the list and the open dialog's payment status
+  const handleRefundComplete = (orderId: string, info: { fullyRefunded: boolean }) => {
+    if (info.fullyRefunded) {
+      setSelectedOrder((current) =>
+        current && current.id === orderId ? { ...current, paymentStatus: 'REFUNDED' } : current
+      );
+    }
+    fetchOrders(
+      currentPage,
+      orderStatusFilter === 'all' ? undefined : orderStatusFilter,
+      paymentStatusFilter === 'all' ? undefined : paymentStatusFilter,
+      paymentMethodFilter === 'all' ? undefined : paymentMethodFilter,
+      searchFilter || undefined,
+      dateFromFilter || undefined,
+      dateToFilter || undefined
+    );
+  };
+
   // Handle page changes
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -210,6 +228,7 @@ export function OrdersManager() {
         onOpenChange={setOrderDetailOpen}
         onUpdateStatus={handleStatusUpdate}
         onUpdatePaymentStatus={handlePaymentStatusUpdate}
+        onRefundComplete={handleRefundComplete}
       />
 
       {/* Enhanced Pagination */}

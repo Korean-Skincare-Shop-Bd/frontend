@@ -3,6 +3,7 @@ import { Button } from "../ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Order } from "@/lib/api/orders";
 import { Badge } from "../ui/badge";
+import { BkashRefundPanel } from "./BkashRefundPanel";
 import Image from "next/image";
 import { cloudfrontLoader } from "@/lib/cloudfront-loader";
 
@@ -47,6 +48,7 @@ interface OrderDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   onUpdateStatus: (orderId: string, status: string) => void;
   onUpdatePaymentStatus: (orderId: string, paymentStatus: string) => void; // Add this
+  onRefundComplete?: (orderId: string, info: { fullyRefunded: boolean }) => void;
 }
 
 export const OrderDetailDialog = ({
@@ -55,6 +57,7 @@ export const OrderDetailDialog = ({
   onOpenChange,
   onUpdateStatus,
   onUpdatePaymentStatus,
+  onRefundComplete,
 }: OrderDetailDialogProps) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="mx-4 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -93,19 +96,19 @@ export const OrderDetailDialog = ({
                   <strong>Order Date:</strong>{" "}
                   {new Date(order.createdAt).toLocaleDateString()}
                 </p>
-                <p className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
                   <strong>Order Status:</strong>
                   <Badge
                     className={`text-xs ${getStatusColor(order.orderStatus)}`}>
                     {order.orderStatus}
                   </Badge>
-                </p>
-                <p className="flex items-center gap-2">
+                </div>
+                <div className="flex items-center gap-2">
                   <strong>Payment Status:</strong>
                   <Badge variant="outline" className="text-xs">
                     {order.paymentStatus}
                   </Badge>
-                </p>
+                </div>
                 <p>
                   <strong>Payment Method:</strong>{" "}
                   {order.paymentMethod.replace("_", " ")}
@@ -344,7 +347,13 @@ export const OrderDetailDialog = ({
             </div>
           </div>
 
-          {/* Payment Status Actions */}
+          {/* Payment Status Actions. bKash orders: real refunds only (no manual status flips) */}
+          {order.paymentMethod === "BKASH" ? (
+            <BkashRefundPanel
+              orderId={order.id}
+              onRefunded={(info) => onRefundComplete?.(order.id, info)}
+            />
+          ) : (
           <div>
             <h4 className="mb-2 font-medium text-sm">Payment Status Actions</h4>
             <div className="flex sm:flex-row flex-col gap-2">
@@ -383,6 +392,7 @@ export const OrderDetailDialog = ({
               </Button>
             </div>
           </div>
+          )}
 
           {/* Other Actions */}
           <div>
