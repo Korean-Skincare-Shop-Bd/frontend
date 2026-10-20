@@ -55,6 +55,11 @@ import {
 import { getSessionIdCookie } from "@/lib/cookies/session";
 import { getProduct, Product, ProductVariation } from "@/lib/api/products";
 import { getMetaIdentifiers, rememberContact } from "@/lib/meta/identity";
+import {
+  BKASH_ENABLED,
+  createBkashPayment,
+  savePendingBkashOrder,
+} from "@/lib/api/bkash";
 
 const paymentMethods = [
   {
@@ -64,6 +69,17 @@ const paymentMethods = [
     icon: Package,
     available: true,
   },
+  ...(BKASH_ENABLED
+    ? [
+        {
+          id: "BKASH",
+          name: "bKash",
+          description: "Pay securely with your bKash wallet",
+          icon: Phone,
+          available: true,
+        },
+      ]
+    : []),
   // {
   //     id: 'CARD',
   //     name: 'Credit/Debit Card',
@@ -128,7 +144,9 @@ export default function CheckoutPage() {
   const [selectedRegion, setSelectedRegion] = useState<
     "dhaka" | "outside_dhaka"
   >("dhaka");
-  const [shippingCost, setShippingCost] = useState<number>(0);
+  const [shippingCostRaw, setShippingCost] = useState<number>(0);
+  // The API serialises Decimal as a string ("60"); coerce so + doesn't concatenate
+  const shippingCost = Number(shippingCostRaw) || 0;
   const [calculatingShipping, setCalculatingShipping] = useState(false);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -246,11 +264,11 @@ export default function CheckoutPage() {
     try {
       const data = await getAllShippingCharges();
       setShippingCharges(data);
-      setShippingCost(data.data.dhaka); // Default to Dhaka
+      setShippingCost(Number(data.data.dhaka)); // Default to Dhaka
       // Set initial shipping fee in formData
       setFormData((prev) => ({
         ...prev,
-        customShippingFee: data.data.dhaka,
+        customShippingFee: Number(data.data.dhaka),
       }));
       setLoading(false);
     } catch (error: any) {
@@ -270,11 +288,11 @@ export default function CheckoutPage() {
         region === "dhaka"
           ? shippingCharges.data.dhaka
           : shippingCharges.data.outsideDhaka;
-      setShippingCost(cost);
+      setShippingCost(Number(cost));
       // Update formData with the selected shipping fee for backend
       setFormData((prev) => ({
         ...prev,
-        customShippingFee: cost,
+        customShippingFee: Number(cost),
       }));
     }
   };
@@ -297,11 +315,11 @@ export default function CheckoutPage() {
 
       const detectedRegion = result.data.region;
       setSelectedRegion(detectedRegion);
-      setShippingCost(result.data.charge);
+      setShippingCost(Number(result.data.charge));
       // Update formData with the calculated shipping fee
       setFormData((prev) => ({
         ...prev,
-        customShippingFee: result.data.charge,
+        customShippingFee: Number(result.data.charge),
       }));
 
       toast({
@@ -446,6 +464,27 @@ export default function CheckoutPage() {
       setErrors({}); // Clear any existing errors
 
       const result = await processCheckout({ ...formData, ...getMetaIdentifiers() });
+
+      // bKash: hand the customer over to the bKash page. The order is only
+      // marked paid by the backend after bKash confirms the payment; the cart
+      // is cleared on /payment/success, not here.
+      if (result.success && formData.paymentMethod === "BKASH") {
+        const pending = { orderId: result.data.orderId, sessionId };
+        savePendingBkashOrder(pending);
+        try {
+          const payment = await createBkashPayment(pending);
+          window.location.href = payment.bkashURL;
+        } catch (paymentError: any) {
+          // The order exists already: let the customer retry the payment
+          // instead of submitting the checkout form again.
+          router.push(
+            `/payment/failure?message=${encodeURIComponent(
+              paymentError?.message || "Unable to start bKash payment"
+            )}`
+          );
+        }
+        return;
+      }
 
       // send data to facebook conversion API
       if (result.success) {

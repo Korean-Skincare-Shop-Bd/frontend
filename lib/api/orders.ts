@@ -14,7 +14,7 @@ export interface Order {
   totalAmount: number;
   discountAmount: number;
   shippingFee: number;
-  paymentMethod: 'CASH_ON_DELIVERY' | 'CARD' | 'MOBILE_BANKING';
+  paymentMethod: 'CASH_ON_DELIVERY' | 'BKASH';
   paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
   orderStatus: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
   creationMethod: 'CUSTOMER' | 'ADMIN';
@@ -95,7 +95,7 @@ export interface CheckoutRequest {
   phone: string;
   shippingAddress: string;
   billingAddress: string;
-  paymentMethod: 'CASH_ON_DELIVERY' | 'CARD' | 'MOBILE_BANKING';
+  paymentMethod: 'CASH_ON_DELIVERY' | 'BKASH';
   notes?: string;
   customShippingFee?: number; // Frontend-selected shipping fee
   metaFbc?: string;
