@@ -1,0 +1,34 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "korean-skincare-shop-bd",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-09-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "korean-skincare-shop-bd"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "korean-next-cache"
+    }
+  ],
+  "observability": { "enabled": true },
+  "routes": [
+    { "pattern": "koreanskincareshopbd.com", "custom_domain": true },
+    { "pattern": "www.koreanskincareshopbd.com", "custom_domain": true }
+  ],
+  "vars": {
+    "NEXT_PUBLIC_API_URL": "https://api.koreanskincareshopbd.com/api/v1",
+    "NEXT_PUBLIC_SITE_URL": "https://koreanskincareshopbd.com",
+    "API_URL": "https://api.koreanskincareshopbd.com/api/v1"
+  }
+  // Secrets: `wrangler secret put WEBHOOK_SECRET | NEXT_FB_PIXEL_ID | NEXT_FB_PIXEL_ACCESS_TOKEN`
+}

@@ -78,3 +78,8 @@ const nextConfig = {
 };
 
 module.exports = withBundleAnalyzer(nextConfig);
+
+// Enables Cloudflare bindings (R2, env) during `next dev`.
+if (process.env.NODE_ENV !== 'production') {
+  import('@opennextjs/cloudflare').then((m) => m.initOpenNextCloudflareForDev()).catch(() => {});
+}

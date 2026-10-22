@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const ALLOWED_EVENTS = new Set(["PageView", "ViewContent", "Search", "AddToCart", "InitiateCheckout", "Purchase"]);
 const MAX_REQUESTS_PER_MINUTE = 120;
+// Best-effort only: state is per-isolate on Cloudflare Workers. Enforce the real limit with a WAF rate-limit rule.
 const requestCounts = new Map<string, { count: number; resetAt: number }>();
 
 function isRateLimited(key: string) {
@@ -57,7 +58,7 @@ export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
 
-    const clientIp = firstIp(request.headers.get("x-forwarded-for"));
+    const clientIp = request.headers.get("cf-connecting-ip") ?? firstIp(request.headers.get("x-forwarded-for"));
     const rateLimitKey = cookieStore.get("ks_external_id")?.value ?? clientIp ?? "unknown";
     if (isRateLimited(rateLimitKey)) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 

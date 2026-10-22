@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
-export const revalidate = 3600;
+// Feed is >2MB, over the Next.js data-cache item limit, so stream it uncached and let the CDN cache it.
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
@@ -9,22 +10,18 @@ export async function GET() {
     const catalogUrl = `${backendUrl}/catalog/facebook.xml`;
 
     // Fetch the catalog from backend
-    const response = await fetch(catalogUrl, {
-      next: { revalidate: 3600 }, // Match the 1-hour Cache-Control below
-    });
+    const response = await fetch(catalogUrl, { cache: 'no-store' });
     
     if (!response.ok) {
       throw new Error(`Failed to fetch catalog: ${response.status}`);
     }
     
-    const xmlContent = await response.text();
-    
     // Return XML response with proper headers
-    return new NextResponse(xmlContent, {
+    return new NextResponse(response.body, {
       status: 200,
       headers: {
         'Content-Type': 'application/xml; charset=utf-8',
-        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+        'Cache-Control': 'public, max-age=3600, s-maxage=3600', // Cache for 1 hour (browser + CDN)
         'Last-Modified': new Date().toUTCString(),
       },
     });
