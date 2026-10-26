@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import {
   CreditCard,
   Truck,
@@ -13,7 +14,6 @@ import {
   Package,
   User,
   Mail,
-  Phone,
   MapPin,
   FileText,
   Loader2,
@@ -61,7 +61,15 @@ import {
   savePendingBkashOrder,
 } from "@/lib/api/bkash";
 
-const paymentMethods = [
+const paymentMethods: {
+  id: string;
+  name: string;
+  description: string;
+  icon: typeof Package;
+  /** Brand logo shown instead of the icon (served from /public) */
+  imageSrc?: string;
+  available: boolean;
+}[] = [
   {
     id: "CASH_ON_DELIVERY",
     name: "Cash on Delivery",
@@ -75,7 +83,8 @@ const paymentMethods = [
           id: "BKASH",
           name: "bKash",
           description: "Pay securely with your bKash wallet",
-          icon: Phone,
+          icon: Package,
+          imageSrc: "/bkash.png",
           available: true,
         },
       ]
@@ -962,7 +971,17 @@ export default function CheckoutPage() {
                                 id={method.id}
                                 disabled={!method.available}
                               />
-                              <IconComponent className="w-5 h-5 text-primary" />
+                              {method.imageSrc ? (
+                                <Image
+                                  src={method.imageSrc}
+                                  alt={`${method.name} logo`}
+                                  width={24}
+                                  height={24}
+                                  className="w-6 h-6 rounded"
+                                />
+                              ) : (
+                                <IconComponent className="w-5 h-5 text-primary" />
+                              )}
                               <div className="flex-1">
                                 <Label
                                   htmlFor={method.id}

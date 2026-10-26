@@ -256,6 +256,20 @@ export function BkashRefundPanel({ orderId, onRefunded }: Props) {
                   disabled={submitting}
                 />
               </div>
+
+              {!canSubmit && !submitting && (
+                <p className="text-xs text-muted-foreground" data-testid="refund-missing">
+                  To enable the refund button:{" "}
+                  {[
+                    !amountValid && "enter a valid amount within the refundable balance",
+                    !reasonValid && "enter a reason (at least 3 characters)",
+                    !confirmValid && "type the order number exactly",
+                  ]
+                    .filter(Boolean)
+                    .join("; ")}
+                  .
+                </p>
+              )}
             </div>
           )}
 
