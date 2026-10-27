@@ -2,8 +2,6 @@ import { adminFetch } from "./adminFetch";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export const BKASH_ENABLED = process.env.NEXT_PUBLIC_BKASH_ENABLED === "true";
-
 const PENDING_KEY = "bkash_pending_order";
 
 export interface BkashPendingOrder {

@@ -55,13 +55,10 @@ import {
 import { getSessionIdCookie } from "@/lib/cookies/session";
 import { getProduct, Product, ProductVariation } from "@/lib/api/products";
 import { getMetaIdentifiers, rememberContact } from "@/lib/meta/identity";
-import {
-  BKASH_ENABLED,
-  createBkashPayment,
-  savePendingBkashOrder,
-} from "@/lib/api/bkash";
+import { createBkashPayment, savePendingBkashOrder } from "@/lib/api/bkash";
+import { useBkashEnabled } from "./bkash-flag";
 
-const paymentMethods: {
+type PaymentMethod = {
   id: string;
   name: string;
   description: string;
@@ -69,7 +66,9 @@ const paymentMethods: {
   /** Brand logo shown instead of the icon (served from /public) */
   imageSrc?: string;
   available: boolean;
-}[] = [
+};
+
+const getPaymentMethods = (bkashEnabled: boolean): PaymentMethod[] => [
   {
     id: "CASH_ON_DELIVERY",
     name: "Cash on Delivery",
@@ -77,7 +76,7 @@ const paymentMethods: {
     icon: Package,
     available: true,
   },
-  ...(BKASH_ENABLED
+  ...(bkashEnabled
     ? [
         {
           id: "BKASH",
@@ -141,6 +140,7 @@ const FieldError = ({ error }: { error?: string }) => {
 };
 export default function CheckoutPage() {
   const router = useRouter();
+  const paymentMethods = getPaymentMethods(useBkashEnabled());
   //   const searchParams = useSearchParams();
   const { toast } = useToast();
 

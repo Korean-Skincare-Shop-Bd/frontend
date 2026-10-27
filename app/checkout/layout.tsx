@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { connection } from 'next/server';
+import { BkashEnabledProvider } from './bkash-flag';
 
 export const metadata: Metadata = {
   title: 'Checkout | Korean Skincare Shop BD',
@@ -10,10 +12,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function CheckoutLayout({
+export default async function CheckoutLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return children;
+  // Opt into per-request rendering so the runtime env var is read live, not at build time.
+  await connection();
+  const bkashEnabled = process.env.BKASH_ENABLED === 'true';
+
+  return (
+    <BkashEnabledProvider value={bkashEnabled}>{children}</BkashEnabledProvider>
+  );
 }
