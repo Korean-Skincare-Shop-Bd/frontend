@@ -145,7 +145,7 @@ export default function RootLayout({
         <script
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: getFbPixelScript(process.env.NEXT_FB_PIXEL_ID ?? ""),
+            __html: getFbPixelScript(process.env.NEXT_PUBLIC_FB_PIXEL_ID ?? ""),
           }}
         />
         {/* <!-- Google tag (gtag.js) --> */}
@@ -160,7 +160,7 @@ export default function RootLayout({
             height="1"
             width="1"
             style={{ display: "none" }}
-            src={`https://www.facebook.com/tr?id=${process.env.NEXT_FB_PIXEL_ID}&ev=PageView&noscript=1`}
+            src={`https://www.facebook.com/tr?id=${process.env.NEXT_PUBLIC_FB_PIXEL_ID}&ev=PageView&noscript=1`}
             alt=""
           />
         </noscript>
