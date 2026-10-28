@@ -11,6 +11,7 @@ import {
   DollarSign,
   Calendar,
   Tag,
+  EyeOff,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getProduct, Product } from "@/lib/api/products";
+import { getProduct, updateProduct, Product } from "@/lib/api/products";
 import { useAdmin } from "@/contexts/AdminContext";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -32,6 +33,7 @@ import Image from "next/image";
 export default function ProductDetails() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const [togglingPublish, setTogglingPublish] = useState(false);
   const router = useRouter();
   const params = useParams();
   const { isAuthenticated } = useAdmin();
@@ -54,6 +56,24 @@ export default function ProductDetails() {
       toast.error("Failed to fetch product details");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTogglePublish = async () => {
+    if (!product) return;
+    const nextPublished = !product.isPublished;
+    try {
+      setTogglingPublish(true);
+      await updateProduct(id, { isPublished: nextPublished });
+      setProduct({ ...product, isPublished: nextPublished });
+      toast.success(
+        nextPublished ? "Product published" : "Product unpublished"
+      );
+    } catch (error) {
+      console.error("Error updating publish status:", error);
+      toast.error("Failed to update publish status");
+    } finally {
+      setTogglingPublish(false);
     }
   };
 
@@ -107,6 +127,17 @@ export default function ProductDetails() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            disabled={togglingPublish}
+            onClick={handleTogglePublish}>
+            {product.isPublished ? (
+              <EyeOff className="mr-2 w-4 h-4" />
+            ) : (
+              <Eye className="mr-2 w-4 h-4" />
+            )}
+            {product.isPublished ? "Unpublish" : "Publish"}
+          </Button>
           <Button
             variant="outline"
             onClick={() => router.push(`/admin/products/${id}/edit`)}>
