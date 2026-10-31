@@ -29,6 +29,7 @@ import {
 import { getProduct, Product, ProductVariation } from "@/lib/api/products";
 import { useRouter } from "next/navigation";
 import { generateEventId } from "@/lib/utils";
+import { track } from "@/lib/tracking";
 import { sendCapiEvent } from "@/lib/meta/track";
 interface CartItemWithProduct extends CartItem {
   product?: Product;
@@ -232,7 +233,17 @@ export default function CartPage() {
         const contents = items.map((item) => ({ id: item.productId, quantity: item.quantity }));
         const customData = { value: total, currency: "BDT", content_ids: contents.map((item) => item.id), content_type: "product", contents, num_items: items.reduce((count, item) => count + item.quantity, 0) };
         sendCapiEvent({ eventName: "InitiateCheckout", eventId, customData });
-        (window as any).fbq?.("track", "InitiateCheckout", customData, { eventID: eventId });
+        track({
+          event: "begin_checkout",
+          eventId,
+          value: total,
+          items: items.map((item) => ({
+            item_id: item.productId,
+            item_name: item.productData?.name || item.product?.name,
+            price: item.productData?.price,
+            quantity: item.quantity,
+          })),
+        });
       }
       toast({
         title: "Success",

@@ -3,25 +3,21 @@
 import { generateEventId } from "@/lib/utils";
 import useFbIds from "@/hooks/useFbIds";
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { track } from "@/lib/tracking";
 
-export default function PageViewEvent({
-  eventName = "PageView",
-}: {
-  eventName?: string;
-}) {
+export default function PageViewEvent() {
   const pathname = usePathname();
+  const lastPath = useRef<string | null>(null);
   useFbIds();
 
   useEffect(() => {
-    const eventID = generateEventId();
-    // Browser pixel only: each server-side CAPI call is a Vercel function
-    // invocation. Conversion events (AddToCart, InitiateCheckout, Purchase)
-    // still go through CAPI.
-    if (typeof window !== "undefined" && (window as any).fbq) {
-      (window as any).fbq("track", eventName, {}, { eventID });
-    }
-  }, [eventName, pathname]);
+    // Guard against double-invocation (React strict mode) so one navigation = one page_view.
+    if (lastPath.current === pathname) return;
+    lastPath.current = pathname;
+    // Browser-only (no CAPI call) to save function invocations.
+    track({ event: "page_view", eventId: generateEventId() });
+  }, [pathname]);
 
   return null;
 }

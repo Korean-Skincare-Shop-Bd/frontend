@@ -57,6 +57,7 @@ import { getProduct, Product, ProductVariation } from "@/lib/api/products";
 import { getMetaIdentifiers, rememberContact } from "@/lib/meta/identity";
 import { createBkashPayment, savePendingBkashOrder } from "@/lib/api/bkash";
 import { useBkashEnabled } from "./bkash-flag";
+import { track } from "@/lib/tracking";
 
 type PaymentMethod = {
   id: string;
@@ -521,8 +522,20 @@ export default function CheckoutPage() {
 
         // The backend sends the authoritative CAPI Purchase with this ID.
         rememberContact(customerData);
-        (window as any).fbq?.("track", "Purchase", customData, {
-          eventID: result.data.orderId,
+        track({
+          event: "purchase",
+          eventId: result.data.orderId,
+          transactionId: result.data.orderId,
+          value: total,
+          items: items.map((item) => ({
+            item_id: item.productId,
+            item_name: item.product?.name,
+            price:
+              Number(item.variation?.salePrice) ||
+              Number(item.variation?.price) ||
+              Number(item.price),
+            quantity: item.quantity,
+          })),
         });
       }
 

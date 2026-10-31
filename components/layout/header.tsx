@@ -42,6 +42,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { cn, generateEventId } from "@/lib/utils";
+import { track } from "@/lib/tracking";
 import { useAdmin } from "@/contexts/AdminContext";
 import { useToast } from "@/hooks/use-toast";
 import { getEnhancedCart } from "@/lib/api/cart";
@@ -441,7 +442,7 @@ export function Header() {
     const eventId = generateEventId();
     const customData = { search_string: query };
     sendCapiEvent({ eventName: "Search", eventId, customData });
-    (window as any).fbq?.("track", "Search", customData, { eventID: eventId });
+    track({ event: "search", eventId, searchTerm: query });
   };
 
   const toggleAdmin = async () => {

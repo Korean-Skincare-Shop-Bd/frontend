@@ -36,6 +36,7 @@ import { Product, ProductVariation } from "@/lib/api/products";
 import { useToast } from "@/hooks/use-toast";
 import { addToEnhancedCart } from "@/lib/api/cart";
 import { generateEventId } from "@/lib/utils";
+import { track } from "@/lib/tracking";
 import { sendCapiEvent } from "@/lib/meta/track";
 
 interface ProductInfoProps {
@@ -111,7 +112,12 @@ export function ProductInfo({
       ...(Number.isFinite(price) ? { value: price } : {}),
     };
     // Browser pixel only (no server CAPI call) to save function invocations.
-    (window as any).fbq?.("track", "ViewContent", customData, { eventID: eventId });
+    track({
+      event: "view_item",
+      eventId,
+      ...(Number.isFinite(price) ? { value: price } : {}),
+      items: [{ item_id: catalogProductId, item_name: name, ...(Number.isFinite(price) ? { price } : {}) }],
+    });
   }, [product?.id, currentVariant?.productId, displayPrice, name]);
 
   const handleAddToCart = async () => {
@@ -137,7 +143,12 @@ export function ProductInfo({
         const eventId = generateEventId();
         const customData = { value: Number(displayPrice) * quantity, currency: "BDT", content_ids: [product.id], content_type: "product", content_name: name, contents: [{ id: product.id, quantity }] };
         sendCapiEvent({ eventName: "AddToCart", eventId, customData });
-        (window as any).fbq?.("track", "AddToCart", customData, { eventID: eventId });
+        track({
+          event: "add_to_cart",
+          eventId,
+          value: Number(displayPrice) * quantity,
+          items: [{ item_id: product.id, item_name: name, price: Number(displayPrice), quantity }],
+        });
       }
 
       window.dispatchEvent(new Event("cartUpdated"));

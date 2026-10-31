@@ -11,8 +11,8 @@ import FloatingActions from "@/components/layout/FloatingActions";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { QueryProvider } from "@/components/providers/QueryProvider";
 import PageViewEvent from "@/components/PixelComponent/PageViewEvent";
+import { GoogleTagManager } from "@next/third-parties/google";
 import { serializeJsonLd } from "@/lib/json-ld";
-import { getFbPixelScript, GA_CONFIG_SCRIPT } from "@/lib/security/inline-scripts";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -99,6 +99,8 @@ export const metadata: Metadata = {
   },
 };
 
+const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
+
 export default function RootLayout({
   children,
 }: {
@@ -134,6 +136,7 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning={true}>
+      {GTM_ID && <GoogleTagManager gtmId={GTM_ID} />}
       <head>
         <link rel="preload" href="/logo2.png" as="image" />
         <script
@@ -141,32 +144,18 @@ export default function RootLayout({
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
         />
-        {/* Meta Pixel Code */}
-        <script
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{
-            __html: getFbPixelScript(process.env.NEXT_PUBLIC_FB_PIXEL_ID ?? ""),
-          }}
-        />
-        {/* <!-- Google tag (gtag.js) --> */}
-        <script suppressHydrationWarning async src="https://www.googletagmanager.com/gtag/js?id=G-NPTTRXW8L1"></script>
-        <script
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: GA_CONFIG_SCRIPT }}
-        />
-        <noscript>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            height="1"
-            width="1"
-            style={{ display: "none" }}
-            src={`https://www.facebook.com/tr?id=${process.env.NEXT_PUBLIC_FB_PIXEL_ID}&ev=PageView&noscript=1`}
-            alt=""
-          />
-        </noscript>
-        {/* End Meta Pixel Code */}
       </head>
       <body className={inter.className}>
+        {GTM_ID && (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+              height="0"
+              width="0"
+              style={{ display: "none", visibility: "hidden" }}
+            />
+          </noscript>
+        )}
         {" "}
         <ThemeProvider>
           <QueryProvider>
