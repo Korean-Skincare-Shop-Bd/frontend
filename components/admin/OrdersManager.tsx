@@ -65,6 +65,7 @@ export function OrdersManager() {
       dateFromFilter || undefined,
       dateToFilter || undefined
     );
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch on these filters only; useOrders returns new function identities each render
   }, [
     isAuthenticated, 
     currentPage, 
@@ -89,6 +90,7 @@ export function OrdersManager() {
     }, 500);
 
     return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- debounce on the search text only
   }, [searchFilter]);
 
   const handleViewOrder = (order: Order) => {

@@ -43,6 +43,7 @@ export default function ProductDetails() {
     if (id && isAuthenticated) {
       fetchProduct();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch only when the product id or auth changes
   }, [id, isAuthenticated]);
 
   const fetchProduct = async () => {

@@ -210,6 +210,7 @@ export default function CheckoutPage() {
       fetchCartData(),
       fetchShippingCharges(),
     ]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- load cart/shipping once per session; fetchers are recreated every render
   }, [sessionId, sessionIdLoading]);
 
   const fetchCartData = async () => {

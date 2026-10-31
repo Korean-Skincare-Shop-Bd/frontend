@@ -136,6 +136,7 @@ export function RecentOrders() {
   useEffect(() => {
     // Fetch recent orders (first page, no filters, show recent orders)
     fetchOrders(1);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- useOrders returns new function identities each render
   }, [isAuthenticated]);
 
   // Handle search with debouncing
@@ -145,6 +146,7 @@ export function RecentOrders() {
     }, 500);
 
     return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- debounce on the search text only
   }, [searchFilter]);
 
   const handleViewOrder = (order: Order) => {

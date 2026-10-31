@@ -103,6 +103,7 @@ export function ReviewDetailsView({ reviewId }: ReviewDetailsViewProps) {
   // Initial fetch
   useEffect(() => {
     fetchReview();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch only when the review id or auth changes
   }, [isAuthenticated, reviewId]);
 
   // Handle save

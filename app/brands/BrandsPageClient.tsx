@@ -91,7 +91,7 @@ export default function BrandsPageContent({
     };
 
     fetchBrands();
-  }, [currentPage, toast]);
+  }, [currentPage, toast, initialBrands.length, pagination.limit]);
 
   // Filter and sort brands
   const filteredAndSortedBrands = brands

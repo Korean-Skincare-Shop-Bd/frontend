@@ -93,6 +93,7 @@ export function CategoriesManager() {
 
   useEffect(() => {
     fetchCategories();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch only when the page changes
   }, [currentPage]);
 
   useEffect(() => {

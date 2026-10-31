@@ -1,7 +1,7 @@
 // components/Order/ManualOrderForm.tsx
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -141,8 +141,8 @@ export function ManualOrderForm() {
     }, [calculatedTotal]);
 
     // Search products with debouncing
-    const debouncedSearch = useCallback(
-        (() => {
+    const debouncedSearch = useMemo(
+        () => {
             let timeoutId: NodeJS.Timeout;
             let previousQuery = '';
 
@@ -160,7 +160,7 @@ export function ManualOrderForm() {
                     }, 300);
                 }
             };
-        })(),
+        },
         [searchProducts, clearProductVariations]
     );
 
