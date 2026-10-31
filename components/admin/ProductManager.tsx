@@ -84,7 +84,7 @@ export function ProductsManager() {
         limit: ITEMS_PER_PAGE,
         ...(debouncedSearch && { search: debouncedSearch }),
       };
-      // Uncached admin list. NOTE: the API defaults to isPublished=true, so drafts are not returned yet
+      // Admin list includes unpublished (draft) products
       const response = await getAdminProducts(params);
       setProducts(response.products);
       setTotalProducts(response.total);

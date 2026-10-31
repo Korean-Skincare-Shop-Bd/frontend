@@ -216,8 +216,8 @@ export const getProducts = async (
   return response.json();
 };
 /**
- * Admin product list, never cached. NOTE: GET /products defaults to isPublished=true on the
- * backend, so unpublished (draft) products are not included until an admin-only route exists.
+ * Admin product list (admin-only, never cached). Includes unpublished (draft) products;
+ * search matches name, description, tags, brand and category names.
  */
 export const getAdminProducts = async (
   params: { page?: number; limit?: number; search?: string } = {}
@@ -229,7 +229,7 @@ export const getAdminProducts = async (
   });
   if (search) searchParams.append("search", search);
 
-  const response = await adminFetch(`/products?${searchParams.toString()}`);
+  const response = await adminFetch(`/products/admin?${searchParams.toString()}`);
   if (!response.ok) {
     throw new Error("Failed to fetch products");
   }
