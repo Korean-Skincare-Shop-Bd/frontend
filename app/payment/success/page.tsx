@@ -10,7 +10,10 @@ import {
   BkashPaymentStatus,
   clearPendingBkashOrder,
   getBkashPaymentStatus,
+  takePendingBkashPurchase,
 } from "@/lib/api/bkash";
+import { rememberContact } from "@/lib/meta/identity";
+import { track } from "@/lib/tracking";
 import { clearCart } from "@/lib/api/cart";
 
 const POLL_MS = 3000;
@@ -39,6 +42,15 @@ function SuccessContent() {
         if (cancelled) return;
         if (status.status === "PAID" || status.status === "REFUNDED") {
           setPayment(status);
+          // Payment confirmed: only now count the sale in GTM/Meta/GA4. The
+          // stored purchase is handed out once, so a refresh cannot repeat it.
+          if (status.status === "PAID") {
+            const purchase = takePendingBkashPurchase();
+            if (purchase) {
+              rememberContact(purchase.user);
+              track({ event: "purchase", ...purchase });
+            }
+          }
           clearPendingBkashOrder();
           await clearCart();
         } else if (status.status === "PENDING" && ++attempts < MAX_POLLS) {

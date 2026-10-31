@@ -55,7 +55,11 @@ import {
 import { getSessionIdCookie } from "@/lib/cookies/session";
 import { getProduct, Product, ProductVariation } from "@/lib/api/products";
 import { getMetaIdentifiers, rememberContact } from "@/lib/meta/identity";
-import { createBkashPayment, savePendingBkashOrder } from "@/lib/api/bkash";
+import {
+  createBkashPayment,
+  savePendingBkashOrder,
+  savePendingBkashPurchase,
+} from "@/lib/api/bkash";
 import { useBkashEnabled } from "./bkash-flag";
 import { track } from "@/lib/tracking";
 
@@ -476,10 +480,43 @@ export default function CheckoutPage() {
 
       const result = await processCheckout({ ...formData, ...getMetaIdentifiers() });
 
+      // Purchase details for the dataLayer event. Built once so cash on
+      // delivery (fires now) and bKash (fires after payment) send the same data.
+      const nameParts = formData.customerName.trim().split(/\s+/);
+      const purchase = result.success
+        ? {
+            eventId: result.data.orderId as string,
+            transactionId: result.data.orderId as string,
+            value: total,
+            shipping: shippingCost,
+            items: items.map((item) => ({
+              item_id: item.productId,
+              item_name: item.product?.name,
+              price:
+                Number(item.variation?.salePrice) ||
+                Number(item.variation?.price) ||
+                Number(item.price),
+              quantity: item.quantity,
+            })),
+            user: {
+              email: formData.email,
+              phone: formData.phone,
+              firstName: nameParts[0],
+              lastName: nameParts.slice(1).join(" "),
+              street: formData.shippingAddress,
+              city: selectedRegion === "dhaka" ? "Dhaka" : "Outside Dhaka",
+              region: selectedRegion === "dhaka" ? "Dhaka" : undefined,
+              country: "BD",
+            },
+          }
+        : null;
+
       // bKash: hand the customer over to the bKash page. The order is only
       // marked paid by the backend after bKash confirms the payment; the cart
-      // is cleared on /payment/success, not here.
+      // is cleared on /payment/success, not here. The browser Purchase event
+      // is held back until then so unpaid orders are not counted as sales.
       if (result.success && formData.paymentMethod === "BKASH") {
+        if (purchase) savePendingBkashPurchase(purchase);
         const pending = { orderId: result.data.orderId, sessionId };
         savePendingBkashOrder(pending);
         try {
@@ -497,47 +534,11 @@ export default function CheckoutPage() {
         return;
       }
 
-      // send data to facebook conversion API
-      if (result.success) {
-        const nameParts = formData.customerName.trim().split(/\s+/);
-        const contents = items.map((item) => ({
-          id: item.productId,
-          quantity: item.quantity,
-        }));
-        const customData = {
-          value: total,
-          currency: "BDT",
-          content_ids: contents.map((item) => item.id),
-          content_type: "product",
-          contents,
-          num_items: items.reduce((count, item) => count + item.quantity, 0),
-          order_id: result.data.orderId,
-        };
-        const customerData = {
-          email: formData.email,
-          phone: formData.phone,
-          firstName: nameParts[0],
-          lastName: nameParts.slice(1).join(" "),
-          country: "BD",
-        };
-
-        // The backend sends the authoritative CAPI Purchase with this ID.
-        rememberContact(customerData);
-        track({
-          event: "purchase",
-          eventId: result.data.orderId,
-          transactionId: result.data.orderId,
-          value: total,
-          items: items.map((item) => ({
-            item_id: item.productId,
-            item_name: item.product?.name,
-            price:
-              Number(item.variation?.salePrice) ||
-              Number(item.variation?.price) ||
-              Number(item.price),
-            quantity: item.quantity,
-          })),
-        });
+      // Cash on delivery: the order is final, so fire the Purchase now. The
+      // backend sends the matching server-side Purchase with the same event ID.
+      if (purchase) {
+        rememberContact(purchase.user);
+        track({ event: "purchase", ...purchase });
       }
 
       toast({

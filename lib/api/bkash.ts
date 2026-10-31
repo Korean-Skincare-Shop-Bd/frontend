@@ -1,4 +1,6 @@
 import { adminFetch } from "./adminFetch";
+import type { TrackItem, TrackUser } from "@/lib/tracking";
+import { getMetaIdentifiers } from "@/lib/meta/identity";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -16,6 +18,44 @@ export interface BkashPaymentStatus {
   trxID: string | null;
   orderNumber: string;
   errorMessage: string | null;
+}
+
+const PURCHASE_KEY = "bkash_pending_purchase";
+
+export interface BkashPendingPurchase {
+  eventId: string;
+  transactionId: string;
+  value: number;
+  shipping: number;
+  items: TrackItem[];
+  user: TrackUser;
+}
+
+/**
+ * The browser Purchase event for a bKash order may only fire once the payment
+ * is confirmed, but the customer leaves the site to pay. Keep the details here
+ * until they come back to /payment/success.
+ */
+export function savePendingBkashPurchase(purchase: BkashPendingPurchase) {
+  try {
+    sessionStorage.setItem(PURCHASE_KEY, JSON.stringify(purchase));
+  } catch {
+    /* storage unavailable: the server-side Purchase still counts the sale */
+  }
+}
+
+/** Returns the stored purchase for this order exactly once, then forgets it. */
+export function takePendingBkashPurchase(orderId?: string): BkashPendingPurchase | null {
+  try {
+    const raw = sessionStorage.getItem(PURCHASE_KEY);
+    if (!raw) return null;
+    const purchase = JSON.parse(raw) as BkashPendingPurchase;
+    if (orderId && purchase.transactionId !== orderId) return null;
+    sessionStorage.removeItem(PURCHASE_KEY);
+    return purchase;
+  } catch {
+    return null;
+  }
 }
 
 /** Remember the order so the failure page can offer "try again". */
@@ -52,7 +92,9 @@ export async function createBkashPayment(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify(order),
+    // The Meta identifiers let the backend attribute the Purchase it sends
+    // once the payment is confirmed (the callback has no access to the cookies).
+    body: JSON.stringify({ ...order, meta: getMetaIdentifiers() }),
   });
   const body = await response.json().catch(() => null);
   if (!response.ok || !body?.success) {
