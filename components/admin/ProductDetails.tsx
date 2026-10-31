@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 import { useRouter, useParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -31,34 +33,26 @@ import { toast } from "sonner";
 import Image from "next/image";
 
 export default function ProductDetails() {
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
   const [togglingPublish, setTogglingPublish] = useState(false);
   const router = useRouter();
   const params = useParams();
   const { isAuthenticated } = useAdmin();
   const id = params?.id as string;
 
-  useEffect(() => {
-    if (id && isAuthenticated) {
-      fetchProduct();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch only when the product id or auth changes
-  }, [id, isAuthenticated]);
+  const queryClient = useQueryClient();
 
-  const fetchProduct = async () => {
-    try {
-      setLoading(true);
-      // Use regular function to get product details
-      const productData = await getProduct(id);
-      setProduct(productData);
-    } catch (error) {
-      console.error("Error fetching product details:", error);
-      toast.error("Failed to fetch product details");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // isPending (not isLoading) keeps the skeleton up until auth resolves and the query is enabled.
+  const { data: product = null, isPending: loading, isError } = useQuery({
+    queryKey: queryKeys.product(id),
+    queryFn: () => getProduct(id),
+    enabled: !!id && isAuthenticated,
+    staleTime: 0,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (isError) toast.error("Failed to fetch product details");
+  }, [isError]);
 
   const handleTogglePublish = async () => {
     if (!product) return;
@@ -66,7 +60,8 @@ export default function ProductDetails() {
     try {
       setTogglingPublish(true);
       await updateProduct(id, { isPublished: nextPublished });
-      setProduct({ ...product, isPublished: nextPublished });
+      queryClient.setQueryData<Product>(queryKeys.product(id), { ...product, isPublished: nextPublished });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
       toast.success(
         nextPublished ? "Product published" : "Product unpublished"
       );

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryKeys';
 
 function toSlug(text: string): string {
   return text
@@ -63,9 +65,17 @@ import { useAdmin } from '@/contexts/AdminContext';
 import { getSlugValidationError } from '@/lib/slug';
 import { toast } from 'sonner';
 
+const CATEGORIES_PAGE_SIZE = 20;
+const EMPTY_PAGINATION = {
+  page: 1,
+  limit: CATEGORIES_PAGE_SIZE,
+  total: 0,
+  totalPages: 0,
+  hasNext: false,
+  hasPrev: false,
+};
+
 export function CategoriesManager() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -81,40 +91,29 @@ export function CategoriesManager() {
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 20,
-    total: 0,
-    totalPages: 0,
-    hasNext: false,
-    hasPrev: false,
-  });
   const { isAuthenticated } = useAdmin();
+  const queryClient = useQueryClient();
+
+  const { data, isLoading: loading, isError } = useQuery({
+    queryKey: queryKeys.categories(currentPage, CATEGORIES_PAGE_SIZE),
+    queryFn: () => getCategories(currentPage, CATEGORIES_PAGE_SIZE),
+    staleTime: 0,
+    placeholderData: keepPreviousData,
+  });
+  const categories = data?.categories ?? [];
+  const pagination = data?.pagination ?? EMPTY_PAGINATION;
 
   useEffect(() => {
-    fetchCategories();
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch only when the page changes
-  }, [currentPage]);
+    if (isError) toast.error('Failed to fetch categories');
+  }, [isError]);
+
+  const refreshCategories = () => queryClient.invalidateQueries({ queryKey: ['categories'] });
 
   useEffect(() => {
     if (!slugManuallyEdited) {
       setFormData((prev) => ({ ...prev, slug: toSlug(prev.name || "") }));
     }
   }, [formData.name, slugManuallyEdited]);
-
-  const fetchCategories = async () => {
-    try {
-      setLoading(true);
-      const response = await getCategories(currentPage, 20);
-      setCategories(response.categories);
-      setPagination(response.pagination);
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      toast.error('Failed to fetch categories');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,7 +142,7 @@ export function CategoriesManager() {
         toast.success('Category created successfully');
       }
       
-      fetchCategories();
+      refreshCategories();
       resetForm();
       setDialogOpen(false);
     } catch (error) {
@@ -173,7 +172,7 @@ export function CategoriesManager() {
     try {
       await deleteCategory(categoryToDelete.id);
       toast.success('Category deleted successfully');
-      fetchCategories();
+      refreshCategories();
     } catch (error) {
       console.error('Error deleting category:', error);
       toast.error('Failed to delete category');

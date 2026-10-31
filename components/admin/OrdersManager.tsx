@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -48,50 +48,11 @@ export function OrdersManager() {
     setDateFromFilter,
     dateToFilter,
     setDateToFilter,
-    fetchOrders,
+    refreshOrders,
     updateOrderStatus,
     updatePaymentStatus,
     applyFilters
   } = useOrders(isAuthenticated);
-
-  // Initial load and when filters change (except search - search is debounced)
-  useEffect(() => {
-    fetchOrders(
-      currentPage,
-      orderStatusFilter === 'all' ? undefined : orderStatusFilter,
-      paymentStatusFilter === 'all' ? undefined : paymentStatusFilter,
-      paymentMethodFilter === 'all' ? undefined : paymentMethodFilter,
-      searchFilter || undefined,
-      dateFromFilter || undefined,
-      dateToFilter || undefined
-    );
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch on these filters only; useOrders returns new function identities each render
-  }, [
-    isAuthenticated, 
-    currentPage, 
-    orderStatusFilter, 
-    paymentStatusFilter, 
-    paymentMethodFilter,
-    dateFromFilter,
-    dateToFilter
-  ]);
-
-  // Debounced search effect
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (currentPage === 1) {
-        // If already on page 1, just apply filters
-        applyFilters();
-      } else {
-        // If not on page 1, reset to page 1 and apply filters
-        setCurrentPage(1);
-        // The above useEffect will handle the API call
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- debounce on the search text only
-  }, [searchFilter]);
 
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
@@ -127,15 +88,7 @@ export function OrdersManager() {
         current && current.id === orderId ? { ...current, paymentStatus: 'REFUNDED' } : current
       );
     }
-    fetchOrders(
-      currentPage,
-      orderStatusFilter === 'all' ? undefined : orderStatusFilter,
-      paymentStatusFilter === 'all' ? undefined : paymentStatusFilter,
-      paymentMethodFilter === 'all' ? undefined : paymentMethodFilter,
-      searchFilter || undefined,
-      dateFromFilter || undefined,
-      dateToFilter || undefined
-    );
+    refreshOrders();
   };
 
   // Handle page changes

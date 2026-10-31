@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queryKeys';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,7 +49,6 @@ import {
   getReviewById,
   updateReview,
   deleteReview,
-  Review,
   UpdateReviewParams,
 } from '@/lib/api/review';
 
@@ -61,8 +62,6 @@ export function ReviewDetailsView({ reviewId }: ReviewDetailsViewProps) {
   const router = useRouter();
 
   // State
-  const [review, setReview] = useState<Review | null>(null);
-  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -74,37 +73,37 @@ export function ReviewDetailsView({ reviewId }: ReviewDetailsViewProps) {
     comment: '',
   });
 
-  // Fetch review details
-  const fetchReview = async () => {
-    if (!isAuthenticated || !reviewId) return;
+  const queryClient = useQueryClient();
 
-    try {
-      setLoading(true);
-      const reviewData = await getReviewById(reviewId, true);
-      setReview(reviewData);
-      setFormData({
-        customerName: reviewData.customerName,
-        email: reviewData.email,
-        rating: reviewData.rating,
-        comment: reviewData.comment,
-      });
-    } catch (error) {
-      console.error('Failed to fetch review:', error);
+  // Fetch review details. isPending keeps the loader up until auth resolves.
+  const { data: review = null, isPending: loading, isError } = useQuery({
+    queryKey: queryKeys.review(reviewId),
+    queryFn: () => getReviewById(reviewId, true),
+    enabled: isAuthenticated && !!reviewId,
+    staleTime: 0,
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (isError) {
       toast({
         title: 'Error',
         description: 'Failed to fetch review details',
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [isError, toast]);
 
-  // Initial fetch
+  // Keep the edit form in sync with the latest server data.
   useEffect(() => {
-    fetchReview();
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch only when the review id or auth changes
-  }, [isAuthenticated, reviewId]);
+    if (!review) return;
+    setFormData({
+      customerName: review.customerName,
+      email: review.email,
+      rating: review.rating,
+      comment: review.comment,
+    });
+  }, [review]);
 
   // Handle save
   const handleSave = async () => {
@@ -121,7 +120,7 @@ export function ReviewDetailsView({ reviewId }: ReviewDetailsViewProps) {
       });
       
       setEditing(false);
-      fetchReview(); // Refresh data
+      queryClient.invalidateQueries({ queryKey: ["reviews"] }); // Refresh data
     } catch (error) {
       console.error('Failed to update review:', error);
       toast({

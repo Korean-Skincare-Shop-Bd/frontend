@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 function toSlug(text: string): string {
   return text
@@ -71,9 +73,17 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { cloudfrontLoader } from "@/lib/cloudfront-loader";
 
+const BRANDS_PAGE_SIZE = 20;
+const EMPTY_PAGINATION = {
+  page: 1,
+  limit: BRANDS_PAGE_SIZE,
+  total: 0,
+  totalPages: 0,
+  hasNext: false,
+  hasPrev: false,
+};
+
 export function BrandsManager() {
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
@@ -91,40 +101,29 @@ export function BrandsManager() {
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 20,
-    total: 0,
-    totalPages: 0,
-    hasNext: false,
-    hasPrev: false,
-  });
   const { isAuthenticated } = useAdmin();
+  const queryClient = useQueryClient();
+
+  const { data, isLoading: loading, isError } = useQuery({
+    queryKey: queryKeys.brands(currentPage, BRANDS_PAGE_SIZE),
+    queryFn: () => getBrands(currentPage, BRANDS_PAGE_SIZE),
+    staleTime: 0,
+    placeholderData: keepPreviousData,
+  });
+  const brands = data?.data.brands ?? [];
+  const pagination = data?.data.pagination ?? EMPTY_PAGINATION;
 
   useEffect(() => {
-    fetchBrands();
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch only when the page changes
-  }, [currentPage]);
+    if (isError) toast.error("Failed to fetch brands");
+  }, [isError]);
+
+  const refreshBrands = () => queryClient.invalidateQueries({ queryKey: ["brands"] });
 
   useEffect(() => {
     if (!slugManuallyEdited) {
       setFormData((prev) => ({ ...prev, slug: toSlug(prev.name || "") }));
     }
   }, [formData.name, slugManuallyEdited]);
-
-  const fetchBrands = async () => {
-    try {
-      setLoading(true);
-      const response = await getBrands(currentPage, 20);
-      setBrands(response.data.brands);
-      setPagination(response.data.pagination);
-    } catch (error) {
-      console.error("Error fetching brands:", error);
-      toast.error("Failed to fetch brands");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -170,7 +169,7 @@ export function BrandsManager() {
         toast.success("Brand created successfully");
       }
 
-      fetchBrands();
+      refreshBrands();
       resetForm();
       setDialogOpen(false);
     } catch (error) {
@@ -202,7 +201,7 @@ export function BrandsManager() {
     try {
       await deleteBrand(brandToDelete.id);
       toast.success("Brand deleted successfully");
-      fetchBrands();
+      refreshBrands();
     } catch (error) {
       console.error("Error deleting brand:", error);
       toast.error("Failed to delete brand");

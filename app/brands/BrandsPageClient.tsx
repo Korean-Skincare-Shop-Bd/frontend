@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -47,12 +49,8 @@ export default function BrandsPageContent({
 }: BrandsPageContentProps) {
   const searchParams = useSearchParams();
   const { toast } = useToast();
-  const isInitialRender = useRef(true);
 
   // State
-  const [brands, setBrands] = useState<Brand[]>(initialBrands);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState(
     searchParams?.get("search") || ""
   );
@@ -61,37 +59,31 @@ export default function BrandsPageContent({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
-  const [pagination, setPagination] = useState(initialPagination);
 
-  // Fetch brands — skip first run if server already provided data
+  // Page 1 is server-rendered (initialBrands); other pages are fetched on demand.
+  const pageSize = initialPagination.limit;
+  const { data, isFetching: loading, isError } = useQuery({
+    queryKey: queryKeys.brands(currentPage, pageSize),
+    queryFn: () => getBrands(currentPage, pageSize),
+    placeholderData: keepPreviousData,
+    initialData:
+      currentPage === 1 && initialBrands.length > 0
+        ? { message: "", data: { brands: initialBrands, pagination: initialPagination } }
+        : undefined,
+  });
+  const brands = data?.data.brands ?? [];
+  const pagination = data?.data.pagination ?? initialPagination;
+  const error = isError ? "Failed to load brands" : null;
+
   useEffect(() => {
-    if (isInitialRender.current && initialBrands.length > 0) {
-      isInitialRender.current = false;
-      return;
+    if (isError) {
+      toast({
+        title: "Error",
+        description: "Failed to load brands",
+        variant: "destructive",
+      });
     }
-    isInitialRender.current = false;
-    const fetchBrands = async () => {
-      try {
-        setLoading(true);
-        const response = await getBrands(currentPage, pagination.limit);
-        setBrands(response.data.brands);
-        setPagination(response.data.pagination);
-        setError(null);
-      } catch (err) {
-        console.error("Failed to fetch brands:", err);
-        setError("Failed to load brands");
-        toast({
-          title: "Error",
-          description: "Failed to load brands",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBrands();
-  }, [currentPage, toast, initialBrands.length, pagination.limit]);
+  }, [isError, toast]);
 
   // Filter and sort brands
   const filteredAndSortedBrands = brands

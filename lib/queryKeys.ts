@@ -10,6 +10,7 @@ export const queryKeys = {
   product: (id: string) => ["products", id] as const,
   productSuggestions: (query: string) => ["products", "suggestions", query] as const,
   reviews: (params: GetReviewsParams = {}) => ["reviews", params] as const,
+  review: (id: string) => ["reviews", "detail", id] as const,
   reviewStatistics: ["reviews", "statistics"] as const,
   cart: ["cart"] as const,
   orders: (params: Record<string, unknown>) => ["orders", params] as const,

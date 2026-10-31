@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -127,27 +127,9 @@ export function RecentOrders() {
     pagination,
     searchFilter,
     setSearchFilter,
-    fetchOrders,
     updateOrderStatus,
     updatePaymentStatus,
-    applyFilters,
   } = useOrders(isAuthenticated);
-
-  useEffect(() => {
-    // Fetch recent orders (first page, no filters, show recent orders)
-    fetchOrders(1);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- useOrders returns new function identities each render
-  }, [isAuthenticated]);
-
-  // Handle search with debouncing
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      applyFilters();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- debounce on the search text only
-  }, [searchFilter]);
 
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
