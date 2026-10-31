@@ -40,7 +40,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { getProducts, Product, deleteProduct } from "@/lib/api/products";
+import { getAdminProducts, Product, deleteProduct } from "@/lib/api/products";
 import { useAdmin } from "@/contexts/AdminContext";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -52,7 +52,9 @@ const ITEMS_PER_PAGE = 20;
 export function ProductsManager() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -63,6 +65,15 @@ export function ProductsManager() {
   const { isAuthenticated } = useAdmin();
   const router = useRouter();
 
+  // Wait for the admin to stop typing before hitting the API
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+      setCurrentPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   const fetchProducts = useCallback(async () => {
     if (!isAuthenticated) return;
 
@@ -71,10 +82,10 @@ export function ProductsManager() {
       const params = {
         page: currentPage,
         limit: ITEMS_PER_PAGE,
-        ...(searchQuery && { search: searchQuery }),
+        ...(debouncedSearch && { search: debouncedSearch }),
       };
-      // Use regular function to get all products
-      const response = await getProducts(params);
+      // Uncached admin list. NOTE: the API defaults to isPublished=true, so drafts are not returned yet
+      const response = await getAdminProducts(params);
       setProducts(response.products);
       setTotalProducts(response.total);
     } catch (error) {
@@ -82,8 +93,9 @@ export function ProductsManager() {
       toast.error("Failed to fetch products");
     } finally {
       setLoading(false);
+      setHasLoaded(true);
     }
-  }, [isAuthenticated, currentPage, searchQuery]);
+  }, [isAuthenticated, currentPage, debouncedSearch]);
 
   useEffect(() => {
     fetchProducts();
@@ -105,14 +117,10 @@ export function ProductsManager() {
     }
   };
 
-  const filteredProducts = products?.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.brand?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.category?.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Search is done by the API; keep the page (and the search box) mounted while refetching
+  const filteredProducts = products;
 
-  if (loading) {
+  if (loading && !hasLoaded) {
     return (
       <div className="mx-auto px-4 py-8 container">
         <div className="space-y-4 animate-pulse">
@@ -175,7 +183,8 @@ export function ProductsManager() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent
+          className={`p-0 transition-opacity ${loading ? "opacity-50" : ""}`}>
           {/* Mobile Card View */} 
           <div className="lg:hidden block">
             <div className="p-4 space-y-4">

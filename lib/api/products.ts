@@ -215,6 +215,26 @@ export const getProducts = async (
 
   return response.json();
 };
+/**
+ * Admin product list, never cached. NOTE: GET /products defaults to isPublished=true on the
+ * backend, so unpublished (draft) products are not included until an admin-only route exists.
+ */
+export const getAdminProducts = async (
+  params: { page?: number; limit?: number; search?: string } = {}
+): Promise<ProductsResponse> => {
+  const { page = 1, limit = 20, search } = params;
+  const searchParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  });
+  if (search) searchParams.append("search", search);
+
+  const response = await adminFetch(`/products?${searchParams.toString()}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch products");
+  }
+  return response.json();
+};
 export const deleteProduct = async (id: string): Promise<{ message: string }> => {
   const response = await adminFetch(`/products/${id}`, {
     method: "DELETE",
