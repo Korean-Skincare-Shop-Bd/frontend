@@ -18,7 +18,11 @@ function contentSecurityPolicy() {
   }
   scriptSrc.push(
     "https://connect.facebook.net",
-    "https://www.googletagmanager.com"
+    "https://www.googletagmanager.com",
+    // Meta GTM template loads clientParamBuilder from these CDNs.
+    "https://cdn.jsdelivr.net",
+    "https://unpkg.com",
+    "https://static.cloudflareinsights.com"
   );
 
   return [
@@ -30,7 +34,7 @@ function contentSecurityPolicy() {
     "img-src 'self' data: blob: https:",
     `connect-src 'self' https:${isDevelopment ? " http://localhost:8000" : ""}`,
     "font-src 'self' data:",
-    "frame-src https://www.googletagmanager.com",
+    "frame-src https://www.googletagmanager.com https://xkffbeow.in.stape.io",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
