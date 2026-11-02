@@ -34,10 +34,10 @@ function contentSecurityPolicy() {
     "img-src 'self' data: blob: https:",
     `connect-src 'self' https:${isDevelopment ? " http://localhost:8000" : ""}`,
     "font-src 'self' data:",
-    "frame-src https://www.googletagmanager.com https://xkffbeow.in.stape.io",
+    "frame-src https://www.googletagmanager.com https://xkffbeow.in.stape.io https://www.facebook.com https://web.facebook.com",
     "object-src 'none'",
     "base-uri 'self'",
-    "form-action 'self'",
+    "form-action 'self' https://www.facebook.com https://web.facebook.com",
     "frame-ancestors 'none'",
     ...(isDevelopment ? [] : ["upgrade-insecure-requests"]),
   ].join("; ");
