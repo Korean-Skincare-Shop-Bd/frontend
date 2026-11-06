@@ -31,6 +31,22 @@ export async function generateStaticParams() {
   }
 }
 
+// getProduct with retries so one slow/failed API call (cold start, timeout,
+// burst during build/revalidate) doesn't get baked into the ISR cache.
+async function getProductWithRetry(slug: string, attempts = 3) {
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await getProduct(slug);
+    } catch (err) {
+      lastError = err;
+      if (err instanceof Error && err.message === "Product not found") throw err;
+      await new Promise((r) => setTimeout(r, 500 * (i + 1)));
+    }
+  }
+  throw lastError;
+}
+
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -41,7 +57,7 @@ export async function generateMetadata({
 }: ProductPageProps): Promise<Metadata> {
   try {
     const resolvedParams = await params;
-    const product = await getProduct(resolvedParams.slug);
+    const product = await getProductWithRetry(resolvedParams.slug);
 
     const currentVariation = product.variations[0];
     const price = currentVariation.salePrice || currentVariation.price;
@@ -108,6 +124,10 @@ export async function generateMetadata({
       },
     };
   } catch (error) {
+    // Transient failures must not be cached as "Product Not Found".
+    if (!(error instanceof Error && error.message === "Product not found")) {
+      throw error;
+    }
     return {
       title: "Product Not Found",
       description: "The requested product could not be found.",
@@ -118,7 +138,7 @@ export async function generateMetadata({
 async function ProductData({ slug }: { slug: string }) {
   try {
     // Fetch product data server-side
-    const product = await getProduct(slug);
+    const product = await getProductWithRetry(slug);
 
     if (!product) {
       notFound();
@@ -375,7 +395,14 @@ async function ProductData({ slug }: { slug: string }) {
     ) {
       throw error;
     }
-    return <ProductErrorState error="Failed to load product" />;
+    if (error instanceof Error && error.message === "Product not found") {
+      notFound();
+    }
+    // Rethrow instead of returning an error component: a returned component is
+    // treated as a successful render and ISR caches it for `revalidate` seconds
+    // (or forever at build time). Throwing keeps the last good page / retries.
+    console.error(`[product page] failed to load "${slug}":`, error);
+    throw error;
   }
 }
 

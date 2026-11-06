@@ -31,6 +31,11 @@ export async function POST(request: NextRequest) {
       // Targeted purge: only the changed product page is re-rendered/re-written.
       revalidateTag(`product:${slug}`);
       revalidatePath(`/products/${slug}`);
+      // Old CUID-style links (/products/<id>) are cached under their own tag/path
+      if (typeof productId === "string") {
+        revalidateTag(`product:${productId}`);
+        revalidatePath(`/products/${productId}`);
+      }
     } else {
       // Backend did not send a slug: fall back to purging every product page.
       // Have the backend include `slug` in the payload to avoid this.
